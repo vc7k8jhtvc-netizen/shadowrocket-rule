@@ -1,5 +1,11 @@
 # 版本变更记录
 
+## 维护流程简化 — 2026-09-06
+
+- 普通维护允许直接更新 `main`，不再强制先走分支/PR。
+- PR 与 GitHub 检查改为按改动风险使用；本地 `scripts/check-config.sh` 仍保留作为发布前检查。
+- README 同步移除强制 Ruleset/分支保护要求。
+
 ## 节点筛选一致性修复 — 2026-09-06
 
 - Clash Verge Rev 的地区节点正则改为与 Shadowrocket 的 `policy-regex-filter` 完全一致，只接受当前项目约定的“英文地区名 + ` | ` + 节点名”格式。
