@@ -29,15 +29,17 @@ const directInput = {
   ipv6: true,
   proxies: [
     { name: 'Hong Kong | HK-01', type: 'ss', server: '127.0.0.1', port: 8388, cipher: 'aes-128-gcm', password: 'test-only' },
-    { name: '🇺🇸 US-01', type: 'ss', server: '127.0.0.1', port: 8389, cipher: 'aes-128-gcm', password: 'test-only' },
-    { name: '日本 Tokyo-01', type: 'ss', server: '127.0.0.1', port: 8390, cipher: 'aes-128-gcm', password: 'test-only' }
+    { name: 'United States | US-01', type: 'ss', server: '127.0.0.1', port: 8389, cipher: 'aes-128-gcm', password: 'test-only' },
+    { name: 'Japan | JP-01', type: 'ss', server: '127.0.0.1', port: 8390, cipher: 'aes-128-gcm', password: 'test-only' },
+    { name: '🇺🇸 US-EXTRA', type: 'ss', server: '127.0.0.1', port: 8391, cipher: 'aes-128-gcm', password: 'test-only' }
   ],
   rules: ['MATCH,DIRECT'],
   'proxy-groups': []
 };
 const direct = context.main(JSON.parse(JSON.stringify(directInput)));
 
-assert(group(direct, '🇺🇸 美国').proxies.includes('🇺🇸 US-01'), 'US node matching');
+assert(group(direct, '🇺🇸 美国').proxies.includes('United States | US-01'), 'US node matching');
+assert(!group(direct, '🌐 全部节点').proxies.includes('🇺🇸 US-EXTRA'), 'all-node group must match Shadowrocket naming filter');
 assert(
   JSON.stringify(group(direct, '🇹🇼 台湾').proxies) === JSON.stringify(['🌐 全部节点']),
   'empty region must fall back to all nodes'
@@ -66,10 +68,11 @@ const provider = context.main({
   'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
 });
 assert(group(provider, '🌐 全部节点').use.includes('WestData'), 'proxy-provider support');
+assert(group(provider, '🌐 全部节点').filter === '^.+ \\| .+$', 'all-node provider filter must match Shadowrocket');
 for (const name of ['🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
   const region = group(provider, name);
   assert(region.use.includes('WestData'), `${name} provider inclusion`);
-  assert(region.filter.startsWith('(?i)'), `${name} provider filter must ignore case`);
+  assert(!region.filter.startsWith('(?i)'), `${name} provider filter must match Shadowrocket case-sensitive semantics`);
   assert(region['empty-fallback'] === 'REJECT', `${name} empty provider region must fail closed`);
   assert(!region.proxies || !region.proxies.includes('🌐 全部节点'), `${name} provider fallback must not mask filtering`);
 }
