@@ -60,7 +60,7 @@
 node scripts/check-westdata-local.js /path/to/private-westdata.conf
 ```
 
-检查器只读取本地文件，只输出节点计数、地区匹配数量、Host 映射命中数和 PASS/FAIL，不输出节点名称、服务器、密码、UUID 或订阅地址。私人输入文件不得提交到仓库。
+检查器只读取本地文件，只输出节点计数、地区匹配数量、被忽略的流量/到期提示条目数量、Host 映射命中数和 PASS/FAIL，不输出节点名称、服务器、密码、UUID 或订阅地址。私人输入文件不得提交到仓库。
 
 ## Shadowrocket 使用方法
 
