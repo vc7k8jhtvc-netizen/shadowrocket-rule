@@ -224,7 +224,6 @@ function main(config) {
 
     // 2. AI 专项服务（GPT / Gemini / Grok）
     // OpenAI / ChatGPT 官方通配
-    'DOMAIN-SUFFIX,auth.openai.com,🤖 AI',
     'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
     'DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI',
     'DOMAIN-SUFFIX,intercom.io,🤖 AI',
@@ -241,7 +240,6 @@ function main(config) {
     'DOMAIN,forwarder.workos.com,🤖 AI',
     'DOMAIN,humb.apple.com,🤖 AI',
     'DOMAIN,images.workoscdn.com,🤖 AI',
-    'DOMAIN,js.intercomcdn.com,🤖 AI',
     'DOMAIN,js.stripe.com,🤖 AI',
     'DOMAIN,o207216.ingest.sentry.io,🤖 AI',
     'DOMAIN,o33249.ingest.sentry.io,🤖 AI',
