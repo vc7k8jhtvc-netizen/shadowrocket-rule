@@ -1,0 +1,130 @@
+# 个人 Global 规则
+# 供 Shadowrocket 与 Clash Verge Rev 共用
+# 仅收录未分类的国际服务
+# 由用户自行维护
+
+
+# ===== 知识资料 =====
+DOMAIN-SUFFIX,wikipedia.org
+DOMAIN-SUFFIX,wikimedia.org
+
+# Exa：网站、API、控制台、MCP 与信任中心
+# 覆盖 exa.ai、api.exa.ai、dashboard.exa.ai、mcp.exa.ai、trust.exa.ai
+DOMAIN-SUFFIX,exa.ai
+
+# Jina：网站、Reader、Search、Embedding / Reranker API
+# 覆盖 jina.ai、r.jina.ai、s.jina.ai、api.jina.ai
+DOMAIN-SUFFIX,jina.ai
+
+# Tavily：网站、API、控制台、文档、MCP、社区、博客、帮助与信任中心
+# 覆盖 tavily.com、api.tavily.com、app.tavily.com、docs.tavily.com、mcp.tavily.com
+# 以及 community、blog、help、trust 等 tavily.com 子域名
+DOMAIN-SUFFIX,tavily.com
+
+
+# ===== 开发工具 =====
+DOMAIN-SUFFIX,docker.io
+DOMAIN-SUFFIX,docker.com
+# Docker 官方镜像与认证依赖；共享平台使用精确主机
+# 来源：https://docs.docker.com/desktop/setup/allow-list/
+DOMAIN-SUFFIX,dhi.io
+DOMAIN,cdn.auth0.com
+DOMAIN-SUFFIX,huggingface.co
+DOMAIN-SUFFIX,hf.co
+# Spaces 应用使用独立域名；模型 CDN 已被 hf.co 覆盖
+# 来源：https://huggingface.co/docs/hub/spaces-embed
+DOMAIN-SUFFIX,hf.space
+DOMAIN-SUFFIX,stackoverflow.com
+# Stack Exchange 静态资源及图片
+# 来源：https://meta.stackexchange.com/questions/395024
+DOMAIN-SUFFIX,sstatic.net
+DOMAIN-SUFFIX,gitlab.com
+# Web IDE 与资源 CDN
+# 来源：https://gitlab.com/gitlab-org/gitlab/-/issues/520263
+DOMAIN-SUFFIX,gitlab-static.net
+DOMAIN-SUFFIX,pypi.org
+# PyPI 包文件及文档托管
+# 来源：https://pythonhosted.org/
+DOMAIN-SUFFIX,pythonhosted.org
+
+
+# ===== 效率工具 =====
+DOMAIN-SUFFIX,notion.so
+DOMAIN-SUFFIX,notion.com
+DOMAIN-SUFFIX,notion.site
+DOMAIN-SUFFIX,notionusercontent.com
+# Notion 官方静态资源主机
+# 来源：https://www.notion.com/help/allowlist-ip
+DOMAIN,secure.notion-static.com
+DOMAIN-SUFFIX,dropbox.com
+DOMAIN-SUFFIX,dropboxapi.com
+DOMAIN-SUFFIX,dropboxusercontent.com
+# Dropbox 静态资源、短链、验证码与 DNS 依赖
+# 来源：https://help.dropbox.com/security/official-domains
+DOMAIN-SUFFIX,dropboxstatic.com
+DOMAIN-SUFFIX,db.tt
+DOMAIN-SUFFIX,dropboxcaptcha.com
+DOMAIN-SUFFIX,dropbox-dns.com
+DOMAIN,dropbox-api.arkoselabs.com
+DOMAIN,paper-attachments.s3.amazonaws.com
+DOMAIN-SUFFIX,slack.com
+DOMAIN-SUFFIX,slack-edge.com
+DOMAIN-SUFFIX,slack-imgs.com
+# Slack 历史文件资源域名；工作区专属依赖仍需从 Slack URLs 页面核对
+# 来源：https://docs.slack.dev/changelog/2016/04/26/file-events-in-the-rtm-api
+DOMAIN-SUFFIX,slack-files.com
+DOMAIN-SUFFIX,atlassian.com
+DOMAIN-SUFFIX,atlassian.net
+# Atlassian 通用平台、Jira/Confluence 与应用资源
+# 来源：https://support.atlassian.com/organization-administration/docs/ip-addresses-and-domains-for-atlassian-cloud-products/
+DOMAIN-SUFFIX,atl-paas.net
+DOMAIN-SUFFIX,ss-inf.net
+DOMAIN-SUFFIX,jira.com
+DOMAIN-SUFFIX,atlassian-dev.net
+DOMAIN-SUFFIX,atlassian-3p.com
+
+
+# ===== 个人 / 未分类 =====
+# JapaneseASMR 播放域名
+DOMAIN-SUFFIX,japaneseasmr.com
+DOMAIN-SUFFIX,weeabo0.xyz
+DOMAIN-SUFFIX,weeab0o.xyz
+
+# ASMR.one 及其官方镜像；后缀规则同时覆盖各 api 子域
+# 来源：https://asmr-100.com/ 及其页面加载记录
+DOMAIN-SUFFIX,asmr.one
+DOMAIN-SUFFIX,asmr-100.com
+DOMAIN-SUFFIX,asmr-200.com
+DOMAIN-SUFFIX,asmr-300.com
+
+# ===== 成人网站 =====
+# 主流成人站点；后缀规则同时覆盖 www、m 等常见子域名
+DOMAIN-SUFFIX,pornhub.com
+DOMAIN-SUFFIX,xvideos.com
+DOMAIN-SUFFIX,xnxx.com
+DOMAIN-SUFFIX,xhamster.com
+DOMAIN-SUFFIX,redtube.com
+DOMAIN-SUFFIX,youporn.com
+DOMAIN-SUFFIX,tube8.com
+DOMAIN-SUFFIX,spankbang.com
+DOMAIN-SUFFIX,eporner.com
+DOMAIN-SUFFIX,tnaflix.com
+
+DOMAIN-SUFFIX,jable.tv
+
+# MissAV 当前及备用入口
+# 来源：https://en.wikipedia.org/wiki/ThisAV
+DOMAIN-SUFFIX,missav.ws
+DOMAIN-SUFFIX,missav.ai
+DOMAIN-SUFFIX,missav123.com
+DOMAIN-SUFFIX,missav.live
+
+# Hanime1 主入口、备用入口及视频资源
+# 来源：https://hanime1.com/
+DOMAIN-SUFFIX,hanime1.me
+DOMAIN-SUFFIX,hanime1.com
+DOMAIN-SUFFIX,hembed.com
+DOMAIN-SUFFIX,hanimeone.me
+
+DOMAIN-SUFFIX,hero-sms.com
+DOMAIN-SUFFIX,greasyfork.org
