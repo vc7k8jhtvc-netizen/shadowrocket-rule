@@ -2,7 +2,7 @@
 
 ## 1. 架构目标
 
-目标不是制作大而全的规则库，而是建立长期稳定、低维护的 Shadowrocket 个人分流系统。
+目标不是制作大而全的规则库，而是建立长期稳定、低维护的 Shadowrocket 与 Clash Verge Rev 双端个人分流系统。
 
 核心原则：
 
@@ -99,11 +99,12 @@ Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维�
 2. 检查策略组、分流目标和规则优先级。
 3. 新增功能、架构或规则优先级变化时升级主配置版本号；已发布配置的修复或默认出口调整保留原路径。
 4. 更新 README 与 CHANGELOG。
-5. 完成语法、引用关系、节点筛选和典型域名命中检查。
+5. 运行 `bash scripts/check-config.sh`，完成 Shadowrocket 结构、Clash 行为、双端一致性、敏感信息与典型规则顺序检查。
+6. 通过分支/PR 的 `Check configuration` 后再进入 `main`。
 
 ### 修改节点筛选
 
-节点服务商改变命名格式时，需要检查 Shadowrocket 的 `policy-regex-filter` 是否能匹配实际节点名称。
+节点服务商改变命名格式时，需要检查 Shadowrocket 的 `policy-regex-filter` 是否能匹配实际节点名称。私人 WestData 配置只在本地使用 `node scripts/check-westdata-local.js /path/to/private-westdata.conf` 验证；检查结果仅输出计数与 PASS/FAIL，不生成或提交私人配置。
 
 ---
 
@@ -120,11 +121,13 @@ Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维�
 
 - 不直接引入未知的大型 Global 规则。
 - 不重新镜像完整的第三方专项规则库。
-- 不把私人订阅地址、节点服务器、UUID、密码或令牌提交到公开仓库。
+- 不把私人订阅地址、节点服务器、UUID、密码或令牌提交到公开仓库；本地私人配置由 `.gitignore` 排除，并由当前树敏感信息检查提供额外拦截。
 - 规则顺序变化必须检查是否覆盖后续规则。
 - Clash 的中国直连必须同时检查 `China` 与 `China_Domain`，避免 Bilibili 等域名落入 FINAL。
 - 遇到异常时，先区分节点状态、策略组选择、远程规则下载和规则内容问题。
 - 删除旧版本文件前确认新版配置已经验证可用；历史回退依赖 Git 记录。
+- 凭据一旦公开，必须优先在服务端撤销或轮换；Git 历史重写只用于降低残留可见性，不能恢复凭据安全性。
+- `main` 作为 raw 配置发布源，应使用 GitHub Ruleset/分支保护要求配置检查通过后才能合并。
 
 ---
 
@@ -136,3 +139,5 @@ Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维�
 - Clash Verge Rev 订阅扩展脚本
 - 双端共用的个人 `Global.list`
 - 双端架构说明、自动检查与版本变更记录
+- 私人 WestData 配置的本地只读兼容性验证工具
+- 当前 Git 树敏感信息防回归检查
