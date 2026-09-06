@@ -43,12 +43,18 @@ const regions = {
   'United States': /^.*United States \| .+$/
 };
 
-const matchedAll = names.filter(name => allPattern.test(name)).length;
+const informationalPattern = /流量|剩余|traffic|quota|到期|expire|expiry|有效期/i;
+const compatibleNames = names.filter(name => allPattern.test(name));
+const informationalNames = names.filter(name => !allPattern.test(name) && informationalPattern.test(name));
+const unexpectedNames = names.filter(name => !allPattern.test(name) && !informationalPattern.test(name));
+
 console.log('WestData local compatibility check');
 console.log('Proxy entries: ' + names.length);
-console.log('Compatible with all-node filter: ' + matchedAll + '/' + names.length);
+console.log('Compatible with all-node filter: ' + compatibleNames.length);
+console.log('Ignored informational entries: ' + informationalNames.length);
+console.log('Unexpected incompatible entries: ' + unexpectedNames.length);
 
-let failed = matchedAll !== names.length;
+let failed = unexpectedNames.length !== 0;
 for (const [region, pattern] of Object.entries(regions)) {
   const count = names.filter(name => pattern.test(name)).length;
   console.log(region + ': ' + count);
