@@ -8,6 +8,7 @@
 - 新增 `scripts/check-westdata-local.js`，本地只读验证私人 WestData 配置的节点命名和 Host 映射，只输出计数及 PASS/FAIL，不打印节点参数。
 - 新增 `.gitignore` 与 `SECURITY.md`，阻止常见私人生成配置误提交，并明确凭据泄露必须优先撤销/轮换。
 - 所有新增自动检查接入 `scripts/check-config.sh`；私人 WestData 检查器在 CI 中只做语法检查，不读取或保存私人订阅。
+- GitHub Actions 的 checkout 从已弃用 Node.js 20 运行时的 v4 升级到 v7.0.1，并固定到提交 SHA，降低未来运行时和供应链漂移风险。
 - 明确 `v2.6.5` 当前兼作稳定导入路径：兼容性修复可回补原路径，不兼容架构变化必须升级版本。
 - 明确 `main` 应启用 Ruleset/分支保护并要求 `Check configuration` 通过；仓库管理设置需在 GitHub 侧单独启用。
 
