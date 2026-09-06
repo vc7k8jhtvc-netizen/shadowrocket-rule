@@ -9,15 +9,22 @@
 - `Global.list`：两个客户端共用的个人 Global 规则集。
 - `EXPERIENCE.md`：Shadowrocket 分流架构与维护原则。
 - `CHANGELOG.md`：版本变更记录。
-- `scripts/check-config.sh`：双端配置与文档一致性的本地静态检查。
+- `scripts/check-config.sh`：统一运行双端结构、敏感信息与行为检查。
+- `scripts/check-shadowrocket.js`：Shadowrocket 结构、默认出口、规则顺序、Host 映射与 Global 规则检查。
 - `scripts/check-clash-script.js`：Clash Verge Rev 脚本行为检查。
+- `scripts/check-dual-client.js`：Shadowrocket 与 Clash Verge Rev 策略组及关键规则一致性检查。
+- `scripts/check-sensitive-data.js`：当前 Git 树常见凭据格式启发式检查。
+- `scripts/check-westdata-local.js`：私人 WestData 配置的本地只读兼容性检查。
+- `SECURITY.md`：凭据暴露处置与仓库安全约束。
 
 ## 当前版本
 
-- Shadowrocket：`v2.6.5`（唯一受支持的导入配置）
+- Shadowrocket：`v2.6.5`（唯一受支持的稳定配置路径）
 - Clash Verge Rev：订阅扩展脚本 `Clash_Verge_Rev_Script.js`
 
 新增功能、架构、策略组或规则优先级变化时，需要同步检查 Shadowrocket 与 Clash Verge Rev 两端；仅修改 `Global.list` 时两个客户端通过远程规则共同更新。
+
+`Shadowrocket_Standalone_v2.6.5.conf` 当前同时承担稳定导入路径的职责：不破坏既有架构的规则修复、默认出口修正和兼容性回补可以保留原路径；DNS 架构、策略组结构、节点机制或其他不兼容变化应升级版本。
 
 ## 架构
 
@@ -44,6 +51,16 @@
 - 确认订阅能够在 Shadowrocket 中正常导入和更新节点。
 - 不要公开分享或提交私人订阅地址。
 - 当前配置按 WestData 的节点名称筛选香港、台湾、新加坡、日本和美国节点。更换服务商后可能需要修改筛选表达式。
+
+## 私人 WestData 本地兼容性检查
+
+仓库不保存私人订阅或生成后的私人配置。需要确认 WestData 当前节点命名和 Host 映射是否仍与本项目兼容时，在本地执行：
+
+```bash
+node scripts/check-westdata-local.js /path/to/private-westdata.conf
+```
+
+检查器只读取本地文件，只输出节点计数、地区匹配数量、Host 映射命中数和 PASS/FAIL，不输出节点名称、服务器、密码、UUID 或订阅地址。私人输入文件不得提交到仓库。
 
 ## Shadowrocket 使用方法
 
@@ -184,13 +201,20 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Glob
 
 - 仅新增或删除 Global 域名：只修改 `Global.list`，不得在 Clash 脚本中复制。
 - 修改专项服务规则、策略组、节点筛选或规则顺序：同步修改并检查 Shadowrocket 主配置与 Clash Verge Rev 脚本。
-- 新增功能、架构或规则优先级变化：升级版本号，并同步更新 README 与 CHANGELOG。已发布配置的修复或默认出口调整也必须同步更新这两份文档。
+- DNS 架构、策略组结构、节点机制或其他不兼容变化：升级版本号，并同步更新 README 与 CHANGELOG；兼容性修复和默认出口修正可保留当前稳定配置路径，但仍必须记录 CHANGELOG。
 - 不重新引入未经验证的大型 Global 规则或第三方规则镜像。
 - 不将私人节点订阅地址提交到仓库。
 
+## 安全与发布
+
+- 私人订阅地址、节点凭据、UUID、密码、Token 与生成后的私人配置不得进入 Git。
+- 修改应先经过分支/PR 的 `Check configuration` 检查，再进入作为远程配置源的 `main`。
+- `scripts/check-sensitive-data.js` 只扫描当前 Git 树并提供启发式拦截；若凭据曾经公开，仍必须在服务端撤销或轮换，历史重写不能替代凭据失效。
+- GitHub 仓库设置应为 `main` 启用 Ruleset/分支保护并要求 `Check configuration` 成功；该项属于仓库管理设置，不由配置文件自身实现。
+
 ## 更新检查
 
-修改后至少检查：
+修改后至少运行 `bash scripts/check-config.sh`，并检查：
 
 - 远程规则 URL 可以访问
 - 规则引用的策略组名称完全一致

@@ -1,0 +1,13 @@
+# Local/private configuration artifacts
+Shadowrocket_Generated.conf
+*.local.conf
+*.private.conf
+WestData*.conf
+westdata*.conf
+private/
+.private/
+
+# Environment files
+.env
+.env.*
+!.env.example
