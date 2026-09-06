@@ -208,9 +208,9 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Glob
 ## 安全与发布
 
 - 私人订阅地址、节点凭据、UUID、密码、Token 与生成后的私人配置不得进入 Git。
-- 修改应先经过分支/PR 的 `Check configuration` 检查，再进入作为远程配置源的 `main`。
+- 普通维护允许直接更新 `main`；较大改动或需要审查时再按需使用分支/PR。发布前仍应运行 `bash scripts/check-config.sh`。
 - `scripts/check-sensitive-data.js` 只扫描当前 Git 树并提供启发式拦截；若凭据曾经公开，仍必须在服务端撤销或轮换，历史重写不能替代凭据失效。
-- GitHub 仓库设置应为 `main` 启用 Ruleset/分支保护并要求 `Check configuration` 成功；该项属于仓库管理设置，不由配置文件自身实现。
+- 不强制为 `main` 启用 Ruleset/分支保护；是否使用 PR 和 GitHub 检查按改动风险决定。
 
 ## 更新检查
 
