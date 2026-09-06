@@ -1,5 +1,11 @@
 # 版本变更记录
 
+## AI 规则精简 — 2026-09-06
+
+- 对照 OpenAI 当前官方 ChatGPT 网络域名清单复核 AI 手工规则，保留官方列出的共享第三方依赖。
+- 删除被现有同策略后缀规则完全覆盖的 `auth.openai.com` 与 `js.intercomcdn.com` 两条冗余规则，不改变实际分流结果。
+- Shadowrocket 与 Clash Verge Rev 同步调整并通过现有双端一致性及 Mihomo 配置校验。
+
 ## 全量审计加固 — 2026-09-06
 
 - 新增 Shadowrocket 结构回归检查，覆盖 17 个策略组、全部既定默认出口、节点筛选、策略引用、关键规则顺序、Global 语法/重复项及三条 WestData Host 映射。
