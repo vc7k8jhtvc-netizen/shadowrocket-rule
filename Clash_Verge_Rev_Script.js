@@ -32,15 +32,16 @@ function main(config) {
     throw new Error(message);
   }
 
-  // 正则过滤提取对应地区节点名称
+  // 与 Shadowrocket policy-regex-filter 保持完全一致，只接受 WestData 当前约定的“地区 | 节点”命名。
+  const allPattern = /^.+ \| .+$/;
   const filterNodes = (regex) => allProxies.filter(name => regex.test(name));
 
   const regionPatterns = {
-    hk: /Hong Kong|香港|🇭🇰/i,
-    tw: /Taiwan|台湾|臺灣|🇹🇼/i,
-    sg: /Singapore|新加坡|狮城|獅城|🇸🇬/i,
-    jp: /Japan|日本|东京|東京|大阪|🇯🇵/i,
-    us: /United States|美国|美國|USA|洛杉矶|洛杉磯|西雅图|西雅圖|🇺🇸/i
+    hk: /^.*Hong Kong \| .+$/,
+    tw: /^.*Taiwan \| .+$/,
+    sg: /^.*Singapore \| .+$/,
+    jp: /^.*Japan \| .+$/,
+    us: /^.*United States \| .+$/
   };
   const regionMatches = {
     hk: filterNodes(regionPatterns.hk),
@@ -66,8 +67,7 @@ function main(config) {
     }
     if (providerNames.length > 0) {
       group.use = providerNames;
-      // RegExp.source 不包含 JavaScript 的 /i 标志；Mihomo 使用内联标志保留忽略大小写语义。
-      group.filter = `(?i)${regex.source}`;
+      group.filter = regex.source;
     }
     if (matchedNodes.length === 0 && providerNames.length === 0) {
       group.proxies = ['🌐 全部节点'];
@@ -81,8 +81,12 @@ function main(config) {
     name: '🌐 全部节点',
     type: 'select'
   };
-  if (allProxies.length > 0) allNodesGroup.proxies = allProxies;
-  if (providerNames.length > 0) allNodesGroup.use = providerNames;
+  const compatibleProxies = allProxies.filter(name => allPattern.test(name));
+  if (compatibleProxies.length > 0) allNodesGroup.proxies = compatibleProxies;
+  if (providerNames.length > 0) {
+    allNodesGroup.use = providerNames;
+    allNodesGroup.filter = allPattern.source;
+  }
 
   // 2. 重建地区节点池与业务策略组
   config['proxy-groups'] = [
