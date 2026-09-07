@@ -1,5 +1,10 @@
 # 版本变更记录
 
+## 移除 X 去广告模块 — 2026-09-07
+
+- 删除稳定版与实验版 X/Twitter 去广告模块，以及对应运行脚本和测试脚本。
+- 实测确认 iOS 原生 X 首页主链路使用 `api.twitter.com`，对其启用 MITM 会导致 App 无法刷新，属于当前 Shadowrocket 方案不可可靠处理的证书绑定场景。
+- 保留主配置中 X/Twitter 的正常“📱 社交”分流规则；本次仅移除去广告模块，不改变 X 的代理策略。
 ## X 去广告增强模块 — 2026-09-07
 
 - 实验：新增 `X.Enhance.Experimental.api-twitter.v0.1.0.sgmodule`，用于诊断 iOS 原生 X 的 `api.twitter.com` 首页链路；请求阶段仅将 GraphQL `includePromotedContent` 强制为 `false`，响应阶段复用现有时间线净化脚本。
