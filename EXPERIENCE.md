@@ -4,10 +4,10 @@
 
 ## 架构
 
-Shadowrocket 以 `Shadowrocket_Routing_v2.7.0.conf` 为当前轻量路径：
+Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置。
-- `Shadowrocket_Routing_v2.7.0.conf`：仅 Proxy Group 与 Rule；通过 `include = WestData.conf` 继承底座。
+- `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule；通过 `include = WestData.conf` 继承底座。
 - YouTube Enhance：Shadowrocket 专属功能模块。
 - Clash Verge Rev：保留订阅基础参数，扩展脚本重建策略组与规则。
 
@@ -17,8 +17,8 @@ Shadowrocket 以 `Shadowrocket_Routing_v2.7.0.conf` 为当前轻量路径：
 |---|---|
 | 个人未分类国际服务域名 | 只修改 Global.list，两端远程共用；不重复收录已有专项规则覆盖的服务 |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
-| Shadowrocket 基础网络参数 | v2.7.0 不复制；由被包含的 WestData.conf 负责 |
-| Shadowrocket Rewrite / MITM / Host | v2.7.0 不维护；供应商基础功能由 WestData.conf 提供，额外增强继续模块化 |
+| Shadowrocket 基础网络参数 | Routing 不复制；由被包含的 WestData.conf 负责 |
+| Shadowrocket Rewrite / MITM / Host | Routing 不维护；供应商基础功能由 WestData.conf 提供，额外增强继续模块化 |
 | 兼容性修复或默认出口调整 | 记录 CHANGELOG，并保持 Routing 职责边界不变 |
 | 新增主分流功能、策略组结构或规则优先级变化 | 升级 Routing 版本并同步双端检查 |
 
@@ -26,11 +26,11 @@ Shadowrocket 以 `Shadowrocket_Routing_v2.7.0.conf` 为当前轻量路径：
 
 ## 必须保留的行为
 
-- Routing v2.7.0 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
+- Routing 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
 - 分流顺序：LAN → 专项服务 → Global → China / China_Domain → GEOIP → FINAL；AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
 - Apple 与中国服务均保留主规则和域名集两部分。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
-- Shadowrocket v2.7.0 的业务策略组与规则应与 Clash 保持语义一致。
+- Shadowrocket Routing 的业务策略组与规则应与 Clash 保持语义一致。
 - Clash 保留订阅 DNS、hosts、IPv6 和节点入口参数；LAN 使用 `no-resolve`。
 - Clash 继续整体重建策略组并继承节点/DNS 参数；暂不处理保留参数对原策略组的引用依赖。
 - YouTube Worker 精确分流保留在模块内，使用“▶️ YouTube”出口，不扩展到整个 workers.dev。
