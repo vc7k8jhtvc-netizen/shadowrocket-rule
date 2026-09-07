@@ -30,6 +30,8 @@ const general = activeLines(section(config, 'General'));
 const proxyGroupLines = activeLines(section(config, 'Proxy Group'));
 const rules = activeLines(section(config, 'Rule'));
 const hostLines = activeLines(section(config, 'Host'));
+const urlRewriteLines = activeLines(section(config, 'URL Rewrite'));
+const mitmLines = activeLines(section(config, 'MITM'));
 
 const generalMap = new Map();
 for (const line of general) {
@@ -150,6 +152,28 @@ for (const line of hostLines) {
 assert(hosts.size === expectedHosts.size, 'unexpected Shadowrocket Host mapping count');
 for (const [source, target] of expectedHosts) {
   assert(hosts.get(source) === target, 'WestData Host mapping changed: ' + source);
+}
+
+const expectedRewrites = [
+  "'^https?://(www.)?google.cn($|/.*)' 'https://www.google.com$2' 302",
+  "'^https?://(www.)?g.cn($|/.*)' 'https://www.google.com$2' 302"
+];
+assert(urlRewriteLines.length === expectedRewrites.length, 'unexpected Google CN rewrite count');
+for (const rewrite of expectedRewrites) {
+  assert(urlRewriteLines.includes(rewrite), 'missing required Google CN rewrite: ' + rewrite);
+}
+
+const mitmMap = new Map();
+for (const line of mitmLines) {
+  const eq = line.indexOf('=');
+  if (eq === -1) continue;
+  mitmMap.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
+}
+assert(mitmMap.get('hostname') === '*.google.cn', 'Google CN MITM hostname changed unexpectedly');
+assert(mitmMap.get('h2') === 'true', 'Google CN MITM h2 must remain enabled');
+assert(mitmMap.get('enable') === 'true', 'Google CN MITM must remain enabled');
+for (const forbidden of ['ca-passphrase', 'ca-p12', 'private-key', 'key']) {
+  assert(!mitmMap.has(forbidden), 'device MITM credential must not be committed: ' + forbidden);
 }
 
 console.log('PASS: Shadowrocket structure and rule checks');
