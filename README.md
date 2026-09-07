@@ -138,10 +138,10 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.En
 模块采用两层处理：
 
 - 域名层只拒绝用途明确的 X/Twitter 广告端点，不默认封锁 `scribe`、`p`、`analytics`、`syndication` 等可能承担正常功能或统计用途的主机。
-- 响应层只清理可成功解密的 `x.com`、`api.x.com`、`twitter.com` 与 `albtls.t.co` GraphQL/Timeline JSON 中具有明确 Promoted/Sponsored 证据的条目。
+- 响应层只清理可成功解密的 `x.com`、`api.x.com`、`twitter.com`、`albtls.t.co` 与 `global.albtls.t.co` GraphQL/Timeline JSON 中具有明确 Promoted/Sponsored 证据的条目。
 - 不使用 `monetizable` 等可能命中普通内容的模糊字段作为单独广告依据，优先降低误杀。
 - **明确不对 `api.twitter.com` 启用 MITM。** iOS 原生 X 的该主机可能存在证书绑定；如果某个版本的首页流量只走该主机，对应广告无法由本模块修改。不要为了追求覆盖率自行把它加入 MITM，否则可能导致时间线加载失败。
-- 脚本只在实际删除广告项时改写响应；JSON 解析异常时直接放行原响应。
+- 脚本兼容字符串及 gzip/Brotli 二进制响应，只在实际删除广告项时改写响应；解码或 JSON 解析异常时直接放行原响应。
 
 该模块不改变 X 的分流策略；X 仍由主配置中的 `📱 社交` 规则处理。
 
