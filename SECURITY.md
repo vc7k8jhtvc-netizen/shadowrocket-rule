@@ -1,19 +1,7 @@
-# Security
+# 安全说明
 
-This repository is public. Private subscription URLs, proxy credentials, UUIDs, passwords, tokens, generated private configurations, and node connection parameters must not be committed.
+仓库公开。私人订阅地址、节点凭据、UUID、密码、Token 和生成后的私人配置不得提交。
 
-## If a credential is exposed
+发布前运行 `bash scripts/check-config.sh`。其中的凭据扫描仅检查当前 Git 树，属于启发式检查，不能保证发现所有秘密或历史泄露；私人配置检查方法见 [维护约定](EXPERIENCE.md)。
 
-1. Revoke or rotate the credential at the provider first.
-2. Remove the sensitive material from the current branch.
-3. Rewrite repository history if necessary.
-4. Treat old Git objects, workflow logs, pull requests, forks, caches, and local clones as potentially still containing the exposed value.
-5. If sensitive Git objects remain reachable after history rewriting, request GitHub-side cleanup where appropriate.
-
-History rewriting is not a substitute for credential revocation.
-
-## Local checks
-
-Run `bash scripts/check-config.sh` before publishing changes. The checks include a current-tree heuristic scan for common credential formats. This is a guardrail, not a guarantee that no secret exists.
-
-For a private WestData configuration, run `node scripts/check-westdata-local.js /path/to/private-westdata.conf`. The validator reports only counts and PASS/FAIL status. Do not commit the private input file.
+凭据一旦公开，先在服务商处撤销或轮换，再移除仓库中的敏感内容；必要时清理 Git 历史。旧提交、日志、PR、fork 和缓存仍可能留有副本，无法自行清理的残留可联系 GitHub。删除文件或重写历史不能代替凭据失效。

@@ -1,144 +1,45 @@
-# Shadowrocket / Clash Verge Rev 分流架构经验总结
+# 维护约定
 
-## 1. 架构目标
+安装、默认出口和日常排查见 [README](README.md)。
 
-目标不是制作大而全的规则库，而是建立长期稳定、低维护的 Shadowrocket 与 Clash Verge Rev 双端个人分流系统。
+## 修改范围
 
-核心原则：
+| 修改内容 | 维护要求 |
+|---|---|
+| 个人未分类国际服务域名 | 只修改 Global.list，两端远程共用；不重复收录已有专项规则覆盖的服务 |
+| 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket 与 Clash |
+| Shadowrocket 专属 MITM / 脚本模块 | 只维护该模块及其测试、使用说明，不复制到 Clash |
+| 兼容性修复或默认出口调整 | 可保留现有稳定路径，记录 CHANGELOG |
+| 新增主分流功能、架构或规则优先级变化 | 升级版本；DNS 架构、策略组结构、节点机制等不兼容变化也须升级 |
 
-- 节点来源与分流逻辑分离。
-- Shadowrocket 主配置与 Clash Verge Rev 订阅扩展脚本分别管理专项规则、策略组和优先级。
-- 新增功能、架构或规则优先级变化时升级版本号；已发布配置的修复或默认出口调整保留原路径，并同步更新 README 与 CHANGELOG。
-- 个人小众服务只维护一份 `Global.list`。
-- 私人订阅地址不进入公开仓库。
+不重新镜像第三方完整规则库，不引入未经验证的大型 Global 规则。保留有用的变更结果，临时排查过程由 Git 历史追溯。
 
----
+## 必须保留的行为
 
-## 2. Shadowrocket 职责
+- 分流顺序：LAN → 专项服务 → Global → China / China_Domain → GEOIP → FINAL；AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
+- Apple 与中国服务均保留主规则和域名集两部分，避免漏掉仅收录于域名集的服务。
+- 两端节点筛选使用相同、区分大小写的 WestData 命名规则；Clash 空节点处理见 README。
+- Shadowrocket 保留 WestData 兼容的 DNS、系统绕过和三条入口 Host 映射，启用 `use-local-host-item-for-proxy = true`；不重新强制 DoH、DNS 劫持或直连失败转代理。
+- Clash 保留订阅 DNS、hosts、IPv6 和节点入口参数；LAN 使用 `no-resolve`，不为前置局域网判断主动解析域名。
+- 按已确认的取舍，Clash 继续整体重建策略组并继承节点/DNS 参数；暂不处理保留参数对原策略组的引用依赖。
+- YouTube Worker 的精确分流保留在模块内，使用“▶️ YouTube”出口，不扩展到整个 workers.dev。
 
-- 原始订阅负责提供和更新节点。
-- 主配置负责策略组、规则顺序、分流目标及 WestData 节点入口 Host 映射。
-- `use-local-host-item-for-proxy = true` 确保代理连接实际使用本地 Host 映射。
-- `policy-regex-filter` 根据节点名称建立地区节点池。
-- 不继承订阅中的规则、DNS、Rewrite 或 MITM。
+## 检查与发布
 
----
+发布前运行现有统一检查：
 
-## 3. Clash Verge Rev 职责
+```bash
+bash scripts/check-config.sh
+```
 
-- 原始订阅负责提供和更新 `proxies` 或 `proxy-providers`。
-- 订阅扩展脚本重建策略组、规则与规则提供器；保留订阅的 DNS、Host 与节点入口参数。
-- provider 地区过滤使用与 Shadowrocket 一致、区分大小写的 WestData 命名正则；地区组与全部节点组筛选为空时使用 `REJECT`，避免 `COMPATIBLE` 隐式直连。
-- 无 provider 且静态节点全部不符合命名时，停止生成配置；LAN 规则使用 `no-resolve`，不为前置局域网判断主动解析域名。
-- 订阅完全没有节点来源时停止生成配置。
-- 生成结果由 Node 行为测试及固定版本 Mihomo 内核共同验证。
+它覆盖当前树敏感信息、Shadowrocket 结构、Clash 行为、双端关键规则一致性和 YouTube 模块结构。GitHub Actions 另用固定版本 Mihomo 检查配置解析、provider 空组阻断及 LAN 不提前查询 DNS。
 
-## 4. 规则分层设计
+修改节点命名或 Host 假设时，用私人配置在本地验证：
 
-主配置采用以下顺序：
+```bash
+node scripts/check-westdata-local.js /path/to/private-westdata.conf
+```
 
-1. LAN
-2. 专项服务规则
-   - AI
-   - Apple
-   - Google
-   - GitHub
-   - Microsoft
-   - YouTube
-   - Telegram
-   - 社交媒体
-   - Apple 主规则与 Apple_Domain 域名规则共同覆盖 Apple 服务
-3. Global 规则集
-4. 中国直连规则
-5. FINAL 兜底
+检查器只输出计数与 PASS/FAIL，不输出节点凭据。私人输入不得提交，详见 [安全说明](SECURITY.md)。
 
-规则自上而下匹配。AI 规则必须位于 Google 等可能产生覆盖的通用规则之前；中国字节跳动规则必须位于 TikTok 规则之前。
-
----
-
-## 5. Global.list 定位
-
-`Global.list` 只收录：
-
-- 没有独立策略组的国际服务
-- 工具和资料网站
-- 个人长期使用的网站
-- 冷门但明确需要代理的服务
-
-不收录已有专项策略组的服务。例如 ChatGPT、YouTube、GitHub 和 Microsoft 不进入 Global。
-
-Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维护重复副本。
-
----
-
-## 6. 为什么使用远程 Global 规则集
-
-将个人域名硬编码到主配置会导致：
-
-- 每增加一个网站都要修改主配置。
-- 主配置持续膨胀。
-- 修改过程更容易引入语法错误。
-
-使用远程列表后，普通 Global 域名变更只需要维护 `Global.list`，Shadowrocket 会按远程规则更新机制获取新内容。
-
----
-
-## 7. 维护流程
-
-### 修改 Global 域名
-
-1. 确认服务没有现成的专项策略组。
-2. 将经过验证的域名添加到或移出 `Global.list`。
-3. 提交 GitHub。
-4. 检查 Shadowrocket 是否能更新并命中该规则。
-
-这种修改不需要编辑主配置，也不必升级主配置版本号。
-
-### 修改专项规则、架构或默认出口
-
-1. 修改 Shadowrocket 主配置。
-2. 检查策略组、分流目标和规则优先级。
-3. 新增功能、架构或规则优先级变化时升级主配置版本号；已发布配置的修复或默认出口调整保留原路径。
-4. 更新 README 与 CHANGELOG。
-5. 运行 `bash scripts/check-config.sh`，完成 Shadowrocket 结构、Clash 行为、双端一致性、敏感信息与典型规则顺序检查。
-6. 普通维护可以直接更新 `main`；较大改动按需使用分支/PR，并核对 `Check configuration` 结果。
-
-### 修改节点筛选
-
-节点服务商改变命名格式时，需要检查 Shadowrocket 的 `policy-regex-filter` 是否能匹配实际节点名称。私人 WestData 配置只在本地使用 `node scripts/check-westdata-local.js /path/to/private-westdata.conf` 验证；检查结果仅输出计数与 PASS/FAIL，不生成或提交私人配置。
-
----
-
-## 8. DNS 维护原则
-
-- Shadowrocket 保留 WestData 原版 DNS 与系统绕过行为，不在独立配置中强制 DoH 或 DNS 劫持。
-- Shadowrocket 代理连接必须启用 `use-local-host-item-for-proxy = true`，确保节点入口备用映射生效。
-- DNS 参数修改后，应验证节点订阅更新、规则下载、国内直连和境外代理解析。
-- 私人订阅地址不得写入 DNS 配置或公开文档。
-
----
-
-## 9. 风险控制
-
-- 不直接引入未知的大型 Global 规则。
-- 不重新镜像完整的第三方专项规则库。
-- 不把私人订阅地址、节点服务器、UUID、密码或令牌提交到公开仓库；本地私人配置由 `.gitignore` 排除，并由当前树敏感信息检查提供额外拦截。
-- 规则顺序变化必须检查是否覆盖后续规则。
-- Clash 的中国直连必须同时检查 `China` 与 `China_Domain`，避免 Bilibili 等域名落入 FINAL。
-- 遇到异常时，先区分节点状态、策略组选择、远程规则下载和规则内容问题。
-- 删除旧版本文件前确认新版配置已经验证可用；历史回退依赖 Git 记录。
-- 凭据一旦公开，必须优先在服务端撤销或轮换；Git 历史重写只用于降低残留可见性，不能恢复凭据安全性。
-- `main` 作为 raw 配置发布源，发布前运行本地检查，发布后核对 CI；不强制 Ruleset/分支保护或 PR。
-
----
-
-## 10. 当前仓库用途
-
-本仓库用于维护：
-
-- Shadowrocket 完整分流配置
-- Clash Verge Rev 订阅扩展脚本
-- 双端共用的个人 `Global.list`
-- 双端架构说明、自动检查与版本变更记录
-- 私人 WestData 配置的本地只读兼容性验证工具
-- 当前 Git 树敏感信息防回归检查
+普通维护可直接更新 `main`，较大改动按需使用分支/PR；不强制 Ruleset 或分支保护。发布后核对 CI。变更涉及远程规则时检查下载与实际命中；涉及 DNS 时检查节点连接、规则下载、国内直连和境外代理。自动测试不能替代设备上的模块播放验证。
