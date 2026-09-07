@@ -3,7 +3,7 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
-const shadowrocketPath = path.join(root, 'Shadowrocket_Standalone_v2.6.5.conf');
+const shadowrocketPath = path.join(root, 'Shadowrocket_Routing_v2.7.0.conf');
 const clashPath = path.join(root, 'Clash_Verge_Rev_Script.js');
 
 const shadowrocket = fs.readFileSync(shadowrocketPath, 'utf8');
