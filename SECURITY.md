@@ -1,6 +1,6 @@
 # 安全说明
 
-仓库公开。私人订阅地址、节点凭据、UUID、密码、Token 和生成后的私人配置不得提交。
+仓库公开。私人订阅地址、节点凭据、UUID、密码、Token 和生成后的私人配置不得提交。Shadowrocket MITM 的设备 CA、`ca-passphrase`、`ca-p12`、私钥或其他证书导出材料同样不得提交；仓库只保存公开的 MITM hostname / 开关配置。
 
 发布前运行 `bash scripts/check-config.sh`。其中的凭据扫描仅检查当前 Git 树，属于启发式检查，不能保证发现所有秘密或历史泄露；私人配置检查方法见 [维护约定](EXPERIENCE.md)。
 
