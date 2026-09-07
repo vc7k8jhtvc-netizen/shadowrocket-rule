@@ -39,9 +39,9 @@ const directInput = {
 const direct = context.main(JSON.parse(JSON.stringify(directInput)));
 
 assert(group(direct, '🇺🇸 美国').proxies.includes('United States | US-01'), 'US node matching');
-assert(!group(direct, '🌐 手动选择').proxies.includes('🇺🇸 US-EXTRA'), 'all-node group must match Shadowrocket naming filter');
+assert(!group(direct, '👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'), 'all-node group must match Shadowrocket naming filter');
 assert(
-  JSON.stringify(group(direct, '🏝️ 台湾').proxies) === JSON.stringify(['🌐 手动选择']),
+  JSON.stringify(group(direct, '🏝️ 台湾').proxies) === JSON.stringify(['👆 手动选择']),
   'empty region must fall back to all nodes'
 );
 assert(!group(direct, '🏝️ 台湾').proxies.includes('DIRECT'), 'region must not silently use DIRECT');
@@ -67,15 +67,15 @@ assert(
 const provider = context.main({
   'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
 });
-assert(group(provider, '🌐 手动选择').use.includes('WestData'), 'proxy-provider support');
-assert(group(provider, '🌐 手动选择')['empty-fallback'] === 'REJECT', 'all-node provider group must fail closed');
-assert(group(provider, '🌐 手动选择').filter === '^.+ \\| .+$', 'all-node provider filter must match Shadowrocket');
+assert(group(provider, '👆 手动选择').use.includes('WestData'), 'proxy-provider support');
+assert(group(provider, '👆 手动选择')['empty-fallback'] === 'REJECT', 'all-node provider group must fail closed');
+assert(group(provider, '👆 手动选择').filter === '^.+ \\| .+$', 'all-node provider filter must match Shadowrocket');
 for (const name of ['🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
   const region = group(provider, name);
   assert(region.use.includes('WestData'), `${name} provider inclusion`);
   assert(!region.filter.startsWith('(?i)'), `${name} provider filter must match Shadowrocket case-sensitive semantics`);
   assert(region['empty-fallback'] === 'REJECT', `${name} empty provider region must fail closed`);
-  assert(!region.proxies || !region.proxies.includes('🌐 手动选择'), `${name} provider fallback must not mask filtering`);
+  assert(!region.proxies || !region.proxies.includes('👆 手动选择'), `${name} provider fallback must not mask filtering`);
 }
 
 let rejectedEmpty = false;
@@ -97,8 +97,8 @@ const mixed = context.main({
   proxies: [{ ...directInput.proxies[0], name: 'HK-01' }],
   'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
 });
-assert(group(mixed, '🌐 手动选择').use.includes('WestData'), 'unmatched static nodes must not reject a provider subscription');
-assert(group(mixed, '🌐 手动选择')['empty-fallback'] === 'REJECT', 'mixed subscription must fail closed');
+assert(group(mixed, '👆 手动选择').use.includes('WestData'), 'unmatched static nodes must not reject a provider subscription');
+assert(group(mixed, '👆 手动选择')['empty-fallback'] === 'REJECT', 'mixed subscription must fail closed');
 assert(direct.rules[0] === 'RULE-SET,Lan,DIRECT,no-resolve', 'LAN must not resolve domains before service rules');
 assert(logs.some(item => item.level === 'error' && item.message.includes('已停止生成')), 'error console output');
 
