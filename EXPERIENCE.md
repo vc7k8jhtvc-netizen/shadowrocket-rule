@@ -45,7 +45,7 @@ bash scripts/check-config.sh
 
 检查覆盖：
 
-- v2.7.0 Routing 仅包含 include / Proxy Group / Rule；
+- Routing 仅包含 include / Proxy Group / Rule；
 - Shadowrocket / Clash 关键行为一致性；
 - 当前树敏感信息与 YouTube 模块结构。
 
