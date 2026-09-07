@@ -14,7 +14,9 @@
 
 [下载 Shadowrocket_Standalone_v2.6.5.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Standalone_v2.6.5.conf)
 
-订阅只提供节点。主配置管理规则、DNS 和 WestData 入口 Host 映射，不继承订阅的 Rewrite 或 MITM。直连使用系统 DNS，IPv6 关闭。
+订阅只提供节点。主配置管理规则、DNS、WestData 入口 Host 映射以及固定的 Google CN Rewrite/MITM，不继承订阅的 Rewrite 或 MITM。直连使用系统 DNS，IPv6 关闭。
+
+主配置将 `google.cn` / `g.cn` 重定向到 `google.com`；HTTPS 重定向依赖 Shadowrocket 本机 MITM 证书。按客户端提示在设备上生成、安装并信任自己的证书；仓库不会保存 `ca-passphrase`、`ca-p12`、私钥或其他设备证书材料。
 
 ### Clash Verge Rev
 
