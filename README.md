@@ -48,7 +48,7 @@
 | 策略组 | 初始出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
-| 🤖 AI（ChatGPT / Gemini / Grok） | 🇺🇸 美国 |
+| 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft、🐟 FINAL | DIRECT |
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🌍 Global | 🚀 默认代理 |
 
