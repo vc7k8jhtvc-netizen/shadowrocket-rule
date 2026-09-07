@@ -75,7 +75,7 @@ assert(groups.size === expectedGroups.length, 'unexpected proxy group count: ' +
 for (const name of expectedGroups) assert(groups.has(name), 'missing proxy group: ' + name);
 
 const expectedDefaults = {
-  '🤖 AI': '🇺🇸 美国',
+  '🤖 AI': '🇸🇬 新加坡',
   '🍎 Apple': 'DIRECT',
   '🔎 Google': '🚀 默认代理',
   '💻 GitHub': '🚀 默认代理',
