@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const text = fs.readFileSync(path.join(root, 'YouTube.Enhance.Shadowrocket.sgmodule'), 'utf8');
-const config = fs.readFileSync(path.join(root, 'Shadowrocket_Standalone_v2.6.5.conf'), 'utf8');
+const config = fs.readFileSync(path.join(root, 'Shadowrocket_Routing_v2.7.0.conf'), 'utf8');
 const assert = (ok, message) => { if (!ok) throw new Error(message); };
 function section(name) {
   const start = text.indexOf('[' + name + ']');
