@@ -4,7 +4,7 @@
 
 ## 2026-09-08
 
-- 删除旧 Shadowrocket Standalone 配置及其专用检查逻辑；Routing 成为唯一 Shadowrocket 主路径。
+- 删除旧 Shadowrocket 配置及其专用检查逻辑；Routing 成为唯一 Shadowrocket 主路径。
 - 清理 README、维护约定与统一检查中的旧版回退内容。
 - Shadowrocket Routing 检查改为独立验证策略组、默认出口、节点筛选、规则引用与顺序，不再依赖任何旧配置基线。
 
