@@ -69,7 +69,7 @@ for (const line of proxyGroupLines) {
 const expectedGroups = [
   '🌐 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
   '🤖 AI', '🍎 Apple', '🌐 Google', '💻 GitHub', '🪟 Microsoft',
-  '📱 社交', '▶️ YouTube', '📲 Telegram', '🌍 Global', '🚀 默认代理', '🐟 FINAL'
+  '📱 社交媒体', '▶️ YouTube', '📲 Telegram', '🌍 Global', '🚀 默认代理', '🐟 FINAL'
 ];
 assert(groups.size === expectedGroups.length, 'unexpected proxy group count: ' + groups.size);
 for (const name of expectedGroups) assert(groups.has(name), 'missing proxy group: ' + name);
@@ -80,7 +80,7 @@ const expectedDefaults = {
   '🌐 Google': '🚀 默认代理',
   '💻 GitHub': '🚀 默认代理',
   '🪟 Microsoft': 'DIRECT',
-  '📱 社交': '🚀 默认代理',
+  '📱 社交媒体': '🚀 默认代理',
   '▶️ YouTube': '🚀 默认代理',
   '📲 Telegram': '🚀 默认代理',
   '🌍 Global': '🚀 默认代理',
@@ -124,7 +124,7 @@ const requiredOrder = [
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GitHub/GitHub.list,💻 GitHub',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list,📲 Telegram',
   'DOMAIN-SUFFIX,bytedance.com,DIRECT',
-  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🌐 Google',
   'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Global.list,🌍 Global',
