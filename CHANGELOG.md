@@ -2,6 +2,7 @@
 
 ## X 去广告增强模块 — 2026-09-07
 
+- 1.0.1：新增版本化入口 `X.Enhance.Shadowrocket.v1.0.1.sgmodule`，用于绕过 Shadowrocket 对旧模块 URL 的缓存；README 与自动检查均切换到该新入口，旧文件保留兼容。
 - 1.0.1：补充 `global.albtls.t.co` 的 GraphQL/Timeline 覆盖；此前仅匹配裸域 `albtls.t.co`，可能漏掉客户端实际使用的子域接口。
 - 1.0.1：启用 `binary-body-mode=1`，并增加 gzip/Brotli/二进制响应解码；修改响应时同步去除原 `Content-Encoding`/`Content-Length`，避免压缩 Body 未进入 JSON 清洗链路。
 - 新增 `X.Enhance.Shadowrocket.sgmodule`，作为 Shadowrocket 专属的 X/Twitter 去广告增强模块。

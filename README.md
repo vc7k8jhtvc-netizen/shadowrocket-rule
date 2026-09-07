@@ -5,7 +5,7 @@
 ## 文件
 
 - `Shadowrocket_Standalone_v2.6.5.conf`：当前 Shadowrocket 完整配置。
-- `X.Enhance.Shadowrocket.sgmodule`：X/Twitter 专用去广告增强模块；保守 MITM + 时间线广告项清理。
+- `X.Enhance.Shadowrocket.v1.0.1.sgmodule`：X/Twitter 专用去广告增强模块；版本化文件名用于规避 Shadowrocket 远程模块缓存。
 - `scripts/x-enhance.js`：X 模块使用的仓库自维护响应脚本。
 - `scripts/check-x-module.js`：X 模块结构与广告过滤夹具测试。
 - `Clash_Verge_Rev_Script.js`：Clash Verge Rev 订阅扩展脚本。
@@ -130,7 +130,7 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shad
 模块地址：
 
 ```text
-https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Shadowrocket.sgmodule
+https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Shadowrocket.v1.0.1.sgmodule
 ```
 
 在 Shadowrocket 的“配置 → 模块”中添加该地址，并确保当前配置已经开启 HTTPS 解密、CA 证书已安装并信任。启用后建议强制关闭 X App 再重新打开。
@@ -179,7 +179,7 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clas
 | Blackmatrix7 专项规则 | 由远程规则引用更新 |
 | 个人 `Global.list` | 两端远程规则更新后生效 |
 | 主配置版本 | 需要手动导入新版配置 |
-| Shadowrocket X 增强模块 | 模块 URL 保持不变，重新下载/更新模块后获取仓库最新版 |
+| Shadowrocket X 增强模块 | 使用版本化文件名；版本升级时更换模块 URL，避免 Shadowrocket 继续读取旧缓存 |
 
 主配置包含版本号，仓库发布新版本后不会自动覆盖本地文件。私人订阅地址仅保存在客户端中。
 

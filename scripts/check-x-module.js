@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const scriptPath = path.join(__dirname, 'x-enhance.js');
-const modulePath = path.join(root, 'X.Enhance.Shadowrocket.sgmodule');
+const modulePath = path.join(root, 'X.Enhance.Shadowrocket.v1.0.1.sgmodule');
 const { cleanPayload, promotedCandidate } = require(scriptPath);
 
 const assert = (condition, message) => {
