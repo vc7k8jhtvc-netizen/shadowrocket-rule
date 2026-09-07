@@ -115,7 +115,7 @@ function main(config) {
     {
       name: '🤖 AI',
       type: 'select',
-      proxies: ['🇺🇸 美国', '🇸🇬 新加坡', '🇯🇵 日本', '🚀 默认代理']
+      proxies: ['🇸🇬 新加坡', '🇺🇸 美国', '🇯🇵 日本', '🚀 默认代理']
     },
     {
       name: '🍎 Apple',
