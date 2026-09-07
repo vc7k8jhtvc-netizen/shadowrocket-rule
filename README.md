@@ -13,14 +13,14 @@
 3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
 4. 检查五个地区组及“🌐 手动选择”是否正常取到 WestData 节点。
 
-[下载 Shadowrocket_Routing_v2.7.0.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing_v2.7.0.conf)
+[下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf)
 
 职责边界：
 
 | 来源 | 负责内容 |
 |---|---|
 | WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 及供应商基础设置 |
-| Shadowrocket_Routing_v2.7.0.conf | Proxy Group、Rule |
+| Shadowrocket_Routing.conf | Proxy Group、Rule |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
 
 包含配置中，当前配置优先于被包含配置。已通过实机验证；更新 WestData 或分流后仍建议从连接日志核对 AI、YouTube、GitHub、中国直连与 FINAL 的实际命中。
@@ -80,12 +80,12 @@
 | 更新内容 | 操作 |
 |---|---|
 | WestData 节点 / 基础配置 | 更新原始 `WestData.conf` |
-| Shadowrocket 分流 | 更新 `Shadowrocket_Routing_v2.7.0.conf` |
+| Shadowrocket 分流 | 更新 `Shadowrocket_Routing.conf` |
 | 专项规则、Global.list | 更新远程规则 |
 | Clash 扩展脚本 | 替换脚本后更新订阅 |
 | YouTube 模块 | 更新模块及脚本资源 |
 
-地区组为空时先检查 WestData 节点命名；网站出口不对时检查已保存的策略选择与连接日志；v2.7.0 的 DNS、Host、Rewrite 或 MITM 异常时优先检查被包含的 `WestData.conf`。
+地区组为空时先检查 WestData 节点命名；网站出口不对时检查已保存的策略选择与连接日志；Routing 的 DNS、Host、Rewrite 或 MITM 异常时优先检查被包含的 `WestData.conf`。
 
 ## 维护文档
 
