@@ -48,6 +48,7 @@ assert(!group(direct, '🏝️ 台湾').proxies.includes('DIRECT'), 'region must
 assert(direct.dns && direct.dns.marker === 'subscription-dns', 'must preserve subscription DNS');
 assert(direct.hosts && direct.hosts['subscription.example'] === '192.0.2.1', 'must preserve subscription hosts');
 assert(direct.ipv6 === true, 'must not override subscription IPv6 setting');
+assert(group(direct, '🤖 AI').proxies[0] === '🇸🇬 新加坡', 'AI default must be Singapore');
 assert(direct.mode === 'rule', 'must set rule mode');
 assert(direct.profile && direct.profile['store-selected'], 'must retain selected-policy persistence');
 assert(direct['rule-providers'].Global.format === 'text', 'Global text provider');
