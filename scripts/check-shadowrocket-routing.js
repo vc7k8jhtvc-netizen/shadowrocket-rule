@@ -67,7 +67,7 @@ for (const line of proxyGroupLines) {
 }
 
 const expectedGroups = [
-  '🌐 全部节点', '🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
+  '🌐 手动选择', '🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
   '🤖 AI', '🍎 Apple', '🌐 Google', '💻 GitHub', '🪟 Microsoft',
   '📱 社交', '▶️ YouTube', '📲 Telegram', '🌍 Global', '🚀 默认代理', '🐟 FINAL'
 ];
@@ -92,7 +92,7 @@ for (const [name, expected] of Object.entries(expectedDefaults)) {
 }
 
 const expectedFilters = {
-  '🌐 全部节点': '^.+ \\| .+$',
+  '🌐 手动选择': '^.+ \\| .+$',
   '🇭🇰 香港': '^.*Hong Kong \\| .+$',
   '🇹🇼 台湾': '^.*Taiwan \\| .+$',
   '🇸🇬 新加坡': '^.*Singapore \\| .+$',
