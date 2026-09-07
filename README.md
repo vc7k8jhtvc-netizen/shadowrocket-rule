@@ -1,26 +1,39 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。两端共用 [Global.list](Global.list)，分别管理节点分组与分流规则。
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 共用 [Global.list](Global.list)，分别维护策略组与分流逻辑。
 
-## 开始使用
+## Shadowrocket
 
-先在对应客户端添加 WestData 订阅，确认节点可正常更新。地区筛选按“英文地区名 + ` | ` + 节点名”区分大小写，支持香港、台湾、新加坡、日本和美国；更换服务商后可能需要调整。
+### v2.7.0 Routing（推荐）
 
-### Shadowrocket
+新版只负责**策略组与分流规则**，基础网络能力由原始 `WestData.conf` 提供。
 
-1. 添加并更新节点订阅。
-2. 导入下列主配置，并设为当前配置。
-3. 检查五个地区组及“🌐 全部节点”中是否有节点。
+1. 在 Shadowrocket 中保留并正常更新原始 `WestData.conf`。
+2. 导入下列 Routing 配置并设为当前配置。
+3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
+4. 检查五个地区组及“🌐 全部节点”是否正常取到 WestData 节点。
+
+[下载 Shadowrocket_Routing_v2.7.0.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing_v2.7.0.conf)
+
+职责边界：
+
+| 来源 | 负责内容 |
+|---|---|
+| WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 及供应商基础设置 |
+| Shadowrocket_Routing_v2.7.0.conf | Proxy Group、Rule |
+| YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
+
+包含配置中，当前配置优先于被包含配置。首次切换后仍应从连接日志核对 AI、YouTube、GitHub、中国直连与 FINAL 的实际命中；若设备端包含行为异常，可立即切回 v2.6.5。
+
+### v2.6.5 Standalone（保留回退）
+
+旧版继续保留，不删除。它自行维护 DNS、Host、Google Rewrite/MITM 等基础参数，不依赖 `include`，适合回退或对比验证。
 
 [下载 Shadowrocket_Standalone_v2.6.5.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Standalone_v2.6.5.conf)
 
-订阅只提供节点。主配置管理规则、DNS、WestData 入口 Host 映射以及固定的 Google CN Rewrite/MITM，不继承订阅的 Rewrite 或 MITM。直连使用系统 DNS，IPv6 关闭。
+## Clash Verge Rev
 
-主配置将 `google.cn` / `g.cn` 重定向到 `google.com`；HTTPS 重定向依赖 Shadowrocket 本机 MITM 证书。按客户端提示在设备上生成、安装并信任自己的证书；仓库不会保存 `ca-passphrase`、`ca-p12`、私钥或其他设备证书材料。
-
-### Clash Verge Rev
-
-1. 添加并更新节点订阅。
+1. 添加并更新 WestData 订阅。
 2. 将下列文件设为该订阅的扩展脚本，启用后更新订阅。
 3. 检查地区组；匹配异常可查看脚本控制台。
 
@@ -45,7 +58,7 @@
 | 🍎 Apple、🪟 Microsoft、🐟 FINAL | DIRECT |
 | 🌐 Google、💻 GitHub、📱 社交、▶️ YouTube、📲 Telegram、🌍 Global | 🚀 默认代理 |
 
-配置更新通常不会覆盖客户端已保存的选择；需要时手动切换。可从连接日志核对：
+配置更新通常不会覆盖客户端已保存的选择。可从连接日志核对：
 
 | 域名 | 应命中的策略 |
 |---|---|
@@ -58,32 +71,30 @@
 
 ## 可选：YouTube 增强模块
 
-**仅适用于 Shadowrocket**，依赖主配置中的“▶️ YouTube”组。
+**仅适用于 Shadowrocket**，依赖“▶️ YouTube”策略组。
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 
-1. 在模块管理中添加上述地址并启用。
-2. 按客户端提示生成、安装并信任自己的 MITM 证书，启用 HTTPS 解密。
-3. 更新脚本资源，测试普通视频、Shorts 和 YouTube Music；异常时先停用模块，确认普通分流是否恢复。
+1. 在模块管理中添加并启用。
+2. 确保当前配置的 HTTPS 解密证书已安装并信任。
+3. 更新脚本资源后测试普通视频、Shorts 和 YouTube Music。
 
-模块固定 Maasea 的脚本版本。部分播放请求会转到第三方 `init-stream.maasea.workers.dev`，传递脚本使用的客户端密钥参数与目标播放 URL；该精确域名跟随 YouTube 出口，Worker 不加入 MITM。停用模块也会停用这些规则和脚本。
-
-脚本版本固定不代表 Worker 服务端固定。自动检查只验证结构与规则范围，去广告、画中画和后台播放仍需设备实测。
+模块固定 Maasea 的脚本版本。部分播放请求会转到第三方 `init-stream.maasea.workers.dev`；该精确域名跟随 YouTube 出口，Worker 不加入 MITM。自动检查只验证结构与规则范围，播放增强仍需设备实测。
 
 ## 更新与排查
 
 | 更新内容 | 操作 |
 |---|---|
-| 节点 | 更新客户端订阅 |
+| WestData 节点 / 基础配置 | 更新原始 `WestData.conf` |
+| Shadowrocket 分流 | 更新 `Shadowrocket_Routing_v2.7.0.conf` |
 | 专项规则、Global.list | 更新远程规则 |
-| Shadowrocket 主配置 | 重新下载或导入，确认设为当前配置 |
-| Clash 扩展脚本 | 替换为最新脚本，再更新订阅 |
-| YouTube 模块 | 更新模块及其脚本资源 |
+| Clash 扩展脚本 | 替换脚本后更新订阅 |
+| YouTube 模块 | 更新模块及脚本资源 |
 
-地区组为空时，先检查订阅更新与节点命名；网站出口不对时，检查已保存的策略选择和连接日志中的命中规则；规则未生效时，检查更新状态及原始下载地址能否访问。
+地区组为空时先检查 WestData 节点命名；网站出口不对时检查已保存的策略选择与连接日志；v2.7.0 的 DNS、Host、Rewrite 或 MITM 异常时优先检查被包含的 `WestData.conf`。
 
 ## 维护文档
 
-- [维护约定](EXPERIENCE.md)：双端同步、DNS 边界、版本与检查命令。
-- [变更记录](CHANGELOG.md)：关键版本结果。
-- [安全说明](SECURITY.md)：私人配置与凭据处理。
+- [维护约定](EXPERIENCE.md)
+- [变更记录](CHANGELOG.md)
+- [安全说明](SECURITY.md)
