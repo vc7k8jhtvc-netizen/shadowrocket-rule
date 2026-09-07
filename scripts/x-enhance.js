@@ -1,5 +1,5 @@
 // X Enhance for Shadowrocket
-// Version: 1.0.0
+// Version: 1.0.1
 // Purpose: conservatively remove clearly promoted/sponsored entries from X/Twitter timeline JSON.
 // Research reference: fkhb90/Surge x_ads_blocker-2.3.js @ 5ff967420b6a085c8285fa907e6810cfb7d25a45.
 // This implementation is independently written for this repository and intentionally avoids broad heuristics.
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
   const MAX_DEPTH = 18;
   const ARRAY_KEYS = new Set(['entries', 'items', 'moduleItems', 'items_results']);
   let removedCount = 0;
@@ -198,9 +198,64 @@
            body.indexOf('ad_metadata') !== -1;
   }
 
+  function getResponseBodyString() {
+    if (typeof $response === 'undefined' || !$response) return '';
+
+    const raw = $response.body;
+    if (typeof raw === 'string') return raw;
+    if (!raw) return '';
+
+    let bytes = raw;
+    const headers = $response.headers || {};
+    const encoding = String(
+      headers['Content-Encoding'] || headers['content-encoding'] || ''
+    ).toLowerCase();
+
+    try {
+      if (encoding.includes('br') &&
+          typeof $utils !== 'undefined' &&
+          typeof $utils.unbrotli === 'function') {
+        bytes = $utils.unbrotli(bytes);
+      } else if (encoding.includes('gzip') &&
+                 typeof $utils !== 'undefined' &&
+                 typeof $utils.ungzip === 'function') {
+        bytes = $utils.ungzip(bytes);
+      }
+
+      if (typeof TextDecoder === 'undefined') return '';
+
+      if (typeof ArrayBuffer !== 'undefined' && bytes instanceof ArrayBuffer) {
+        return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+      }
+
+      if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(bytes)) {
+        return new TextDecoder('utf-8').decode(
+          new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        );
+      }
+
+      if (typeof bytes.byteLength === 'number') {
+        return new TextDecoder('utf-8').decode(bytes);
+      }
+    } catch (error) {
+      console.log('[X Enhance ' + VERSION + '] body decode failed: ' + error);
+    }
+
+    return '';
+  }
+
+  function responseHeadersForPlainBody() {
+    const headers = Object.assign({}, ($response && $response.headers) || {});
+    for (const key of Object.keys(headers)) {
+      const lower = key.toLowerCase();
+      if (lower === 'content-encoding' || lower === 'content-length') delete headers[key];
+    }
+    return headers;
+  }
+
   function runShadowrocket() {
-    const body = typeof $response !== 'undefined' && $response ? $response.body : '';
-    if (typeof body !== 'string' || !body || !hasPromotedHint(body)) {
+    const body = getResponseBodyString();
+    if (!body || !hasPromotedHint(body)) {
       $done({});
       return;
     }
@@ -215,7 +270,7 @@
 
       const url = typeof $request !== 'undefined' && $request ? ($request.url || '') : '';
       console.log('[X Enhance ' + VERSION + '] removed ' + result.removed + ' promoted item(s): ' + url);
-      $done({ body: JSON.stringify(result.payload) });
+      $done({ headers: responseHeadersForPlainBody(), body: JSON.stringify(result.payload) });
     } catch (error) {
       console.log('[X Enhance ' + VERSION + '] passthrough after parse error: ' + error);
       $done({});
