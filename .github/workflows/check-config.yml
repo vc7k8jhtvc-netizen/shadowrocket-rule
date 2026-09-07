@@ -33,3 +33,4 @@ jobs:
           gzip -dc "${archive}" > "${RUNNER_TEMP}/mihomo"
           chmod +x "${RUNNER_TEMP}/mihomo"
           "${RUNNER_TEMP}/mihomo" -t -f "${RUNNER_TEMP}/generated-mihomo.json"
+          node scripts/check-mihomo-runtime.js "${RUNNER_TEMP}/mihomo"

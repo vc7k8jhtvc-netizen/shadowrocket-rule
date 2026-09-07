@@ -1,5 +1,16 @@
 # 版本变更记录
 
+## 审计修复 — 2026-09-07
+
+- Clash“🌐 全部节点”补充 `empty-fallback: REJECT`，防止 provider 筛选为空时隐式直连；没有 provider 且静态节点全部不符合 WestData 命名时明确报错。
+- Clash LAN 引用补充 `no-resolve`，不再为前置局域网判断主动解析域名；保留其余 DNS、Host、节点入口参数和规则顺序。
+- YouTube Shadowrocket 模块增加 `init-stream.maasea.workers.dev` 精确分流，跟随“▶️ YouTube”；不扩大到整个 workers.dev，仅启用模块时生效。
+- 为现有 YouTube 模块补充安装、停用、第三方 Worker 依赖与实测边界说明；增加模块结构、脚本固定版本与 MITM 范围检查。
+- 增加无匹配静态节点回归，以及 Mihomo 运行期 provider 空组阻断、LAN 不提前查询 DNS 的隔离验证。
+- EXPERIENCE 同步现有大小写敏感正则和按需 PR 流程。
+- 按用户要求，保留整体重建策略组并继承节点/DNS 参数的现状，不处理审计 F3 的引用依赖问题。
+- 本次为审计缺陷修复，保留现有稳定导入路径；客户端播放效果仍须实测。
+
 ## 移除 X 去广告模块 — 2026-09-07
 
 - 删除稳定版与实验版 X/Twitter 去广告模块，以及对应运行脚本和测试脚本。

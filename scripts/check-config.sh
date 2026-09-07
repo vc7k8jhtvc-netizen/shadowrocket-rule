@@ -11,6 +11,7 @@ shadow_check="$root/scripts/check-shadowrocket.js"
 dual_check="$root/scripts/check-dual-client.js"
 sensitive_check="$root/scripts/check-sensitive-data.js"
 westdata_check="$root/scripts/check-westdata-local.js"
+youtube_check="$root/scripts/check-youtube-module.js"
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 line() { grep -nF "$1" "$config" | head -n1 | cut -d: -f1; }
@@ -23,6 +24,7 @@ require_line() { [[ -n "$(line "$1")" ]] || fail "missing config line: $1"; }
 [[ -f "$dual_check" ]] || fail "missing dual-client parity checker"
 [[ -f "$sensitive_check" ]] || fail "missing sensitive-data checker"
 [[ -f "$westdata_check" ]] || fail "missing WestData local checker"
+[[ -f "$youtube_check" ]] || fail "missing YouTube module checker"
 [[ $(grep -c '^\[General\]$' "$config") -eq 1 ]] || fail "[General] section"
 [[ $(grep -c '^\[Proxy Group\]$' "$config") -eq 1 ]] || fail "[Proxy Group] section"
 [[ $(grep -c '^\[Rule\]$' "$config") -eq 1 ]] || fail "[Rule] section"
@@ -51,9 +53,11 @@ node --check "$shadow_check"
 node --check "$dual_check"
 node --check "$sensitive_check"
 node --check "$westdata_check"
+node --check "$youtube_check"
 node "$sensitive_check"
 node "$shadow_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"
+node "$youtube_check"
 
 printf 'PASS: configuration static checks\n'

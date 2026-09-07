@@ -28,7 +28,8 @@
 
 - 原始订阅负责提供和更新 `proxies` 或 `proxy-providers`。
 - 订阅扩展脚本重建策略组、规则与规则提供器；保留订阅的 DNS、Host 与节点入口参数。
-- provider 地区过滤使用忽略大小写正则；空地区使用 `REJECT`，避免 `COMPATIBLE` 隐式直连。
+- provider 地区过滤使用与 Shadowrocket 一致、区分大小写的 WestData 命名正则；地区组与全部节点组筛选为空时使用 `REJECT`，避免 `COMPATIBLE` 隐式直连。
+- 无 provider 且静态节点全部不符合命名时，停止生成配置；LAN 规则使用 `no-resolve`，不为前置局域网判断主动解析域名。
 - 订阅完全没有节点来源时停止生成配置。
 - 生成结果由 Node 行为测试及固定版本 Mihomo 内核共同验证。
 
@@ -100,7 +101,7 @@ Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维�
 3. 新增功能、架构或规则优先级变化时升级主配置版本号；已发布配置的修复或默认出口调整保留原路径。
 4. 更新 README 与 CHANGELOG。
 5. 运行 `bash scripts/check-config.sh`，完成 Shadowrocket 结构、Clash 行为、双端一致性、敏感信息与典型规则顺序检查。
-6. 通过分支/PR 的 `Check configuration` 后再进入 `main`。
+6. 普通维护可以直接更新 `main`；较大改动按需使用分支/PR，并核对 `Check configuration` 结果。
 
 ### 修改节点筛选
 
@@ -127,7 +128,7 @@ Shadowrocket 通过远程 `RULE-SET` 直接读取 `Global.list`，不需要维�
 - 遇到异常时，先区分节点状态、策略组选择、远程规则下载和规则内容问题。
 - 删除旧版本文件前确认新版配置已经验证可用；历史回退依赖 Git 记录。
 - 凭据一旦公开，必须优先在服务端撤销或轮换；Git 历史重写只用于降低残留可见性，不能恢复凭据安全性。
-- `main` 作为 raw 配置发布源，应使用 GitHub Ruleset/分支保护要求配置检查通过后才能合并。
+- `main` 作为 raw 配置发布源，发布前运行本地检查，发布后核对 CI；不强制 Ruleset/分支保护或 PR。
 
 ---
 

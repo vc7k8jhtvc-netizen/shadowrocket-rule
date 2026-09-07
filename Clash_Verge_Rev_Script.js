@@ -79,9 +79,15 @@ function main(config) {
 
   const allNodesGroup = {
     name: '🌐 全部节点',
-    type: 'select'
+    type: 'select',
+    'empty-fallback': 'REJECT'
   };
   const compatibleProxies = allProxies.filter(name => allPattern.test(name));
+  if (compatibleProxies.length === 0 && providerNames.length === 0) {
+    const message = 'proxies 中没有符合 WestData 命名规则的节点，已停止生成配置。';
+    writeLog('error', message);
+    throw new Error(message);
+  }
   if (compatibleProxies.length > 0) allNodesGroup.proxies = compatibleProxies;
   if (providerNames.length > 0) {
     allNodesGroup.use = providerNames;
@@ -224,7 +230,8 @@ function main(config) {
   // 6. 覆盖重写分流规则（严格保持优先级）
   config.rules = [
     // 1. 局域网直连
-    'RULE-SET,Lan,DIRECT',
+    // 与 Shadowrocket LAN IP 规则一致：不为前置局域网判断主动解析域名。
+    'RULE-SET,Lan,DIRECT,no-resolve',
 
     // 2. AI 专项服务（GPT / Gemini / Grok）
     // OpenAI / ChatGPT 官方通配

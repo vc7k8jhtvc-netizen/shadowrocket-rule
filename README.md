@@ -16,6 +16,9 @@
 - `scripts/check-sensitive-data.js`：当前 Git 树常见凭据格式启发式检查。
 - `scripts/check-westdata-local.js`：私人 WestData 配置的本地只读兼容性检查。
 - `SECURITY.md`：凭据暴露处置与仓库安全约束。
+- `YouTube.Enhance.Shadowrocket.sgmodule`：可选的 Shadowrocket YouTube 增强模块。
+- `scripts/check-youtube-module.js`：模块分流、固定脚本入口、匹配范围与 MITM 检查。
+- `scripts/check-mihomo-runtime.js`：使用合成配置验证 provider 空组阻断与 LAN 不提前解析 DNS。
 
 ## 当前版本
 
@@ -133,12 +136,31 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clas
 
 
 3. 将脚本作为该订阅的扩展脚本启用，然后更新订阅。
-4. 检查地区组是否识别出节点。静态 `proxies` 中未识别出的地区会回退到“🌐 全部节点”；`proxy-providers` 的地区过滤为空时使用 `REJECT`，明确阻断而不静默直连。订阅完全没有节点或节点提供器时，脚本会直接报错。
+4. 检查地区组是否识别出节点。静态 `proxies` 中未识别出的地区会回退到“🌐 全部节点”；`proxy-providers` 的地区组及全部节点组过滤为空时使用 `REJECT`。无节点来源，或没有 provider 且静态节点全部不符合命名时，脚本会直接报错。
 5. 修改 `Global.list` 后只需更新远程规则，无需重新复制域名到脚本。
 
 脚本会在 Clash Verge Rev 的脚本控制台输出执行开始、节点来源数量、各地区匹配数量、回退警告和完成摘要。为避免泄露订阅信息，日志不输出节点名称、节点参数或订阅地址。
 
 脚本保留机场订阅的 DNS、Host 与节点入口参数，不启用或改写 Fake-IP、DoH、IPv6 和 Host 映射；仅接管分流策略。
+
+Clash 的前置 LAN 规则使用 `no-resolve`，与 Shadowrocket 的 LAN IP 规则保持一致：不为局域网判断主动解析仅有域名的连接；已有目的 IP 仍可匹配。其余专项规则及 DNS 设置保持原有行为。
+
+## 可选：YouTube 增强模块（仅 Shadowrocket）
+
+模块地址：
+
+```text
+https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule
+```
+
+1. 使用本项目主配置，确认存在“▶️ YouTube”策略组。
+2. 在 Shadowrocket 的模块管理中添加上述 URL，并启用模块。
+3. 按客户端提示生成、安装并信任自己的 MITM 证书，启用 HTTPS 解密；不要使用他人提供的私人证书。
+4. 更新模块引用的脚本资源，检查普通视频、Shorts 和 YouTube Music 的播放与日志。异常时先停用此模块，再确认普通 YouTube 分流是否正常。
+
+模块固定 Maasea 的 GitHub 脚本提交，但部分 Onesie 播放请求会重定向到第三方 `init-stream.maasea.workers.dev`，并传递脚本使用的客户端密钥参数与目标播放 URL。模块仅将该精确域名交给“▶️ YouTube”，不代理整个 `workers.dev`，不为 Worker 增加 MITM。停用模块后，其规则及脚本不再生效。
+
+固定脚本版本不能固定 Worker 服务端实现。本项目自动检查验证模块结构及规则范围，不代表已在你的设备上确认去广告、画中画或后台播放可用；这些效果仍需客户端实测。
 
 ## DNS 能力
 
@@ -221,7 +243,9 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Glob
 - 规则引用的策略组名称完全一致
 - 没有不必要的重复规则或前置覆盖
 - Shadowrocket 与 Clash Verge Rev 均能正确读取 `Global.list`
-- Clash Verge Rev 静态节点空地区回退“🌐 全部节点”，provider 空地区使用 `REJECT`；空订阅停止生成配置
+- Clash Verge Rev 静态节点空地区回退“🌐 全部节点”，provider 空地区及空全部节点组使用 `REJECT`；无 provider 且无匹配静态节点时停止生成配置
+- Clash LAN 不为域名连接提前触发 DNS 查询；CI 使用隔离的本地 DNS 接收器和合成 provider 验证行为
+- YouTube 模块 Worker 精确域名跟随 YouTube 出口；自动检查不能替代设备播放验证
 - Clash Verge Rev 保留订阅 DNS/Host 与节点入口参数，不应出现脚本注入的 Host 或 DNS 覆盖
 - Clash Verge Rev 同步使用 `China_Domain`，覆盖 Bilibili 等仅存在于中国域名集的国内服务
 - 地区筛选能够匹配当前订阅的节点命名

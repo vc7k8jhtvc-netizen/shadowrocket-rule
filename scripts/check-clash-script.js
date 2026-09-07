@@ -68,6 +68,7 @@ const provider = context.main({
   'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
 });
 assert(group(provider, '🌐 全部节点').use.includes('WestData'), 'proxy-provider support');
+assert(group(provider, '🌐 全部节点')['empty-fallback'] === 'REJECT', 'all-node provider group must fail closed');
 assert(group(provider, '🌐 全部节点').filter === '^.+ \\| .+$', 'all-node provider filter must match Shadowrocket');
 for (const name of ['🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
   const region = group(provider, name);
@@ -84,6 +85,21 @@ try {
   rejectedEmpty = /proxies/.test(error.message);
 }
 assert(rejectedEmpty, 'empty subscriptions must fail closed');
+for (const name of ['HK-01', '剩余流量：10GB']) {
+  const input = { proxies: [{ ...directInput.proxies[0], name }], rules: ['MATCH,DIRECT'] };
+  const before = JSON.stringify(input);
+  let rejected = false;
+  try { context.main(input); } catch (error) { rejected = /WestData/.test(error.message); }
+  assert(rejected, 'subscriptions with no matching static nodes must be rejected');
+  assert(JSON.stringify(input) === before, 'rejected subscription must not be partially rewritten');
+}
+const mixed = context.main({
+  proxies: [{ ...directInput.proxies[0], name: 'HK-01' }],
+  'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
+});
+assert(group(mixed, '🌐 全部节点').use.includes('WestData'), 'unmatched static nodes must not reject a provider subscription');
+assert(group(mixed, '🌐 全部节点')['empty-fallback'] === 'REJECT', 'mixed subscription must fail closed');
+assert(direct.rules[0] === 'RULE-SET,Lan,DIRECT,no-resolve', 'LAN must not resolve domains before service rules');
 assert(logs.some(item => item.level === 'error' && item.message.includes('已停止生成')), 'error console output');
 
 const ruleSetNames = new Set(Object.keys(direct['rule-providers']));

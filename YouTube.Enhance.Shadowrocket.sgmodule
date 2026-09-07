@@ -5,6 +5,8 @@
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
 
 [Rule]
+# Onesie 播放依赖与 YouTube 共用出口；仅代理该精确主机。
+DOMAIN,init-stream.maasea.workers.dev,▶️ YouTube
 # 强制 YouTube 相关流量回退 TCP/TLS，便于 Shadowrocket MITM/脚本处理
 AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP)),REJECT
 AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP)),REJECT
