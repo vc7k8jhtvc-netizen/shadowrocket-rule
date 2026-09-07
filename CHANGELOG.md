@@ -2,6 +2,8 @@
 
 ## X 去广告增强模块 — 2026-09-07
 
+- 1.0.1：补充 `global.albtls.t.co` 的 GraphQL/Timeline 覆盖；此前仅匹配裸域 `albtls.t.co`，可能漏掉客户端实际使用的子域接口。
+- 1.0.1：启用 `binary-body-mode=1`，并增加 gzip/Brotli/二进制响应解码；修改响应时同步去除原 `Content-Encoding`/`Content-Length`，避免压缩 Body 未进入 JSON 清洗链路。
 - 新增 `X.Enhance.Shadowrocket.sgmodule`，作为 Shadowrocket 专属的 X/Twitter 去广告增强模块。
 - 新增仓库自维护 `scripts/x-enhance.js`：解析 GraphQL/Timeline JSON，仅依据 `promotedMetadata`、`advertiser_results`、Promoted/Sponsored 标记、明确广告 entryId 等强信号删除广告条目。
 - 不把 `monetizable` 等模糊字段作为独立广告依据，避免误删普通可变现视频或正常时间线内容。
