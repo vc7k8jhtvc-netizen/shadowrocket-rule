@@ -12,7 +12,7 @@
 
 ## 2026-09-07 · v2.7.0
 
-- 新增 `Shadowrocket_Routing_v2.7.0.conf`：只维护 `include = WestData.conf`、策略组与分流规则。
+- 新增 `Shadowrocket_Routing.conf`：只维护 `include = WestData.conf`、策略组与分流规则。
 - 节点、General / DNS / TUN、Host、Google Rewrite/MITM 等基础能力直接继承原始 WestData 配置，不在 Routing 配置中复制。
 - Shadowrocket / Clash 双端一致性检查以 Routing 为基准；新增职责边界检查，防止基础参数进入轻量配置。
 - WestData 私人本地检查验证节点命名、Host、Google Rewrite/MITM 等底座依赖，但不输出凭据。
