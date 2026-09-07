@@ -1,6 +1,6 @@
 /**
  * Clash Verge Rev 订阅扩展脚本 (Script)
- * 基于 shadowrocket-rule v2.6.5 策略转换
+ * 与 Shadowrocket Routing 策略保持一致
  *
  * 原理与优势：
  * 1. 继承原项目架构：“节点来源与分流逻辑分离”。
