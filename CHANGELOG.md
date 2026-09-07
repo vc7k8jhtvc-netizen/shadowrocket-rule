@@ -4,6 +4,7 @@
 
 ## 2026-09-08
 
+- `🌐 Google` 重命名为 `🔎 Google`，`🌐 手动选择` 重命名为 `👆 手动选择`；仅调整策略组显示名称与引用，分流行为不变。
 - `📲 Telegram` 重命名为 `✈️ Telegram`；仅调整策略组显示名称，规则与默认出口不变。
 - `📱 社交` 重命名为 `📱 社交媒体`，同步 Shadowrocket / Clash 及检查器；规则范围与默认出口不变。
 - Shadowrocket 主配置改为固定文件名 `Shadowrocket_Routing.conf`，版本号仅保留在配置头部注释；以后应用内更新可持续使用同一 Raw URL。
