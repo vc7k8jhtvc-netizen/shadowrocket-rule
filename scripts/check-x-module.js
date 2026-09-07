@@ -16,8 +16,11 @@ const mitmLine = moduleLines.find(line => line.startsWith('hostname ='));
 assert(mitmLine, 'X module missing MITM hostname line');
 assert(mitmLine.includes('%APPEND%'), 'X module MITM must append instead of overwrite');
 assert(mitmLine.includes('api.x.com'), 'X module must include api.x.com');
+assert(mitmLine.includes('global.albtls.t.co'), 'X module must include global.albtls.t.co');
 assert(!mitmLine.includes('api.twitter.com'), 'X module must not MITM api.twitter.com');
 assert(moduleText.includes('scripts/x-enhance.js'), 'X module must use repository-owned script');
+assert(moduleText.includes('binary-body-mode=1'), 'X module must enable binary body handling');
+assert(moduleText.includes('(?:global\\.)?albtls\\.t\\.co'), 'X module pattern must cover global.albtls.t.co');
 assert(moduleText.includes('DOMAIN,ads-api.twitter.com,REJECT'), 'X module missing ads-api block');
 assert(moduleText.includes('DOMAIN-SUFFIX,ads-twitter.com,REJECT'), 'X module missing ads-twitter block');
 
