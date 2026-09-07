@@ -138,7 +138,7 @@ function main(config) {
       proxies: ['DIRECT', '🚀 默认代理', '🇺🇸 美国', '🌐 手动选择']
     },
     {
-      name: '📱 社交',
+      name: '📱 社交媒体',
       type: 'select',
       proxies: ['🚀 默认代理', '🇺🇸 美国', '🇸🇬 新加坡', '🇯🇵 日本']
     },
@@ -279,9 +279,9 @@ function main(config) {
     'DOMAIN-SUFFIX,bytedance.net,DIRECT',
 
     // 社交服务
-    'RULE-SET,Twitter,📱 社交',
-    'RULE-SET,Instagram,📱 社交',
-    'RULE-SET,TikTok,📱 社交',
+    'RULE-SET,Twitter,📱 社交媒体',
+    'RULE-SET,Instagram,📱 社交媒体',
+    'RULE-SET,TikTok,📱 社交媒体',
 
     // 视频与搜索
     'RULE-SET,YouTube,▶️ YouTube',
