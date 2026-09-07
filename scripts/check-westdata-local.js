@@ -20,6 +20,19 @@ const proxyProtocols = new Set([
   'snell', 'hysteria', 'hysteria2', 'tuic', 'wireguard'
 ]);
 
+const general = new Map();
+for (const raw of section('General').split(/\r?\n/)) {
+  const line = raw.trim();
+  if (!line || line.startsWith('#')) continue;
+  const eq = line.indexOf('=');
+  if (eq === -1) continue;
+  general.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
+}
+if (general.get('use-local-host-item-for-proxy') !== 'true') {
+  console.error('FAIL: WestData base no longer enables proxy Host mappings');
+  process.exit(1);
+}
+
 const names = [];
 for (const raw of section('Proxy').split(/\r?\n/)) {
   const line = raw.trim();
@@ -81,6 +94,28 @@ for (const [source, target] of expectedHosts) {
 }
 console.log('Required Host mappings: ' + hostMatches + '/' + expectedHosts.size);
 if (hostMatches !== expectedHosts.size) failed = true;
+
+const rewriteLines = section('URL Rewrite')
+  .split(/\r?\n/)
+  .map(line => line.trim())
+  .filter(line => line && !line.startsWith('#'));
+const hasGoogleCnRewrite = rewriteLines.some(line => line.includes('google.cn') && line.includes('google.com'));
+const hasGCnRewrite = rewriteLines.some(line => /(^|[^a-z])g\.cn/i.test(line) && line.includes('google.com'));
+console.log('Google CN rewrites: ' + ((hasGoogleCnRewrite && hasGCnRewrite) ? '2/2' : 'incomplete'));
+if (!hasGoogleCnRewrite || !hasGCnRewrite) failed = true;
+
+const mitm = new Map();
+for (const raw of section('MITM').split(/\r?\n/)) {
+  const line = raw.trim();
+  if (!line || line.startsWith('#')) continue;
+  const eq = line.indexOf('=');
+  if (eq === -1) continue;
+  mitm.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
+}
+const mitmHosts = (mitm.get('hostname') || '').split(',').map(item => item.trim());
+const mitmReady = mitm.get('enable') === 'true' && mitmHosts.includes('*.google.cn');
+console.log('Google CN MITM base: ' + (mitmReady ? 'present' : 'missing'));
+if (!mitmReady) failed = true;
 
 if (failed) {
   console.error('FAIL: local WestData configuration is not fully compatible with the current Shadowrocket assumptions');
