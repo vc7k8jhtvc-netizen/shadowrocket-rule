@@ -11,6 +11,9 @@ shadow_check="$root/scripts/check-shadowrocket.js"
 dual_check="$root/scripts/check-dual-client.js"
 sensitive_check="$root/scripts/check-sensitive-data.js"
 westdata_check="$root/scripts/check-westdata-local.js"
+x_module="$root/X.Enhance.Shadowrocket.sgmodule"
+x_script="$root/scripts/x-enhance.js"
+x_check="$root/scripts/check-x-module.js"
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 line() { grep -nF "$1" "$config" | head -n1 | cut -d: -f1; }
@@ -23,6 +26,9 @@ require_line() { [[ -n "$(line "$1")" ]] || fail "missing config line: $1"; }
 [[ -f "$dual_check" ]] || fail "missing dual-client parity checker"
 [[ -f "$sensitive_check" ]] || fail "missing sensitive-data checker"
 [[ -f "$westdata_check" ]] || fail "missing WestData local checker"
+[[ -f "$x_module" ]] || fail "missing X Enhance module"
+[[ -f "$x_script" ]] || fail "missing X Enhance runtime script"
+[[ -f "$x_check" ]] || fail "missing X Enhance checker"
 [[ $(grep -c '^\[General\]$' "$config") -eq 1 ]] || fail "[General] section"
 [[ $(grep -c '^\[Proxy Group\]$' "$config") -eq 1 ]] || fail "[Proxy Group] section"
 [[ $(grep -c '^\[Rule\]$' "$config") -eq 1 ]] || fail "[Rule] section"
@@ -42,6 +48,7 @@ final_line=$(line 'FINAL,🐟 FINAL')
 
 grep -qF 'Shadowrocket_Standalone_v2.6.5.conf' "$readme" || fail 'README primary config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
+grep -qF 'X.Enhance.Shadowrocket.sgmodule' "$readme" || fail 'README X module reference'
 grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Standalone_v2.6.5.conf' "$readme" || fail 'README import URL'
 ! grep -Eq '^DOMAIN-SUFFIX,npmjs\.(com|org)$' "$global" || fail 'npm must not duplicate GitHub rules'
 
@@ -51,9 +58,12 @@ node --check "$shadow_check"
 node --check "$dual_check"
 node --check "$sensitive_check"
 node --check "$westdata_check"
+node --check "$x_script"
+node --check "$x_check"
 node "$sensitive_check"
 node "$shadow_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"
+node "$x_check"
 
 printf 'PASS: configuration static checks\n'

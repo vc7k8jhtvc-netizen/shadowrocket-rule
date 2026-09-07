@@ -5,6 +5,9 @@
 ## 文件
 
 - `Shadowrocket_Standalone_v2.6.5.conf`：当前 Shadowrocket 完整配置。
+- `X.Enhance.Shadowrocket.sgmodule`：X/Twitter 专用去广告增强模块；保守 MITM + 时间线广告项清理。
+- `scripts/x-enhance.js`：X 模块使用的仓库自维护响应脚本。
+- `scripts/check-x-module.js`：X 模块结构与广告过滤夹具测试。
 - `Clash_Verge_Rev_Script.js`：Clash Verge Rev 订阅扩展脚本。
 - `Global.list`：两个客户端共用的个人 Global 规则集。
 - `EXPERIENCE.md`：Shadowrocket 分流架构与维护原则。
@@ -22,7 +25,7 @@
 - Shadowrocket：`v2.6.5`（唯一受支持的稳定配置路径）
 - Clash Verge Rev：订阅扩展脚本 `Clash_Verge_Rev_Script.js`
 
-新增功能、架构、策略组或规则优先级变化时，需要同步检查 Shadowrocket 与 Clash Verge Rev 两端；仅修改 `Global.list` 时两个客户端通过远程规则共同更新。
+新增主分流功能、架构、策略组或规则优先级变化时，需要同步检查 Shadowrocket 与 Clash Verge Rev 两端；仅修改 `Global.list` 时两个客户端通过远程规则共同更新。仅属于单客户端能力的扩展模块（例如 Shadowrocket MITM/脚本）不做无意义的双端复制，但必须明确标注适用范围。
 
 `Shadowrocket_Standalone_v2.6.5.conf` 当前同时承担稳定导入路径的职责：不破坏既有架构的规则修复、默认出口修正和兼容性回补可以保留原路径；DNS 架构、策略组结构、节点机制或其他不兼容变化应升级版本。
 
@@ -122,6 +125,26 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shad
 
 本配置不继承订阅中的规则、DNS、Rewrite 或 MITM；主配置包含 WestData 节点入口 Host 映射。
 
+### X 去广告增强模块（可选，仅 Shadowrocket）
+
+模块地址：
+
+```text
+https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Shadowrocket.sgmodule
+```
+
+在 Shadowrocket 的“配置 → 模块”中添加该地址，并确保当前配置已经开启 HTTPS 解密、CA 证书已安装并信任。启用后建议强制关闭 X App 再重新打开。
+
+模块采用两层处理：
+
+- 域名层只拒绝用途明确的 X/Twitter 广告端点，不默认封锁 `scribe`、`p`、`analytics`、`syndication` 等可能承担正常功能或统计用途的主机。
+- 响应层只清理可成功解密的 `x.com`、`api.x.com`、`twitter.com` 与 `albtls.t.co` GraphQL/Timeline JSON 中具有明确 Promoted/Sponsored 证据的条目。
+- 不使用 `monetizable` 等可能命中普通内容的模糊字段作为单独广告依据，优先降低误杀。
+- **明确不对 `api.twitter.com` 启用 MITM。** iOS 原生 X 的该主机可能存在证书绑定；如果某个版本的首页流量只走该主机，对应广告无法由本模块修改。不要为了追求覆盖率自行把它加入 MITM，否则可能导致时间线加载失败。
+- 脚本只在实际删除广告项时改写响应；JSON 解析异常时直接放行原响应。
+
+该模块不改变 X 的分流策略；X 仍由主配置中的 `📱 社交` 规则处理。
+
 ## Clash Verge Rev 使用方法
 
 1. 在 Clash Verge Rev 中添加并确认机场订阅可正常更新。
@@ -156,6 +179,7 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clas
 | Blackmatrix7 专项规则 | 由远程规则引用更新 |
 | 个人 `Global.list` | 两端远程规则更新后生效 |
 | 主配置版本 | 需要手动导入新版配置 |
+| Shadowrocket X 增强模块 | 模块 URL 保持不变，重新下载/更新模块后获取仓库最新版 |
 
 主配置包含版本号，仓库发布新版本后不会自动覆盖本地文件。私人订阅地址仅保存在客户端中。
 
@@ -201,6 +225,7 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Glob
 
 - 仅新增或删除 Global 域名：只修改 `Global.list`，不得在 Clash 脚本中复制。
 - 修改专项服务规则、策略组、节点筛选或规则顺序：同步修改并检查 Shadowrocket 主配置与 Clash Verge Rev 脚本。
+- 修改 Shadowrocket 专属 MITM/脚本模块：不要求同步复制到 Clash；必须保持主分流语义不变，并同步更新模块测试、README 与 CHANGELOG。
 - DNS 架构、策略组结构、节点机制或其他不兼容变化：升级版本号，并同步更新 README 与 CHANGELOG；兼容性修复和默认出口修正可保留当前稳定配置路径，但仍必须记录 CHANGELOG。
 - 不重新引入未经验证的大型 Global 规则或第三方规则镜像。
 - 不将私人节点订阅地址提交到仓库。

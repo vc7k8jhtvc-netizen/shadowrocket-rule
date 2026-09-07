@@ -1,5 +1,14 @@
 # 版本变更记录
 
+## X 去广告增强模块 — 2026-09-07
+
+- 新增 `X.Enhance.Shadowrocket.sgmodule`，作为 Shadowrocket 专属的 X/Twitter 去广告增强模块。
+- 新增仓库自维护 `scripts/x-enhance.js`：解析 GraphQL/Timeline JSON，仅依据 `promotedMetadata`、`advertiser_results`、Promoted/Sponsored 标记、明确广告 entryId 等强信号删除广告条目。
+- 不把 `monetizable` 等模糊字段作为独立广告依据，避免误删普通可变现视频或正常时间线内容。
+- 域名层只拦截 `ads-api.twitter.com`、`ads-bidder-api.twitter.com`、`ads-twitter.com`、`ads.twitter.com`、`static-ads.twitter.com` 等用途明确的广告端点，不默认封锁统计/嵌入相关主机。
+- MITM 仅覆盖显式可处理主机，并明确排除 `api.twitter.com`，降低 iOS X 原生 App 证书绑定导致时间线断流的风险。
+- 新增 `scripts/check-x-module.js`，验证 MITM 安全约束及正常推文、游标、NoDisclosure 趋势不误删，同时覆盖 Promoted Tweet、模块内广告项和 Promoted Trend 删除。
+- X 模块及其测试接入 `scripts/check-config.sh`。
 ## 维护流程简化 — 2026-09-06
 
 - 普通维护允许直接更新 `main`，不再强制先走分支/PR。
