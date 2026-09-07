@@ -11,7 +11,7 @@ shadow_check="$root/scripts/check-shadowrocket.js"
 dual_check="$root/scripts/check-dual-client.js"
 sensitive_check="$root/scripts/check-sensitive-data.js"
 westdata_check="$root/scripts/check-westdata-local.js"
-x_module="$root/X.Enhance.Shadowrocket.sgmodule"
+x_module="$root/X.Enhance.Shadowrocket.v1.0.1.sgmodule"
 x_script="$root/scripts/x-enhance.js"
 x_check="$root/scripts/check-x-module.js"
 
@@ -48,7 +48,7 @@ final_line=$(line 'FINAL,🐟 FINAL')
 
 grep -qF 'Shadowrocket_Standalone_v2.6.5.conf' "$readme" || fail 'README primary config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
-grep -qF 'X.Enhance.Shadowrocket.sgmodule' "$readme" || fail 'README X module reference'
+grep -qF 'X.Enhance.Shadowrocket.v1.0.1.sgmodule' "$readme" || fail 'README X module reference'
 grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Standalone_v2.6.5.conf' "$readme" || fail 'README import URL'
 ! grep -Eq '^DOMAIN-SUFFIX,npmjs\.(com|org)$' "$global" || fail 'npm must not duplicate GitHub rules'
 
