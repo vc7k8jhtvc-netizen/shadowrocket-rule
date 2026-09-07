@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-routing_config="$root/Shadowrocket_Routing_v2.7.0.conf"
+routing_config="$root/Shadowrocket_Routing.conf"
 readme="$root/README.md"
 global="$root/Global.list"
 clash_script="$root/Clash_Verge_Rev_Script.js"
@@ -24,9 +24,9 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$westdata_check" ]] || fail "missing WestData local checker"
 [[ -f "$youtube_check" ]] || fail "missing YouTube module checker"
 
-grep -qF 'Shadowrocket_Routing_v2.7.0.conf' "$readme" || fail 'README routing config reference'
+grep -qF 'Shadowrocket_Routing.conf' "$readme" || fail 'README routing config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
-grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing_v2.7.0.conf' "$readme" || fail 'README routing import URL'
+grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf' "$readme" || fail 'README routing import URL'
 ! grep -Eq '^DOMAIN-SUFFIX,npmjs\.(com|org)$' "$global" || fail 'npm must not duplicate GitHub rules'
 
 command -v node >/dev/null 2>&1 || fail 'node is required for configuration checks'
