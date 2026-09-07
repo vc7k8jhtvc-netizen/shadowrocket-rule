@@ -50,7 +50,7 @@
 | 🚀 默认代理 | 🇭🇰 香港 |
 | 🤖 AI（ChatGPT / Gemini / Grok） | 🇺🇸 美国 |
 | 🍎 Apple、🪟 Microsoft、🐟 FINAL | DIRECT |
-| 🌐 Google、💻 GitHub、📱 社交、▶️ YouTube、📲 Telegram、🌍 Global | 🚀 默认代理 |
+| 🌐 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、📲 Telegram、🌍 Global | 🚀 默认代理 |
 
 配置更新通常不会覆盖客户端已保存的选择。可从连接日志核对：
 
