@@ -5,9 +5,6 @@
 ## 文件
 
 - `Shadowrocket_Standalone_v2.6.5.conf`：当前 Shadowrocket 完整配置。
-- `X.Enhance.Shadowrocket.v1.0.1.sgmodule`：X/Twitter 专用去广告增强模块；版本化文件名用于规避 Shadowrocket 远程模块缓存。
-- `scripts/x-enhance.js`：X 模块使用的仓库自维护响应脚本。
-- `scripts/check-x-module.js`：X 模块结构与广告过滤夹具测试。
 - `Clash_Verge_Rev_Script.js`：Clash Verge Rev 订阅扩展脚本。
 - `Global.list`：两个客户端共用的个人 Global 规则集。
 - `EXPERIENCE.md`：Shadowrocket 分流架构与维护原则。
@@ -125,40 +122,6 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shad
 
 本配置不继承订阅中的规则、DNS、Rewrite 或 MITM；主配置包含 WestData 节点入口 Host 映射。
 
-### X 去广告增强模块（可选，仅 Shadowrocket）
-
-模块地址：
-
-```text
-https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Shadowrocket.v1.0.1.sgmodule
-```
-
-在 Shadowrocket 的“配置 → 模块”中添加该地址，并确保当前配置已经开启 HTTPS 解密、CA 证书已安装并信任。启用后建议强制关闭 X App 再重新打开。
-
-模块采用两层处理：
-
-- 域名层只拒绝用途明确的 X/Twitter 广告端点，不默认封锁 `scribe`、`p`、`analytics`、`syndication` 等可能承担正常功能或统计用途的主机。
-- 响应层只清理可成功解密的 `x.com`、`api.x.com`、`twitter.com`、`albtls.t.co` 与 `global.albtls.t.co` GraphQL/Timeline JSON 中具有明确 Promoted/Sponsored 证据的条目。
-- 不使用 `monetizable` 等可能命中普通内容的模糊字段作为单独广告依据，优先降低误杀。
-- **明确不对 `api.twitter.com` 启用 MITM。** iOS 原生 X 的该主机可能存在证书绑定；如果某个版本的首页流量只走该主机，对应广告无法由本模块修改。不要为了追求覆盖率自行把它加入 MITM，否则可能导致时间线加载失败。
-- 脚本兼容字符串及 gzip/Brotli 二进制响应，只在实际删除广告项时改写响应；解码或 JSON 解析异常时直接放行原响应。
-
-该模块不改变 X 的分流策略；X 仍由主配置中的 `📱 社交` 规则处理。
-
-#### X `api.twitter.com` 实验模块（高风险，仅用于诊断）
-
-当稳定版无法去除 iOS 原生 X 首页广告，且 Shadowrocket 最近请求明确出现 `api.twitter.com` 时，可临时启用：
-
-```text
-https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Experimental.api-twitter.v0.1.0.sgmodule
-```
-
-实验模块仅增加对 `api.twitter.com/graphql/` 的处理：请求阶段把已有的 `includePromotedContent=true` 改为 `false`，响应阶段复用稳定版广告清理脚本。不会修改认证头、Cookie、Host 或其他 GraphQL 参数。
-
-**风险：** iOS 原生 X 可能对 `api.twitter.com` 使用 certificate pinning。若启用后出现首页空白、刷新失败、网络错误或 Shadowrocket 显示 MITM failed，应立即停用该实验模块并强制退出 X 后重开。该现象本身即可证明普通 Shadowrocket MITM 无法处理当前原生 App 的该主机。
-
-建议与稳定版同时启用；实验版只补充 `api.twitter.com`，不会替代稳定版对其他可解密主机的处理。
-
 ## Clash Verge Rev 使用方法
 
 1. 在 Clash Verge Rev 中添加并确认机场订阅可正常更新。
@@ -193,7 +156,6 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clas
 | Blackmatrix7 专项规则 | 由远程规则引用更新 |
 | 个人 `Global.list` | 两端远程规则更新后生效 |
 | 主配置版本 | 需要手动导入新版配置 |
-| Shadowrocket X 增强模块 | 使用版本化文件名；版本升级时更换模块 URL，避免 Shadowrocket 继续读取旧缓存 |
 
 主配置包含版本号，仓库发布新版本后不会自动覆盖本地文件。私人订阅地址仅保存在客户端中。
 
