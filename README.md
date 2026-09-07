@@ -11,7 +11,7 @@
 1. 在 Shadowrocket 中保留并正常更新原始 `WestData.conf`。
 2. 导入下列 Routing 配置并设为当前配置。
 3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
-4. 检查五个地区组及“🌐 全部节点”是否正常取到 WestData 节点。
+4. 检查五个地区组及“🌐 手动选择”是否正常取到 WestData 节点。
 
 [下载 Shadowrocket_Routing_v2.7.0.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing_v2.7.0.conf)
 
@@ -37,7 +37,7 @@
 
 | 节点情况 | 处理方式 |
 |---|---|
-| 仅静态节点，某地区为空 | 该地区回退到“🌐 全部节点” |
+| 仅静态节点，某地区为空 | 该地区回退到“🌐 手动选择” |
 | 含 provider，地区组或全部节点组筛选为空 | 使用 REJECT 阻断 |
 | 无节点来源，或无 provider 且没有符合命名的静态节点 | 停止生成并报错 |
 
