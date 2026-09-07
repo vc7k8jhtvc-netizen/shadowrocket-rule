@@ -67,8 +67,8 @@ for (const line of proxyGroupLines) {
 }
 
 const expectedGroups = [
-  '🌐 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
-  '🤖 AI', '🍎 Apple', '🌐 Google', '💻 GitHub', '🪟 Microsoft',
+  '👆 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
+  '🤖 AI', '🍎 Apple', '🔎 Google', '💻 GitHub', '🪟 Microsoft',
   '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🚀 默认代理', '🐟 FINAL'
 ];
 assert(groups.size === expectedGroups.length, 'unexpected proxy group count: ' + groups.size);
@@ -77,7 +77,7 @@ for (const name of expectedGroups) assert(groups.has(name), 'missing proxy group
 const expectedDefaults = {
   '🤖 AI': '🇺🇸 美国',
   '🍎 Apple': 'DIRECT',
-  '🌐 Google': '🚀 默认代理',
+  '🔎 Google': '🚀 默认代理',
   '💻 GitHub': '🚀 默认代理',
   '🪟 Microsoft': 'DIRECT',
   '📱 社交媒体': '🚀 默认代理',
@@ -92,7 +92,7 @@ for (const [name, expected] of Object.entries(expectedDefaults)) {
 }
 
 const expectedFilters = {
-  '🌐 手动选择': '^.+ \\| .+$',
+  '👆 手动选择': '^.+ \\| .+$',
   '🇭🇰 香港': '^.*Hong Kong \\| .+$',
   '🏝️ 台湾': '^.*Taiwan \\| .+$',
   '🇸🇬 新加坡': '^.*Singapore \\| .+$',
@@ -126,7 +126,7 @@ const requiredOrder = [
   'DOMAIN-SUFFIX,bytedance.com,DIRECT',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube',
-  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🌐 Google',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',
   'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Global.list,🌍 Global',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list,DIRECT',
