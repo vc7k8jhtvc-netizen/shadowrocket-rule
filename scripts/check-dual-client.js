@@ -52,7 +52,7 @@ const clash = context.main({
 
 const clashGroups = new Map(clash['proxy-groups'].map(group => [group.name, group]));
 const parityGroups = [
-  '🚀 默认代理', '🤖 AI', '🍎 Apple', '🌐 Google', '💻 GitHub', '🪟 Microsoft',
+  '🚀 默认代理', '🤖 AI', '🍎 Apple', '🔎 Google', '💻 GitHub', '🪟 Microsoft',
   '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🐟 FINAL'
 ];
 
