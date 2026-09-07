@@ -4,7 +4,7 @@
 
 ## Shadowrocket
 
-### v2.7.0 Routing（推荐）
+### Shadowrocket Routing
 
 新版只负责**策略组与分流规则**，基础网络能力由原始 `WestData.conf` 提供。
 
@@ -23,13 +23,7 @@
 | Shadowrocket_Routing_v2.7.0.conf | Proxy Group、Rule |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
 
-包含配置中，当前配置优先于被包含配置。首次切换后仍应从连接日志核对 AI、YouTube、GitHub、中国直连与 FINAL 的实际命中；若设备端包含行为异常，可立即切回 v2.6.5。
-
-### v2.6.5 Standalone（保留回退）
-
-旧版继续保留，不删除。它自行维护 DNS、Host、Google Rewrite/MITM 等基础参数，不依赖 `include`，适合回退或对比验证。
-
-[下载 Shadowrocket_Standalone_v2.6.5.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Standalone_v2.6.5.conf)
+包含配置中，当前配置优先于被包含配置。已通过实机验证；更新 WestData 或分流后仍建议从连接日志核对 AI、YouTube、GitHub、中国直连与 FINAL 的实际命中。
 
 ## Clash Verge Rev
 
