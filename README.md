@@ -145,6 +145,20 @@ https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.En
 
 该模块不改变 X 的分流策略；X 仍由主配置中的 `📱 社交` 规则处理。
 
+#### X `api.twitter.com` 实验模块（高风险，仅用于诊断）
+
+当稳定版无法去除 iOS 原生 X 首页广告，且 Shadowrocket 最近请求明确出现 `api.twitter.com` 时，可临时启用：
+
+```text
+https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/X.Enhance.Experimental.api-twitter.v0.1.0.sgmodule
+```
+
+实验模块仅增加对 `api.twitter.com/graphql/` 的处理：请求阶段把已有的 `includePromotedContent=true` 改为 `false`，响应阶段复用稳定版广告清理脚本。不会修改认证头、Cookie、Host 或其他 GraphQL 参数。
+
+**风险：** iOS 原生 X 可能对 `api.twitter.com` 使用 certificate pinning。若启用后出现首页空白、刷新失败、网络错误或 Shadowrocket 显示 MITM failed，应立即停用该实验模块并强制退出 X 后重开。该现象本身即可证明普通 Shadowrocket MITM 无法处理当前原生 App 的该主机。
+
+建议与稳定版同时启用；实验版只补充 `api.twitter.com`，不会替代稳定版对其他可解密主机的处理。
+
 ## Clash Verge Rev 使用方法
 
 1. 在 Clash Verge Rev 中添加并确认机场订阅可正常更新。

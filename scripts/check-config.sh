@@ -14,6 +14,9 @@ westdata_check="$root/scripts/check-westdata-local.js"
 x_module="$root/X.Enhance.Shadowrocket.v1.0.1.sgmodule"
 x_script="$root/scripts/x-enhance.js"
 x_check="$root/scripts/check-x-module.js"
+x_experimental_module="$root/X.Enhance.Experimental.api-twitter.v0.1.0.sgmodule"
+x_experimental_script="$root/scripts/x-experimental-request.js"
+x_experimental_check="$root/scripts/check-x-experimental.js"
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 line() { grep -nF "$1" "$config" | head -n1 | cut -d: -f1; }
@@ -29,6 +32,9 @@ require_line() { [[ -n "$(line "$1")" ]] || fail "missing config line: $1"; }
 [[ -f "$x_module" ]] || fail "missing X Enhance module"
 [[ -f "$x_script" ]] || fail "missing X Enhance runtime script"
 [[ -f "$x_check" ]] || fail "missing X Enhance checker"
+[[ -f "$x_experimental_module" ]] || fail "missing X Experimental module"
+[[ -f "$x_experimental_script" ]] || fail "missing X Experimental request script"
+[[ -f "$x_experimental_check" ]] || fail "missing X Experimental checker"
 [[ $(grep -c '^\[General\]$' "$config") -eq 1 ]] || fail "[General] section"
 [[ $(grep -c '^\[Proxy Group\]$' "$config") -eq 1 ]] || fail "[Proxy Group] section"
 [[ $(grep -c '^\[Rule\]$' "$config") -eq 1 ]] || fail "[Rule] section"
@@ -60,10 +66,13 @@ node --check "$sensitive_check"
 node --check "$westdata_check"
 node --check "$x_script"
 node --check "$x_check"
+node --check "$x_experimental_script"
+node --check "$x_experimental_check"
 node "$sensitive_check"
 node "$shadow_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"
 node "$x_check"
+node "$x_experimental_check"
 
 printf 'PASS: configuration static checks\n'
