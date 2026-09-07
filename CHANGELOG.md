@@ -2,9 +2,17 @@
 
 仅保留关键结果。当前用法见 [README](README.md)，完整修改与临时试验见 [Git 历史](https://github.com/vc7k8jhtvc-netizen/shadowrocket-rule/commits/main/)。
 
-## 2026-09-07
+## 2026-09-07 · v2.7.0
 
-- 将设备实际必需的 Google CN Rewrite/MITM 同步回 Shadowrocket 主配置；仅保留公开配置，设备 CA、口令与 PKCS#12 材料不入库。
+- 新增 `Shadowrocket_Routing_v2.7.0.conf`：只维护 `include = WestData.conf`、策略组与分流规则。
+- 节点、General / DNS / TUN、Host、Google Rewrite/MITM 等基础能力改为直接继承原始 WestData 配置，不再在 Routing 配置中复制。
+- `Shadowrocket_Standalone_v2.6.5.conf` 暂不删除，继续作为独立回退路径并保留自动检查。
+- Shadowrocket / Clash 双端一致性检查切换到 v2.7.0 Routing；新增职责边界检查，防止基础参数重新进入轻量配置。
+- WestData 私人本地检查增加 Host、Google Rewrite/MITM 等底座依赖验证，但不输出凭据。
+
+## 2026-09-07 · v2.6.5 maintenance
+
+- 将设备实际必需的 Google CN Rewrite/MITM 同步回 Shadowrocket 独立配置；仅保留公开配置，设备 CA、口令与 PKCS#12 材料不入库。
 - 文档精简：合并重复的架构、更新及检查说明，移除已撤回试验和已删除模块的实现细节。
 - Clash 全部节点组补齐空组阻断；无 provider 且静态节点全部不符合命名时停止生成。
 - Clash LAN 增加 `no-resolve`，避免前置局域网判断主动解析域名。
