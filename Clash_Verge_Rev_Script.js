@@ -70,15 +70,15 @@ function main(config) {
       group.filter = regex.source;
     }
     if (matchedNodes.length === 0 && providerNames.length === 0) {
-      group.proxies = ['🌐 手动选择'];
-      writeLog('warn', `${name}未匹配到节点，使用“🌐 手动选择”兜底`);
+      group.proxies = ['👆 手动选择'];
+      writeLog('warn', `${name}未匹配到节点，使用“👆 手动选择”兜底`);
     }
 
     return group;
   };
 
   const allNodesGroup = {
-    name: '🌐 手动选择',
+    name: '👆 手动选择',
     type: 'select',
     'empty-fallback': 'REJECT'
   };
@@ -108,7 +108,7 @@ function main(config) {
     {
       name: '🚀 默认代理',
       type: 'select',
-      proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '🌐 手动选择']
+      proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '👆 手动选择']
     },
 
     // ----- 业务策略组 -----
@@ -120,10 +120,10 @@ function main(config) {
     {
       name: '🍎 Apple',
       type: 'select',
-      proxies: ['DIRECT', '🚀 默认代理', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🌐 手动选择']
+      proxies: ['DIRECT', '🚀 默认代理', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '👆 手动选择']
     },
     {
-      name: '🌐 Google',
+      name: '🔎 Google',
       type: 'select',
       proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡']
     },
@@ -135,7 +135,7 @@ function main(config) {
     {
       name: '🪟 Microsoft',
       type: 'select',
-      proxies: ['DIRECT', '🚀 默认代理', '🇺🇸 美国', '🌐 手动选择']
+      proxies: ['DIRECT', '🚀 默认代理', '🇺🇸 美国', '👆 手动选择']
     },
     {
       name: '📱 社交媒体',
@@ -160,7 +160,7 @@ function main(config) {
     {
       name: '🐟 FINAL',
       type: 'select',
-      proxies: ['DIRECT', '🚀 默认代理', '🌐 手动选择']
+      proxies: ['DIRECT', '🚀 默认代理', '👆 手动选择']
     }
   ];
 
@@ -285,7 +285,7 @@ function main(config) {
 
     // 视频与搜索
     'RULE-SET,YouTube,▶️ YouTube',
-    'RULE-SET,Google,🌐 Google',
+    'RULE-SET,Google,🔎 Google',
 
     // 4. 与 Shadowrocket 共用同一份个人 Global 规则
     'RULE-SET,Global,🌍 Global',
