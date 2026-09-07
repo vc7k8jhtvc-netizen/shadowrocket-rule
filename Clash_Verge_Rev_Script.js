@@ -148,7 +148,7 @@ function main(config) {
       proxies: ['🚀 默认代理', '🇯🇵 日本', '🇺🇸 美国', '🇸🇬 新加坡']
     },
     {
-      name: '📲 Telegram',
+      name: '✈️ Telegram',
       type: 'select',
       proxies: ['🚀 默认代理', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本']
     },
@@ -272,7 +272,7 @@ function main(config) {
     'RULE-SET,Apple_Domain,🍎 Apple',
     'RULE-SET,Microsoft,🪟 Microsoft',
     'RULE-SET,GitHub,💻 GitHub',
-    'RULE-SET,Telegram,📲 Telegram',
+    'RULE-SET,Telegram,✈️ Telegram',
 
     // 字节跳动大陆直连（必须在 TikTok 之前）
     'DOMAIN-SUFFIX,bytedance.com,DIRECT',
