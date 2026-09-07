@@ -100,17 +100,37 @@ DOMAIN-SUFFIX,asmr-300.com
 # ===== 成人网站 =====
 # 主流成人站点；后缀规则同时覆盖 www、m 等常见子域名
 DOMAIN-SUFFIX,pornhub.com
+# Pornhub 静态资源与媒体 CDN
+DOMAIN-SUFFIX,phncdn.com
+DOMAIN-SUFFIX,phprcdn.com
+
 DOMAIN-SUFFIX,xvideos.com
+DOMAIN-SUFFIX,xvideos-cdn.com
+
 DOMAIN-SUFFIX,xnxx.com
+DOMAIN-SUFFIX,xnxx-cdn.com
+
 DOMAIN-SUFFIX,xhamster.com
+# xHamster 静态资源与连接检测 CDN
+DOMAIN-SUFFIX,xhcdn.com
+DOMAIN-SUFFIX,xhpingcdn.com
+
 DOMAIN-SUFFIX,redtube.com
+DOMAIN-SUFFIX,rdtcdn.com
+
 DOMAIN-SUFFIX,youporn.com
+DOMAIN-SUFFIX,ypncdn.com
+
 DOMAIN-SUFFIX,tube8.com
+
 DOMAIN-SUFFIX,spankbang.com
+DOMAIN-SUFFIX,sb-cd.com
+
 DOMAIN-SUFFIX,eporner.com
 DOMAIN-SUFFIX,tnaflix.com
 
 DOMAIN-SUFFIX,jable.tv
+DOMAIN-SUFFIX,cdnlab.live
 
 # MissAV 当前及备用入口
 # 来源：https://en.wikipedia.org/wiki/ThisAV
