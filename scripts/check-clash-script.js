@@ -41,10 +41,10 @@ const direct = context.main(JSON.parse(JSON.stringify(directInput)));
 assert(group(direct, '🇺🇸 美国').proxies.includes('United States | US-01'), 'US node matching');
 assert(!group(direct, '🌐 手动选择').proxies.includes('🇺🇸 US-EXTRA'), 'all-node group must match Shadowrocket naming filter');
 assert(
-  JSON.stringify(group(direct, '🇹🇼 台湾').proxies) === JSON.stringify(['🌐 手动选择']),
+  JSON.stringify(group(direct, '🏝️ 台湾').proxies) === JSON.stringify(['🌐 手动选择']),
   'empty region must fall back to all nodes'
 );
-assert(!group(direct, '🇹🇼 台湾').proxies.includes('DIRECT'), 'region must not silently use DIRECT');
+assert(!group(direct, '🏝️ 台湾').proxies.includes('DIRECT'), 'region must not silently use DIRECT');
 assert(direct.dns && direct.dns.marker === 'subscription-dns', 'must preserve subscription DNS');
 assert(direct.hosts && direct.hosts['subscription.example'] === '192.0.2.1', 'must preserve subscription hosts');
 assert(direct.ipv6 === true, 'must not override subscription IPv6 setting');
@@ -70,7 +70,7 @@ const provider = context.main({
 assert(group(provider, '🌐 手动选择').use.includes('WestData'), 'proxy-provider support');
 assert(group(provider, '🌐 手动选择')['empty-fallback'] === 'REJECT', 'all-node provider group must fail closed');
 assert(group(provider, '🌐 手动选择').filter === '^.+ \\| .+$', 'all-node provider filter must match Shadowrocket');
-for (const name of ['🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
+for (const name of ['🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
   const region = group(provider, name);
   assert(region.use.includes('WestData'), `${name} provider inclusion`);
   assert(!region.filter.startsWith('(?i)'), `${name} provider filter must match Shadowrocket case-sensitive semantics`);
