@@ -1,4 +1,5 @@
 #!name=X Enhance (Shadowrocket)
+#!version=1.0.1
 #!desc=X/Twitter 去广告增强：拦截明确广告域名，并清理可解密 GraphQL/Timeline 响应中的 Promoted/Sponsored 条目；保守 MITM，明确避开 api.twitter.com
 #!author=vc7k8jhtvc-netizen
 #!homepage=https://github.com/vc7k8jhtvc-netizen/shadowrocket-rule
@@ -14,8 +15,8 @@ DOMAIN,static-ads.twitter.com,REJECT
 
 [Script]
 # 仅处理明确列出的可解密主机；pattern 故意不匹配 api.twitter.com
-x.timeline.response = type=http-response,pattern=^https:\/\/(?:(?:www\.)?x\.com|api\.x\.com|(?:www\.|mobile\.)?twitter\.com|albtls\.t\.co)\/(?:i\/)?(?:api\/)?(?:graphql\/|2\/timeline\/),requires-body=1,max-size=4194304,script-path=https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/scripts/x-enhance.js
+x.timeline.response = type=http-response,pattern=^https:\/\/(?:(?:www\.)?x\.com|api\.x\.com|(?:www\.|mobile\.)?twitter\.com|(?:global\.)?albtls\.t\.co)\/(?:i\/)?(?:api\/)?(?:graphql\/|2\/timeline\/),requires-body=1,max-size=4194304,binary-body-mode=1,timeout=8,script-path=https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/scripts/x-enhance.js
 
 [MITM]
 # iOS 原生 X 的 api.twitter.com 可能存在证书绑定；不要在此追加该主机
-hostname = %APPEND% x.com, www.x.com, api.x.com, twitter.com, www.twitter.com, mobile.twitter.com, albtls.t.co
+hostname = %APPEND% x.com, www.x.com, api.x.com, twitter.com, www.twitter.com, mobile.twitter.com, albtls.t.co, global.albtls.t.co
