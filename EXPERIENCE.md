@@ -8,7 +8,6 @@ Shadowrocket 以 `Shadowrocket_Routing_v2.7.0.conf` 为当前轻量路径：
 
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置。
 - `Shadowrocket_Routing_v2.7.0.conf`：仅 Proxy Group 与 Rule；通过 `include = WestData.conf` 继承底座。
-- `Shadowrocket_Standalone_v2.6.5.conf`：旧独立路径，暂时保留用于回退与对照。
 - YouTube Enhance：Shadowrocket 专属功能模块。
 - Clash Verge Rev：保留订阅基础参数，扩展脚本重建策略组与规则。
 
@@ -20,7 +19,7 @@ Shadowrocket 以 `Shadowrocket_Routing_v2.7.0.conf` 为当前轻量路径：
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
 | Shadowrocket 基础网络参数 | v2.7.0 不复制；由被包含的 WestData.conf 负责 |
 | Shadowrocket Rewrite / MITM / Host | v2.7.0 不维护；供应商基础功能由 WestData.conf 提供，额外增强继续模块化 |
-| 兼容性修复或默认出口调整 | 记录 CHANGELOG，并保持 v2.6.5 回退路径可用 |
+| 兼容性修复或默认出口调整 | 记录 CHANGELOG，并保持 Routing 职责边界不变 |
 | 新增主分流功能、策略组结构或规则优先级变化 | 升级 Routing 版本并同步双端检查 |
 
 不重新镜像第三方完整规则库，不引入未经验证的大型 Global 规则。
@@ -46,9 +45,7 @@ bash scripts/check-config.sh
 
 检查覆盖：
 
-- v2.6.5 Standalone 旧路径完整性；
 - v2.7.0 Routing 仅包含 include / Proxy Group / Rule；
-- v2.7.0 与 v2.6.5 的策略组和分流规则基线一致；
 - Shadowrocket / Clash 关键行为一致性；
 - 当前树敏感信息与 YouTube 模块结构。
 
@@ -58,6 +55,6 @@ bash scripts/check-config.sh
 node scripts/check-westdata-local.js /path/to/private-westdata.conf
 ```
 
-私人 WestData 配置不得提交。首次切换 v2.7.0 或 WestData 大改后，必须在设备上核对包含关系、地区节点、AI / YouTube / GitHub、中国直连、FINAL，以及 Google Rewrite/MITM。若包含行为异常，直接切回 v2.6.5。
+私人 WestData 配置不得提交。WestData 大改后，必须在设备上核对包含关系、地区节点、AI / YouTube / GitHub、中国直连、FINAL，以及 Google Rewrite/MITM。
 
 普通维护可直接更新 `main`；较大改动按需使用分支/PR。
