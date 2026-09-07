@@ -99,7 +99,7 @@ function main(config) {
     // ----- 地区节点池 -----
     allNodesGroup,
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
-    regionalGroup('🇹🇼 台湾', regionPatterns.tw, regionMatches.tw),
+    regionalGroup('🏝️ 台湾', regionPatterns.tw, regionMatches.tw),
     regionalGroup('🇸🇬 新加坡', regionPatterns.sg, regionMatches.sg),
     regionalGroup('🇯🇵 日本', regionPatterns.jp, regionMatches.jp),
     regionalGroup('🇺🇸 美国', regionPatterns.us, regionMatches.us),
@@ -108,7 +108,7 @@ function main(config) {
     {
       name: '🚀 默认代理',
       type: 'select',
-      proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🇹🇼 台湾', '🌐 手动选择']
+      proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '🌐 手动选择']
     },
 
     // ----- 业务策略组 -----
