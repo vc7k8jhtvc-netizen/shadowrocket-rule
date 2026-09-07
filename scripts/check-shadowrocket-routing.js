@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const routingPath = path.join(root, 'Shadowrocket_Routing_v2.7.0.conf');
+const routingPath = path.join(root, 'Shadowrocket_Routing.conf');
 const globalPath = path.join(root, 'Global.list');
 
 const routing = fs.readFileSync(routingPath, 'utf8');
