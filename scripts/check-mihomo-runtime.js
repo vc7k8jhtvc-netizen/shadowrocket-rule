@@ -60,7 +60,7 @@ async function freePort() {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert(groups, 'Mihomo API did not become ready');
-    for (const name of ['🌐 全部节点', '🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
+    for (const name of ['🌐 手动选择', '🇭🇰 香港', '🇹🇼 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
       assert(groups[name].now === 'REJECT' && JSON.stringify(groups[name].all) === '["REJECT"]', 'empty filtered group is not blocked: ' + name);
     }
     // Domain-only HTTP proxy traffic must reach REJECT without querying the local DNS trap.
