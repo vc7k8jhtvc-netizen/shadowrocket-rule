@@ -13,6 +13,8 @@
 3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
 4. 检查五个地区组及“👆 手动选择”是否正常取到 WestData 节点，并确认“🛑 广告拦截”默认选择 `REJECT`。
 
+Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供自动回退到“👆 手动选择”的配置机制。若某个地区组没有可用节点，请直接使用“👆 手动选择”，并检查 WestData 节点是否符合“地区 | 节点”的命名格式；空组在客户端中的具体呈现以实际设备行为为准。
+
 [下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf)
 
 职责边界：

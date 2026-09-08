@@ -25,6 +25,7 @@ function activeLines(text) {
 }
 
 const shadowGroups = new Map();
+const shadowFilters = new Map();
 for (const line of activeLines(section(shadowrocket, 'Proxy Group'))) {
   const eq = line.indexOf('=');
   const name = line.slice(0, eq).trim();
@@ -33,6 +34,8 @@ for (const line of activeLines(section(shadowrocket, 'Proxy Group'))) {
     .slice(1)
     .filter(item => !item.startsWith('policy-regex-filter=') && !item.startsWith('select='));
   shadowGroups.set(name, options);
+  const filter = parts.find(item => item.startsWith('policy-regex-filter='));
+  if (filter) shadowFilters.set(name, filter.slice('policy-regex-filter='.length));
 }
 
 const context = { console: { log() {}, warn() {}, error() {} } };
@@ -64,6 +67,26 @@ for (const name of parityGroups) {
   assert(
     JSON.stringify(shadowOptions) === JSON.stringify(clashOptions),
     'proxy group drift between clients: ' + name
+  );
+}
+
+// Node-pool groups use different client-specific representations. Compare their
+// effective filter strings instead of comparing generated proxy members.
+const nodeGroups = [
+  '👆 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国'
+];
+const clashWithProvider = context.main({
+  'proxy-providers': { WestData: { type: 'http', url: 'https://example.invalid/sub' } }
+});
+const clashNodeGroups = new Map(
+  clashWithProvider['proxy-groups'].map(group => [group.name, group])
+);
+for (const name of nodeGroups) {
+  assert(shadowFilters.has(name), 'Shadowrocket missing node filter: ' + name);
+  assert(clashNodeGroups.has(name), 'Clash missing node group: ' + name);
+  assert(
+    shadowFilters.get(name) === clashNodeGroups.get(name).filter,
+    'node filter drift between clients: ' + name
   );
 }
 

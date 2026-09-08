@@ -13,12 +13,41 @@ function check(script, args, expected, diagnostic) {
 }
 try {
   fs.mkdirSync(path.join(temp, 'scripts'));
-  for (const file of ['scripts/check-shadowrocket-routing.js', 'scripts/check-westdata-local.js', 'scripts/check-sensitive-data.js', 'Shadowrocket_Routing.conf', 'Global.list']) {
+  for (const file of [
+    'scripts/check-shadowrocket-routing.js', 'scripts/check-dual-client.js',
+    'scripts/check-westdata-local.js',
+    'scripts/check-sensitive-data.js', 'scripts/check-version.js',
+    'Shadowrocket_Routing.conf', 'Clash_Verge_Rev_Script.js', 'Global.list',
+    'README.md', 'CHANGELOG.md'
+  ]) {
     fs.copyFileSync(path.join(root, file), path.join(temp, file));
   }
   const routingPath = path.join(temp, 'Shadowrocket_Routing.conf');
   const routing = fs.readFileSync(routingPath, 'utf8');
   check('check-shadowrocket-routing.js', [], 0);
+
+  check('check-version.js', [], 0);
+  const readmePath = path.join(temp, 'README.md');
+  const readme = fs.readFileSync(readmePath, 'utf8');
+  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.5`', '内部版本为 `v9.9.9`'));
+  check('check-version.js', [], 1, 'version mismatch');
+  fs.writeFileSync(readmePath, readme);
+
+  const changelogPath = path.join(temp, 'CHANGELOG.md');
+  const changelog = fs.readFileSync(changelogPath, 'utf8');
+  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.5`', '内部版本升至 `v9.9.9`'));
+  check('check-version.js', [], 1, 'version mismatch');
+  fs.writeFileSync(changelogPath, changelog);
+
+  const clashPath = path.join(temp, 'Clash_Verge_Rev_Script.js');
+  const clashSource = fs.readFileSync(clashPath, 'utf8');
+  check('check-dual-client.js', [], 0);
+  fs.writeFileSync(clashPath, clashSource.replace(
+    'hk: /^.*Hong Kong \\| .+$/', 'hk: /^.*HK \\| .+$/'
+  ));
+  check('check-dual-client.js', [], 1, 'node filter drift');
+  fs.writeFileSync(clashPath, clashSource);
+
   const pool = '👆 手动选择 = select,';
   for (const [member, diagnostic] of [['missing-policy', 'missing policy'], ['👆 手动选择', 'cycle detected']]) {
     fs.writeFileSync(routingPath, routing.replace(pool, pool + member + ','));

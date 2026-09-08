@@ -13,6 +13,7 @@ sensitive_check="$root/scripts/check-sensitive-data.js"
 westdata_check="$root/scripts/check-westdata-local.js"
 youtube_check="$root/scripts/check-youtube-module.js"
 validator_check="$root/scripts/check-validator-regressions.js"
+version_check="$root/scripts/check-version.js"
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 
@@ -25,6 +26,7 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$westdata_check" ]] || fail "missing WestData local checker"
 [[ -f "$youtube_check" ]] || fail "missing YouTube module checker"
 [[ -f "$validator_check" ]] || fail "missing validator regression checker"
+[[ -f "$version_check" ]] || fail "missing version consistency checker"
 
 grep -qF 'Shadowrocket_Routing.conf' "$readme" || fail 'README routing config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
@@ -38,11 +40,13 @@ node --check "$dual_check"
 node --check "$sensitive_check"
 node --check "$westdata_check"
 node --check "$youtube_check"
+node --check "$version_check"
 node "$sensitive_check"
 node "$routing_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"
 node "$youtube_check"
 node "$validator_check"
+node "$version_check"
 
 printf 'PASS: configuration static checks\n'

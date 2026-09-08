@@ -22,6 +22,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 | Shadowrocket Rewrite / MITM / Host | Routing 不维护；供应商基础功能由 WestData.conf 提供，额外增强继续模块化 |
 | 兼容性修复或默认出口调整 | 记录 CHANGELOG，并保持 Routing 职责边界不变 |
 | 新增主分流功能、策略组结构或规则优先级变化 | 升级 Routing 版本并同步双端检查 |
+| 仅更新 Global.list 数据 | 记录 CHANGELOG；不要求升级 Routing 版本 |
 
 不重新镜像第三方完整规则库，不引入未经验证的大型 Global 规则。
 
@@ -49,7 +50,8 @@ bash scripts/check-config.sh
 - Routing 仅包含 include / Proxy Group / Rule；
 - Advertising 主规则、域名集及其默认 REJECT 选择；
 - Shadowrocket / Clash 关键行为一致性；
-- 当前树敏感信息与 YouTube 模块结构。
+- 当前树敏感信息与 YouTube 模块结构；
+- Routing 配置、README 与当前 CHANGELOG 的版本一致性。
 
 修改节点命名或验证 WestData 底座时，用私人配置本地检查：
 
