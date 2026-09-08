@@ -22,9 +22,6 @@ DOMAIN-SUFFIX,jina.ai
 DOMAIN-SUFFIX,tavily.com
 
 
-# Cloudflare cdnjs 公共前端 CDN
-DOMAIN,cdnjs.cloudflare.com
-
 # ===== 开发工具 =====
 DOMAIN-SUFFIX,docker.io
 DOMAIN-SUFFIX,docker.com
