@@ -29,12 +29,13 @@
 
 [下载 Shadowrocket_Routing_AdBlock_Trial.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing_AdBlock_Trial.conf)
 
-基于正式版 v2.7.4 的独立配置，内部版本为 `v2.7.4-adblock.1`，文件名固定。保留并更新 `WestData.conf`，将试运行版作为新的配置导入并选中；正式版与 Clash 不变。
+基于正式版 v2.7.4 的独立配置，内部版本为 `v2.7.4-adblock.2`，文件名固定。保留并更新 `WestData.conf`，将试运行版作为新的配置导入并选中；正式版与 Clash 不变。
 
-- 新增“🛑 广告拦截”，默认 `REJECT`；引用单一[秋风域名规则源](https://github.com/TG-Twilight/AWAvenue-Ads-Rule)，不新增 DNS、Rewrite、MITM 或脚本。
+- 新增“🛑 广告拦截”，默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md)，同时引用 `Advertising.list`（RULE-SET）与 `Advertising_Domain.list`（DOMAIN-SET），不额外叠加 Lite、Privacy 或 Hijacking。
+- 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则需要对应 MITM 覆盖才能生效；本配置不扩展解密范围。
 - 顺序：LAN → 现有 AI 专项 → 广告 → 其他业务 → Global → 中国直连 → FINAL。AI 例外优先于广告拦截。
 - `DIRECT` 与“🚀 默认代理”仅用于临时排障，分别强制直连或代理，不会继续匹配后续分流。该组不控制 WestData 或其他模块自身的拦截。
-- 导入后更新远程规则，确认该组为 `REJECT`；从连接日志检查 `ad.doubleclick.net` 是否命中广告组，并验证 ChatGPT 登录、日常 App、小程序与视频播放。激励广告可能无法使用；域名规则不能保证去除同域广告或替代 YouTube 模块。
+- 导入后更新远程规则，确认该组为 `REJECT`；从连接日志检查 `ad.doubleclick.net` 是否命中广告组，并验证 ChatGPT 登录、日常 App、小程序与视频播放。激励广告可能无法使用；不能保证去除所有同域广告或替代 YouTube 模块。
 - 当前仅完成静态检查，尚未实机验证。出现异常可切回正式版 `Shadowrocket_Routing.conf`，恢复原分流。
 
 ## Clash Verge Rev
