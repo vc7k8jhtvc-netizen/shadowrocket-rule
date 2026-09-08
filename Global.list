@@ -132,6 +132,7 @@ DOMAIN-SUFFIX,tnaflix.com
 DOMAIN-SUFFIX,jable.tv
 DOMAIN-SUFFIX,cdnlab.live
 DOMAIN-SUFFIX,mushroomtrack.com
+DOMAIN-SUFFIX,fs1.app
 
 # MissAV 当前/备用入口及媒体资源域名
 # 2026-05-07 美国加州北区联邦法院文件列出以下相关域名
@@ -147,6 +148,9 @@ DOMAIN-SUFFIX,avmiss.buzz
 DOMAIN-SUFFIX,missav99.cc
 DOMAIN-SUFFIX,surrit.com
 DOMAIN-SUFFIX,fourhoi.com
+DOMAIN-SUFFIX,missav888.com
+DOMAIN-SUFFIX,missav01.com
+DOMAIN-SUFFIX,nineyu.com
 
 # Hanime1 主入口、备用入口及视频资源
 # 来源：https://hanime1.com/
