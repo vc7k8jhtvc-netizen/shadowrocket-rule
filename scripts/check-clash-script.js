@@ -52,6 +52,17 @@ assert(group(direct, '🤖 AI').proxies[0] === '🇸🇬 新加坡', 'AI default
 assert(direct.mode === 'rule', 'must set rule mode');
 assert(direct.profile && direct.profile['store-selected'], 'must retain selected-policy persistence');
 assert(direct['rule-providers'].Global.format === 'text', 'Global text provider');
+assert(group(direct, '🛑 广告拦截').proxies[0] === 'REJECT', 'Advertising default must be REJECT');
+assert(
+  JSON.stringify(group(direct, '🛑 广告拦截').proxies) ===
+  JSON.stringify(['REJECT', 'DIRECT', '🚀 默认代理']),
+  'Advertising group options'
+);
+assert(direct['rule-providers'].Advertising.behavior === 'classical', 'Advertising classical provider');
+assert(direct['rule-providers'].Advertising.format === 'yaml', 'Advertising YAML provider');
+assert(direct['rule-providers'].Advertising.url.includes('/Clash/Advertising/Advertising.yaml'), 'Advertising provider source');
+assert(direct['rule-providers'].Advertising_Domain.behavior === 'domain', 'Advertising domain provider');
+assert(direct['rule-providers'].Advertising_Domain.url.includes('/Clash/Advertising/Advertising_Domain.txt'), 'Advertising domain provider source');
 assert(direct['rule-providers'].Apple_Domain.behavior === 'domain', 'Apple domain provider');
 assert(direct['rule-providers'].China_Domain.behavior === 'domain', 'China domain provider');
 assert(logs.some(item => item.message.includes('开始生成')), 'start console output');
@@ -111,9 +122,13 @@ for (const rule of direct.rules) {
 }
 
 const globalIndex = direct.rules.indexOf('RULE-SET,Global,🌍 Global');
+const advertisingIndex = direct.rules.indexOf('RULE-SET,Advertising,🛑 广告拦截');
+const advertisingDomainIndex = direct.rules.indexOf('RULE-SET,Advertising_Domain,🛑 广告拦截');
+const appleIndex = direct.rules.indexOf('RULE-SET,Apple,🍎 Apple');
 const chinaIndex = direct.rules.indexOf('RULE-SET,China,DIRECT');
 const finalIndex = direct.rules.indexOf('MATCH,🐟 FINAL');
 const chinaDomainIndex = direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
+assert(advertisingIndex < advertisingDomainIndex && advertisingDomainIndex < appleIndex, 'Advertising/Apple order');
 assert(globalIndex < chinaIndex && chinaIndex < chinaDomainIndex && chinaDomainIndex < finalIndex, 'Global/China/China_Domain/FINAL order');
 assert(direct['rule-providers'].China_Domain.url.includes('China_Domain.list'), 'China domain rule-provider source');
 

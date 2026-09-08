@@ -34,7 +34,7 @@
 - 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
 - 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
 - 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
-- 广告拦截属于 Shadowrocket Routing 功能，Clash 扩展脚本保持现有行为。
+- 广告拦截已同步到 Clash 扩展脚本；Clash 使用官方 `Advertising.yaml` 与 `Advertising_Domain.txt`，Shadowrocket 的 14 条 URL-REGEX 由 Shadowrocket 规则端支持。
 
 ## Clash Verge Rev
 
@@ -44,7 +44,7 @@
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
 
-脚本重建策略组、规则和规则提供器，保留订阅的 DNS、hosts、IPv6 及节点入口参数，支持 `proxies` 和 `proxy-providers`。
+脚本重建策略组、规则和规则提供器，保留订阅的 DNS、hosts、IPv6 及节点入口参数，支持 `proxies` 和 `proxy-providers`；广告拦截使用与 Shadowrocket 对应的完整 Advertising 规则集。
 
 | 节点情况 | 处理方式 |
 |---|---|
@@ -95,7 +95,7 @@
 | WestData 节点 / 基础配置 | 更新原始 `WestData.conf` |
 | Shadowrocket 分流与广告拦截 | 更新 `Shadowrocket_Routing.conf` |
 | 专项规则、Global.list | 更新远程规则 |
-| Clash 扩展脚本 | 替换脚本后更新订阅 |
+| Clash 分流与广告拦截 | 替换脚本后更新订阅 |
 | YouTube 模块 | 更新模块及脚本资源 |
 
 地区组为空时先检查 WestData 节点命名；网站出口不对时检查已保存的策略选择与连接日志；Routing 的 DNS、Host、Rewrite 或 MITM 异常时优先检查被包含的 `WestData.conf`。

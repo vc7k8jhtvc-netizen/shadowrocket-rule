@@ -6,7 +6,7 @@
  * 1. 继承原项目架构：“节点来源与分流逻辑分离”。
  * 2. 自动清空机场订阅中自带的杂乱策略组和规则，接管为本项目严格定义的策略组和分层规则。
  * 3. 同时兼容 proxies 与 proxy-providers，通过节点名称划分地区节点池。
- * 4. 与 Shadowrocket 版本并行维护主要策略组、规则优先级和 Global.list。
+ * 4. 与 Shadowrocket 版本同步主要策略组、Advertising、规则优先级和 Global.list。
  */
 
 function main(config) {
@@ -158,6 +158,11 @@ function main(config) {
       proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡']
     },
     {
+      name: '🛑 广告拦截',
+      type: 'select',
+      proxies: ['REJECT', 'DIRECT', '🚀 默认代理']
+    },
+    {
       name: '🐟 FINAL',
       type: 'select',
       proxies: ['DIRECT', '🚀 默认代理', '👆 手动选择']
@@ -174,7 +179,7 @@ function main(config) {
     'store-fake-ip': true
   });
 
-  // 4. 配置远程规则集。Global.list 由两个客户端共用，避免复制后漂移。
+  // 4. 配置远程规则集。Global.list 由两个客户端共用；Advertising 使用官方 Clash 输出。
   const blackmatrix = 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule';
   const classicalProvider = (name) => ({
     type: 'http',
@@ -212,6 +217,24 @@ function main(config) {
       format: 'text',
       url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Global.list',
       path: './rule_providers/Global.list',
+      interval: 86400,
+      proxy: '🚀 默认代理'
+    },
+    Advertising: {
+      type: 'http',
+      behavior: 'classical',
+      format: 'yaml',
+      url: `${blackmatrix}/Clash/Advertising/Advertising.yaml`,
+      path: './rule_providers/Advertising.yaml',
+      interval: 86400,
+      proxy: '🚀 默认代理'
+    },
+    Advertising_Domain: {
+      type: 'http',
+      behavior: 'domain',
+      format: 'text',
+      url: `${blackmatrix}/Clash/Advertising/Advertising_Domain.txt`,
+      path: './rule_providers/Advertising_Domain.txt',
       interval: 86400,
       proxy: '🚀 默认代理'
     },
@@ -267,7 +290,11 @@ function main(config) {
     'DOMAIN-SUFFIX,x.ai,🤖 AI',
     'DOMAIN-SUFFIX,grok.com,🤖 AI',
 
-    // 3. 专项服务规则
+    // 3. Advertising（与 Shadowrocket 使用同一完整规则源的 Clash 输出）
+    'RULE-SET,Advertising,🛑 广告拦截',
+    'RULE-SET,Advertising_Domain,🛑 广告拦截',
+
+    // 4. 专项服务规则
     'RULE-SET,Apple,🍎 Apple',
     'RULE-SET,Apple_Domain,🍎 Apple',
     'RULE-SET,Microsoft,🪟 Microsoft',
@@ -287,15 +314,15 @@ function main(config) {
     'RULE-SET,YouTube,▶️ YouTube',
     'RULE-SET,Google,🔎 Google',
 
-    // 4. 与 Shadowrocket 共用同一份个人 Global 规则
+    // 5. 与 Shadowrocket 共用同一份个人 Global 规则
     'RULE-SET,Global,🌍 Global',
 
-    // 5. 中国大陆直连
+    // 6. 中国大陆直连
     'RULE-SET,China,DIRECT',
     'RULE-SET,China_Domain,DIRECT',
     'GEOIP,CN,DIRECT,no-resolve',
 
-    // 6. 兜底
+    // 7. 兜底
     'MATCH,🐟 FINAL'
   ];
 

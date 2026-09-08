@@ -53,7 +53,7 @@ const clash = context.main({
 const clashGroups = new Map(clash['proxy-groups'].map(group => [group.name, group]));
 const parityGroups = [
   '🚀 默认代理', '🤖 AI', '🍎 Apple', '🔎 Google', '💻 GitHub', '🪟 Microsoft',
-  '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🐟 FINAL'
+  '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🛑 广告拦截', '🐟 FINAL'
 ];
 
 for (const name of parityGroups) {
@@ -78,11 +78,13 @@ for (const rule of ['DOMAIN-SUFFIX,bytedance.com,DIRECT', 'DOMAIN-SUFFIX,bytedan
 }
 
 const canonicalShadow = [
+  'Advertising/Advertising.list', 'Advertising/Advertising_Domain.list',
   'Apple.list', 'Apple_Domain.list', 'Microsoft.list', 'GitHub.list', 'Telegram.list',
   'bytedance.com', 'Twitter.list', 'Instagram.list', 'TikTok.list', 'YouTube.list',
   'Google.list', '/Global.list', '/China/China.list', 'China_Domain.list', 'GEOIP,CN,DIRECT', 'FINAL,🐟 FINAL'
 ];
 const canonicalClash = [
+  'RULE-SET,Advertising,', 'RULE-SET,Advertising_Domain,',
   'RULE-SET,Apple,', 'RULE-SET,Apple_Domain,', 'RULE-SET,Microsoft,', 'RULE-SET,GitHub,',
   'RULE-SET,Telegram,', 'bytedance.com', 'RULE-SET,Twitter,', 'RULE-SET,Instagram,',
   'RULE-SET,TikTok,', 'RULE-SET,YouTube,', 'RULE-SET,Google,', 'RULE-SET,Global,',
