@@ -4,9 +4,7 @@
 
 ## 2026-09-08
 
-- 广告试运行版升级为 `v2.7.4-adblock.2`：按用户要求改用 blackmatrix7 完整 Advertising 主规则与域名集，替换秋风源；拦截组、优先级和基础配置职责不变。
-
-- 新增仅 Shadowrocket 使用的独立广告试运行版 `Shadowrocket_Routing_AdBlock_Trial.conf`（`v2.7.4-adblock.1`）：单一秋风域名规则源，广告组默认 REJECT，置于现有 AI 专项后、其他业务前；正式版与 Clash 不变，待实机验证。
+- 将完成实机试用且无异常的广告拦截方案合并到正式 `Shadowrocket_Routing.conf`，内部版本升至 `v2.7.5`，正式文件名保持不变；Clash 扩展脚本保持现有行为。使用 blackmatrix7 完整 Advertising 主规则与域名集，广告组默认 `REJECT`，置于 AI 专项后、其他业务前。
 
 - 补齐检查器盲点：验证所有策略组成员及循环引用；Google 重写检查实际匹配、跳转目标与路径保留；拦截非空 MITM CA 导出字段。增加隔离的正反例回归，不改变运行配置。
 - 🤖 AI 默认出口调整为 `🇸🇬 新加坡`；美国、日本与默认代理仍保留为候选。

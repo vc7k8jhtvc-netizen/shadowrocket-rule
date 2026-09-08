@@ -70,7 +70,7 @@ for (const line of proxyGroupLines) {
 const expectedGroups = [
   '👆 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国',
   '🤖 AI', '🍎 Apple', '🔎 Google', '💻 GitHub', '🪟 Microsoft',
-  '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🚀 默认代理', '🐟 FINAL'
+  '📱 社交媒体', '▶️ YouTube', '✈️ Telegram', '🌍 Global', '🛑 广告拦截', '🚀 默认代理', '🐟 FINAL'
 ];
 assert(groups.size === expectedGroups.length, 'unexpected proxy group count: ' + groups.size);
 for (const name of expectedGroups) assert(groups.has(name), 'missing proxy group: ' + name);
@@ -85,6 +85,7 @@ const expectedDefaults = {
   '▶️ YouTube': '🚀 默认代理',
   '✈️ Telegram': '🚀 默认代理',
   '🌍 Global': '🚀 默认代理',
+  '🛑 广告拦截': 'REJECT',
   '🚀 默认代理': '🇭🇰 香港',
   '🐟 FINAL': 'DIRECT'
 };
@@ -141,6 +142,8 @@ for (const rule of rules) {
 
 const requiredOrder = [
   'DOMAIN,gemini.google.com,🤖 AI',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising.list,🛑 广告拦截',
+  'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising_Domain.list,🛑 广告拦截',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple_Domain.list,🍎 Apple',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Microsoft/Microsoft.list,🪟 Microsoft',
