@@ -1,12 +1,12 @@
 /**
- * Clash Verge Rev 订阅扩展脚本 (Script)
- * 与 Shadowrocket Routing 策略保持一致
+ * Clash Verge Rev 订阅扩展脚本
+ * 与小火箭分流策略保持一致
  *
  * 原理与优势：
  * 1. 继承原项目架构：“节点来源与分流逻辑分离”。
  * 2. 自动清空机场订阅中自带的杂乱策略组和规则，接管为本项目严格定义的策略组和分层规则。
  * 3. 同时兼容 proxies 与 proxy-providers，通过节点名称划分地区节点池。
- * 4. 与 Shadowrocket 版本同步主要策略组、Advertising、规则优先级和 Global.list。
+ * 4. 与小火箭版本同步主要策略组、Advertising、规则优先级和 Global.list。
  */
 
 function main(config) {
@@ -32,7 +32,7 @@ function main(config) {
     throw new Error(message);
   }
 
-  // 与 Shadowrocket policy-regex-filter 保持完全一致，只接受 WestData 当前约定的“地区 | 节点”命名。
+  // 与小火箭的 policy-regex-filter 保持完全一致，只接受 WestData 当前约定的“地区 | 节点”命名。
   const allPattern = /^.+ \| .+$/;
   const filterNodes = (regex) => allProxies.filter(name => regex.test(name));
 
@@ -253,11 +253,11 @@ function main(config) {
   // 6. 覆盖重写分流规则（严格保持优先级）
   config.rules = [
     // 1. 局域网直连
-    // 与 Shadowrocket LAN IP 规则一致：不为前置局域网判断主动解析域名。
+    // 与小火箭局域网 IP 规则一致：不为前置局域网判断主动解析域名。
     'RULE-SET,Lan,DIRECT,no-resolve',
 
     // 2. AI 专项服务（GPT / Gemini / Grok）
-    // OpenAI / ChatGPT 官方通配
+    // OpenAI / ChatGPT 官方通配域名
     'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
     'DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI',
     'DOMAIN-SUFFIX,intercom.io,🤖 AI',
@@ -281,7 +281,7 @@ function main(config) {
     'DOMAIN,setup.workos.com,🤖 AI',
     'DOMAIN,workos.imgix.net,🤖 AI',
 
-    // Gemini / Google AI（必须在 Google 规则之前）
+    // Gemini / Google AI（必须置于 Google 规则之前）
     'DOMAIN,gemini.google.com,🤖 AI',
     'DOMAIN-SUFFIX,ai.google,🤖 AI',
     'DOMAIN,generativelanguage.googleapis.com,🤖 AI',
@@ -290,7 +290,7 @@ function main(config) {
     'DOMAIN-SUFFIX,x.ai,🤖 AI',
     'DOMAIN-SUFFIX,grok.com,🤖 AI',
 
-    // 3. Advertising（与 Shadowrocket 使用同一完整规则源的 Clash 输出）
+    // 3. Advertising（与小火箭使用同一完整规则源的 Clash 输出）
     'RULE-SET,Advertising,🛑 广告拦截',
     'RULE-SET,Advertising_Domain,🛑 广告拦截',
 
@@ -314,7 +314,7 @@ function main(config) {
     'RULE-SET,YouTube,▶️ YouTube',
     'RULE-SET,Google,🔎 Google',
 
-    // 5. 与 Shadowrocket 共用同一份个人 Global 规则
+    // 5. 与小火箭共用同一份个人 Global 规则
     'RULE-SET,Global,🌍 Global',
 
     // 6. 中国大陆直连
