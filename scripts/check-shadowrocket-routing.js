@@ -61,6 +61,7 @@ for (const line of proxyGroupLines) {
   const eq = line.indexOf('=');
   assert(eq !== -1, 'invalid proxy group line');
   const name = line.slice(0, eq).trim();
+  assert(!groups.has(name), 'duplicate proxy group: ' + name);
   const parts = line.slice(eq + 1).split(',').map(item => item.trim());
   assert(parts[0] === 'select', 'unsupported proxy group type: ' + name);
   groups.set(name, parts.slice(1));
@@ -102,6 +103,28 @@ const expectedFilters = {
 for (const [name, filter] of Object.entries(expectedFilters)) {
   assert(groups.get(name).includes('policy-regex-filter=' + filter), name + ' node filter changed unexpectedly');
 }
+
+// Validate every explicit group member, including node pools excluded from business parity checks.
+const groupEdges = new Map();
+for (const [name, options] of groups) {
+  const members = options.filter(option => !option.includes('='));
+  for (const member of members) {
+    assert(groups.has(member) || ['DIRECT', 'REJECT'].includes(member),
+      'group references missing policy: ' + name + ' -> ' + member);
+  }
+  groupEdges.set(name, members.filter(member => groups.has(member)));
+}
+const visiting = new Set();
+const visited = new Set();
+function visitGroup(name) {
+  assert(!visiting.has(name), 'proxy group cycle detected at: ' + name);
+  if (visited.has(name)) return;
+  visiting.add(name);
+  for (const member of groupEdges.get(name)) visitGroup(member);
+  visiting.delete(name);
+  visited.add(name);
+}
+for (const name of groups.keys()) visitGroup(name);
 
 const rules = activeLines(section(routing, 'Rule'));
 assert(new Set(rules).size === rules.length, 'duplicate Shadowrocket rules detected');

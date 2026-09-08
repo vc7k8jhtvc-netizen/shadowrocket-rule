@@ -48,6 +48,15 @@ for (const file of files) {
 
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
+    // CA exports must never bypass detection through a generic example/placeholder allowlist.
+    const ca = lines[i].match(/^\s*ca-(?:passphrase|p12)\s*=\s*(.*)$/i);
+    if (ca) {
+      const value = ca[1].replace(/\s*#.*$/, '').trim();
+      if (value && value !== '""' && value !== "''") {
+        findings.push({ file, line: i + 1, label: 'MITM CA material' });
+      }
+      continue;
+    }
     if (allowLine(lines[i])) continue;
     for (const [label, pattern] of patterns) {
       pattern.lastIndex = 0;

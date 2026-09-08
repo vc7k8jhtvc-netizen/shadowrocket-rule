@@ -99,8 +99,35 @@ const rewriteLines = section('URL Rewrite')
   .split(/\r?\n/)
   .map(line => line.trim())
   .filter(line => line && !line.startsWith('#'));
-const hasGoogleCnRewrite = rewriteLines.some(line => line.includes('google.cn') && line.includes('google.com'));
-const hasGCnRewrite = rewriteLines.some(line => /(^|[^a-z])g\.cn/i.test(line) && line.includes('google.com'));
+// Parse redirect structure and execute representative URLs instead of matching keywords.
+const redirects = rewriteLines.flatMap(line => {
+  const parts = line.match(/^(\S+)\s+(\S+)\s+(301|302|307|308)$/);
+  if (!parts) return [];
+  try { return [{ pattern: new RegExp(parts[1]), replacement: parts[2] }]; }
+  catch { return []; }
+});
+function coversGoogleRedirect(domain) {
+  for (const protocol of ['http', 'https']) {
+    for (const prefix of ['', 'www.']) {
+      for (const suffix of ['', '/search?q=audit']) {
+        const input = protocol + '://' + prefix + domain + suffix;
+        // The first matching redirect owns this request; a later valid rule cannot mask it.
+        const rule = redirects.find(item => item.pattern.test(input));
+        if (!rule) return false;
+        try {
+          const source = new URL(input);
+          const target = new URL(input.replace(rule.pattern, rule.replacement));
+          if (target.protocol !== 'https:' || !['google.com', 'www.google.com'].includes(target.hostname) ||
+              target.username || target.password || target.port ||
+              target.pathname !== source.pathname || target.search !== source.search || target.hash) return false;
+        } catch { return false; }
+      }
+    }
+  }
+  return true;
+}
+const hasGoogleCnRewrite = coversGoogleRedirect('google.cn');
+const hasGCnRewrite = coversGoogleRedirect('g.cn');
 console.log('Google CN rewrites: ' + ((hasGoogleCnRewrite && hasGCnRewrite) ? '2/2' : 'incomplete'));
 if (!hasGoogleCnRewrite || !hasGCnRewrite) failed = true;
 
