@@ -25,14 +25,14 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
 
-包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与 FINAL 的实际命中。
+包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与最终 Global 兜底的实际命中。
 
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.6`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.7`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
-- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → 中国直连 → FINAL。FINAL 默认转入 Global，因此未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
+- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 最终 Global 兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
 - 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
 - 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
 - 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
@@ -56,7 +56,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 
 ## 默认分流
 
-规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → FINAL。FINAL 默认选择 🌍 Global，形成“中国大陆白名单直连、其余未知流量代理”的兜底。
+规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 🌍 Global。最后的 Shadowrocket `FINAL` / Clash `MATCH` 规则直接指向 🌍 Global，不再设置额外 FINAL 策略组。
 
 | 策略组 | 初始出口 |
 |---|---|
@@ -65,7 +65,6 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | 🍎 Apple、🪟 Microsoft | DIRECT |
 | 🛑 广告拦截 | REJECT |
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🌍 Global | 🚀 默认代理 |
-| 🐟 FINAL | 🌍 Global |
 
 配置更新通常不会覆盖客户端已保存的选择。可从连接日志核对：
 
@@ -75,9 +74,9 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | ad.doubleclick.net | 🛑 广告拦截 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
-| wikipedia.org | 🐟 FINAL → 🌍 Global |
+| wikipedia.org | 🌍 Global |
 | bytedance.com、bilibili.com | DIRECT |
-| 未匹配域名 | 🐟 FINAL → 🌍 Global |
+| 未匹配域名 | 🌍 Global |
 
 ## 可选：YouTube 增强模块
 

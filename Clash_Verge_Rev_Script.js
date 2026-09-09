@@ -92,8 +92,7 @@ function main(config) {
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇯🇵 日本', '🇺🇸 美国', '🇸🇬 新加坡'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
     { name: '🌍 Global', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡'] },
-    { name: '🛑 广告拦截', type: 'select', proxies: ['REJECT', 'DIRECT', '🚀 默认代理'] },
-    { name: '🐟 FINAL', type: 'select', proxies: ['🌍 Global', 'DIRECT', '🚀 默认代理', '👆 手动选择'] }
+    { name: '🛑 广告拦截', type: 'select', proxies: ['REJECT', 'DIRECT', '🚀 默认代理'] }
   ];
 
   writeLog('log', '保留订阅 DNS 与 hosts，不改写节点入口解析链路');
@@ -134,7 +133,7 @@ function main(config) {
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',
-    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🐟 FINAL'
+    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🌍 Global'
   ];
 
   writeLog('log', `完成：策略组=${config['proxy-groups'].length}，规则集=${Object.keys(config['rule-providers']).length}，规则=${config.rules.length}，DNS/hosts=继承订阅`);
