@@ -11,7 +11,7 @@
 1. 在 Shadowrocket 中保留并正常更新原始 `WestData.conf`。
 2. 导入下列 Routing 配置并设为当前配置。
 3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
-4. 检查“🚀 默认代理”“🌍 国际兜底”和常用业务组是否正常，再按需检查底部地区节点池；确认“🛑 广告拦截”默认选择 `REJECT`。
+4. 检查“🚀 默认代理”和常用业务组是否正常，再按需检查“🐟 漏网之鱼”与底部地区节点池；确认“🛑 广告拦截”默认选择 `REJECT`。
 
 Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供自动回退到“👆 手动选择”的配置机制。若某个地区组没有可用节点，请直接使用“👆 手动选择”，并检查 WestData 节点是否符合“地区 | 节点”的命名格式；空组在客户端中的具体呈现以实际设备行为为准。
 
@@ -25,7 +25,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
 
-包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与最终国际兜底的实际命中。
+包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与“🐟 漏网之鱼”的实际命中。
 
 ### 显式终结与 WestData Rule 隔离
 
@@ -34,19 +34,19 @@ v2.7.9 起，Shadowrocket 保留 `include = WestData.conf`，继续继承 WestDa
 当前 Routing 在中国规则之后加入：
 
 ```ini
-DOMAIN-WILDCARD,*,🌍 国际兜底
-IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve
-IP-CIDR,::/0,🌍 国际兜底,no-resolve
+DOMAIN-WILDCARD,*,🐟 漏网之鱼
+IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve
+IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 ```
 
-目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🌍 国际兜底”接管，不继续进入 WestData 的 `[Rule]`。
+目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🐟 漏网之鱼”接管，不继续进入 WestData 的 `[Rule]`。
 
 该机制已于 2026-09-09 通过 Shadowrocket 实机连接日志验证：
 
 | 验证目标 | WestData 原行为 | 实机结果 |
 |---|---|---|
-| steampowered.com / steamstatic.com | DIRECT | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
-| wikipedia.org / wikimedia.org | PROXY | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
+| steampowered.com / steamstatic.com | DIRECT | 命中 `DOMAIN-WILDCARD,*`，进入漏网之鱼 |
+| wikipedia.org / wikimedia.org | PROXY | 命中 `DOMAIN-WILDCARD,*`，进入漏网之鱼 |
 | 1.1.1.1 与其他直接 IP | 可能继续进入 WestData IP 规则 | 命中当前 Routing 的 `IP-CIDR` 全网段终结规则 |
 
 实机同时确认 AI、Google、GitHub、YouTube、Apple、中国直连与广告拦截等专项规则仍能正常命中，MITM 日志仍正常出现。因此当前架构已达到“继续继承 WestData 基础能力，但由 Routing 接管实际分流”的目标。
@@ -61,16 +61,18 @@ DOMAIN-SUFFIX,deepseek.com,DIRECT
 
 覆盖官网、`chat.deepseek.com` 与 `api.deepseek.com` 等官方子域，并置于 ChatGPT / Gemini / Grok 的代理规则之前。
 
-### 国际兜底手动控制
+### 漏网之鱼
 
-v2.7.12 起，“🌍 国际兜底”在保留“🚀 默认代理”为默认出口的同时，同时提供 `DIRECT` 与“👆 手动选择”。需要临时绕过代理或指定某个具体节点时，都可以直接在国际兜底分组完成，不必修改默认代理或分流规则。
+v2.7.13 起，原“🌍 国际兜底”重命名为“🐟 漏网之鱼”，并从顶部总控区移动到“🛑 广告拦截”之后，更直观地表达其职责：只接收前面所有专项、中国规则都未命中的剩余流量。
+
+“🐟 漏网之鱼”默认仍为“🚀 默认代理”，并保留 `DIRECT`、美国、日本、新加坡与“👆 手动选择”候选项。
 
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.12`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.13`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
-- 规则顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 显式国际兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
+- 规则顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 漏网之鱼。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
 - 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
 - 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
 - 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
@@ -96,19 +98,19 @@ v2.7.12 起，“🌍 国际兜底”在保留“🚀 默认代理”为默认�
 
 两端统一按使用频率与语义层级展示：
 
-1. 总控：🚀 默认代理、🌍 国际兜底、👆 手动选择
+1. 总控：🚀 默认代理、👆 手动选择
 2. 业务：🤖 AI、🍎 Apple、🔎 Google、💻 GitHub、🪟 Microsoft、📱 社交媒体、▶️ YouTube、✈️ Telegram
-3. 功能：🛑 广告拦截
+3. 功能：🛑 广告拦截、🐟 漏网之鱼
 4. 地区节点池：🇭🇰 香港、🏝️ 台湾、🇸🇬 新加坡、🇯🇵 日本、🇺🇸 美国
 
 ## 默认分流
 
-Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 显式国际兜底。Clash 使用同等业务顺序，并最终以 `MATCH,🌍 国际兜底` 收口。
+Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 漏网之鱼。Clash 使用同等业务顺序，并最终以 `MATCH,🐟 漏网之鱼` 收口。
 
 | 策略组 / 服务 | 初始出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
-| 🌍 国际兜底 | 🚀 默认代理（可切换 DIRECT / 👆 手动选择） |
+| 🐟 漏网之鱼 | 🚀 默认代理（可切换 DIRECT / 👆 手动选择） |
 | DeepSeek | DIRECT |
 | 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft | DIRECT |
@@ -124,9 +126,9 @@ Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 �
 | ad.doubleclick.net | 🛑 广告拦截 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
-| wikipedia.org、steampowered.com | 🌍 国际兜底 |
+| wikipedia.org、steampowered.com | 🐟 漏网之鱼 |
 | bytedance.com、bilibili.com | DIRECT |
-| 未匹配域名 | 🌍 国际兜底 |
+| 未匹配域名 | 🐟 漏网之鱼 |
 
 ## 可选：YouTube 增强模块
 

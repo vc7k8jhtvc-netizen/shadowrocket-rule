@@ -77,7 +77,6 @@ function main(config) {
 
   config['proxy-groups'] = [
     { name: '🚀 默认代理', type: 'select', proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '👆 手动选择'] },
-    { name: '🌍 国际兜底', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '👆 手动选择'] },
     allNodesGroup,
     { name: '🤖 AI', type: 'select', proxies: ['🇸🇬 新加坡', '🇺🇸 美国', '🇯🇵 日本', '🚀 默认代理'] },
     { name: '🍎 Apple', type: 'select', proxies: ['DIRECT', '🚀 默认代理', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '👆 手动选择'] },
@@ -88,6 +87,7 @@ function main(config) {
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇯🇵 日本', '🇺🇸 美国', '🇸🇬 新加坡'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
     { name: '🛑 广告拦截', type: 'select', proxies: ['REJECT', 'DIRECT', '🚀 默认代理'] },
+    { name: '🐟 漏网之鱼', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '👆 手动选择'] },
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
     regionalGroup('🏝️ 台湾', regionPatterns.tw, regionMatches.tw),
     regionalGroup('🇸🇬 新加坡', regionPatterns.sg, regionMatches.sg),
@@ -134,7 +134,7 @@ function main(config) {
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',
-    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🌍 国际兜底'
+    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🐟 漏网之鱼'
   ];
 
   writeLog('log', `完成：策略组=${config['proxy-groups'].length}，规则集=${Object.keys(config['rule-providers']).length}，规则=${config.rules.length}，DNS/hosts=继承订阅`);

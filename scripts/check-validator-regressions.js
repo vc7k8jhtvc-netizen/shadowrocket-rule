@@ -27,22 +27,22 @@ try {
 
   fs.writeFileSync(routingPath, routing.replace('DOMAIN-SUFFIX,deepseek.com,DIRECT\n', ''));
   check('check-shadowrocket-routing.js', [], 1, 'DeepSeek DIRECT rule missing');
-  fs.writeFileSync(routingPath, routing.replace('🌍 国际兜底 = select,🚀 默认代理,DIRECT,', '🌍 国际兜底 = select,🚀 默认代理,'));
-  check('check-shadowrocket-routing.js', [], 1, 'international fallback must include DIRECT');
-  fs.writeFileSync(routingPath, routing.replace('DOMAIN-WILDCARD,*,🌍 国际兜底\n', ''));
+  fs.writeFileSync(routingPath, routing.replace('🐟 漏网之鱼 = select,🚀 默认代理,DIRECT,', '🐟 漏网之鱼 = select,🚀 默认代理,'));
+  check('check-shadowrocket-routing.js', [], 1, 'fallback group must include DIRECT');
+  fs.writeFileSync(routingPath, routing.replace('DOMAIN-WILDCARD,*,🐟 漏网之鱼\n', ''));
   check('check-shadowrocket-routing.js', [], 1, 'explicit terminal rules');
-  fs.writeFileSync(routingPath, routing.replace('IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve', 'FINAL,🌍 国际兜底'));
+  fs.writeFileSync(routingPath, routing.replace('IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve', 'FINAL,🐟 漏网之鱼'));
   check('check-shadowrocket-routing.js', [], 1, 'FINAL must not be used');
   fs.writeFileSync(routingPath, routing);
 
   const readmePath = path.join(temp, 'README.md');
   const readme = fs.readFileSync(readmePath, 'utf8');
-  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.12`', '内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.13`', '内部版本为 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(readmePath, readme);
   const changelogPath = path.join(temp, 'CHANGELOG.md');
   const changelog = fs.readFileSync(changelogPath, 'utf8');
-  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.12`', '内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.13`', '内部版本升至 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(changelogPath, changelog);
   const clashPath = path.join(temp, 'Clash_Verge_Rev_Script.js');

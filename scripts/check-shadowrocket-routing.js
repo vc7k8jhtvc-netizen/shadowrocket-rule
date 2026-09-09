@@ -24,12 +24,12 @@ for (const line of proxyGroupLines) {
   const name = line.slice(0, eq).trim(); assert(!groups.has(name), 'duplicate proxy group: ' + name);
   const parts = line.slice(eq + 1).split(',').map(item => item.trim()); assert(parts[0] === 'select', 'unsupported proxy group type: ' + name); groups.set(name, parts.slice(1));
 }
-const expectedGroups = ['🚀 默认代理','🌍 国际兜底','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...groups.keys()]) === JSON.stringify(expectedGroups), 'proxy group display order changed unexpectedly');
-const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🌍 国际兜底':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理','🛑 广告拦截':'REJECT'};
+const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理','🛑 广告拦截':'REJECT'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
-assert(groups.get('🌍 国际兜底').includes('DIRECT'), 'international fallback must include DIRECT');
-assert(groups.get('🌍 国际兜底').includes('👆 手动选择'), 'international fallback must include manual selection');
+assert(groups.get('🐟 漏网之鱼').includes('DIRECT'), 'fallback group must include DIRECT');
+assert(groups.get('🐟 漏网之鱼').includes('👆 手动选择'), 'fallback group must include manual selection');
 const expectedFilters = {'👆 手动选择':'^.+ \\| .+$','🇭🇰 香港':'^.*Hong Kong \\| .+$','🏝️ 台湾':'^.*Taiwan \\| .+$','🇸🇬 新加坡':'^.*Singapore \\| .+$','🇯🇵 日本':'^.*Japan \\| .+$','🇺🇸 美国':'^.*United States \\| .+$'};
 for (const [name, filter] of Object.entries(expectedFilters)) assert(groups.get(name).includes('policy-regex-filter=' + filter), name + ' node filter changed unexpectedly');
 const groupEdges = new Map();
@@ -46,7 +46,7 @@ const builtins = new Set(['DIRECT','REJECT']);
 for (const rule of rules) { const parts = rule.split(','); let policy; if (parts[0] === 'GEOIP') policy = parts[2]; else policy = parts[parts.length - 1] === 'no-resolve' ? parts[parts.length - 2] : parts[parts.length - 1]; assert(builtins.has(policy) || groups.has(policy), 'rule references missing policy: ' + policy); }
 const deepseekRule = 'DOMAIN-SUFFIX,deepseek.com,DIRECT';
 assert(rules.includes(deepseekRule), 'DeepSeek DIRECT rule missing');
-const terminalRules = ['DOMAIN-WILDCARD,*,🌍 国际兜底','IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve','IP-CIDR,::/0,🌍 国际兜底,no-resolve'];
+const terminalRules = ['DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
 assert(!rules.some(rule => rule.startsWith('FINAL,')), 'Shadowrocket FINAL must not be used');
 assert(JSON.stringify(rules.slice(-3)) === JSON.stringify(terminalRules), 'explicit terminal rules must be the final three Shadowrocket rules');
 const requiredOrder = [deepseekRule,'DOMAIN-SUFFIX,chatgpt.com,🤖 AI','DOMAIN,gemini.google.com,🤖 AI','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising.list,🛑 广告拦截','DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising_Domain.list,🛑 广告拦截','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple','DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple_Domain.list,🍎 Apple','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Microsoft/Microsoft.list,🪟 Microsoft','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GitHub/GitHub.list,💻 GitHub','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list,✈️ Telegram','DOMAIN-SUFFIX,bytedance.com,DIRECT','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT','DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list,DIRECT','GEOIP,CN,DIRECT',...terminalRules];

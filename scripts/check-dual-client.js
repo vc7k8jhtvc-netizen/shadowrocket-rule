@@ -20,15 +20,15 @@ const clash = context.main({ proxies: [
   { name:'United States | US-01',type:'ss',server:'127.0.0.1',port:8392,cipher:'aes-128-gcm',password:'test-only' }
 ]});
 const clashGroups = new Map(clash['proxy-groups'].map(group => [group.name, group]));
-const expectedOrder = ['🚀 默认代理','🌍 国际兜底','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...shadowGroups.keys()]) === JSON.stringify(expectedOrder), 'Shadowrocket display order drift');
 assert(JSON.stringify([...clashGroups.keys()]) === JSON.stringify(expectedOrder), 'Clash display order drift');
-const parityGroups = ['🚀 默认代理','🌍 国际兜底','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截'];
+const parityGroups = ['🚀 默认代理','🐟 漏网之鱼','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截'];
 for (const name of parityGroups) { assert(shadowGroups.has(name), 'Shadowrocket missing parity group: ' + name); assert(clashGroups.has(name), 'Clash missing parity group: ' + name); const shadowOptions = shadowGroups.get(name); const clashOptions = clashGroups.get(name).proxies || []; assert(JSON.stringify(shadowOptions) === JSON.stringify(clashOptions), 'proxy group drift between clients: ' + name); }
-assert(shadowGroups.get('🌍 国际兜底').includes('DIRECT'), 'Shadowrocket international fallback missing DIRECT');
-assert(clashGroups.get('🌍 国际兜底').proxies.includes('DIRECT'), 'Clash international fallback missing DIRECT');
-assert(shadowGroups.get('🌍 国际兜底').includes('👆 手动选择'), 'Shadowrocket international fallback missing manual selection');
-assert(clashGroups.get('🌍 国际兜底').proxies.includes('👆 手动选择'), 'Clash international fallback missing manual selection');
+assert(shadowGroups.get('🐟 漏网之鱼').includes('DIRECT'), 'Shadowrocket fallback group missing DIRECT');
+assert(clashGroups.get('🐟 漏网之鱼').proxies.includes('DIRECT'), 'Clash fallback group missing DIRECT');
+assert(shadowGroups.get('🐟 漏网之鱼').includes('👆 手动选择'), 'Shadowrocket fallback group missing manual selection');
+assert(clashGroups.get('🐟 漏网之鱼').proxies.includes('👆 手动选择'), 'Clash fallback group missing manual selection');
 assert(!shadowGroups.has('🐟 FINAL'), 'Shadowrocket obsolete FINAL group must be absent');
 assert(!clashGroups.has('🐟 FINAL'), 'Clash obsolete FINAL group must be absent');
 const nodeGroups = ['👆 手动选择','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
@@ -40,7 +40,7 @@ for (const rule of ['DOMAIN-SUFFIX,deepseek.com,DIRECT','DOMAIN-SUFFIX,bytedance
 assert(shadowRules.indexOf('DOMAIN-SUFFIX,deepseek.com,DIRECT') < shadowRules.indexOf('DOMAIN-SUFFIX,chatgpt.com,🤖 AI'), 'Shadowrocket DeepSeek must precede proxied AI rules');
 assert(clash.rules.indexOf('DOMAIN-SUFFIX,deepseek.com,DIRECT') < clash.rules.indexOf('DOMAIN-SUFFIX,chatgpt.com,🤖 AI'), 'Clash DeepSeek must precede proxied AI rules');
 assert(!shadowRules.some(rule => rule.startsWith('FINAL,')), 'Shadowrocket must not use FINAL');
-const canonicalShadow = ['deepseek.com','Advertising/Advertising.list','Advertising/Advertising_Domain.list','Apple.list','Apple_Domain.list','Microsoft.list','GitHub.list','Telegram.list','bytedance.com','Twitter.list','Instagram.list','TikTok.list','YouTube.list','Google.list','/China/China.list','China_Domain.list','GEOIP,CN,DIRECT','DOMAIN-WILDCARD,*,🌍 国际兜底','IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve','IP-CIDR,::/0,🌍 国际兜底,no-resolve'];
-const canonicalClash = ['deepseek.com','RULE-SET,Advertising,','RULE-SET,Advertising_Domain,','RULE-SET,Apple,','RULE-SET,Apple_Domain,','RULE-SET,Microsoft,','RULE-SET,GitHub,','RULE-SET,Telegram,','bytedance.com','RULE-SET,Twitter,','RULE-SET,Instagram,','RULE-SET,TikTok,','RULE-SET,YouTube,','RULE-SET,Google,','RULE-SET,China,','RULE-SET,China_Domain,','GEOIP,CN,DIRECT','MATCH,🌍 国际兜底'];
+const canonicalShadow = ['deepseek.com','Advertising/Advertising.list','Advertising/Advertising_Domain.list','Apple.list','Apple_Domain.list','Microsoft.list','GitHub.list','Telegram.list','bytedance.com','Twitter.list','Instagram.list','TikTok.list','YouTube.list','Google.list','/China/China.list','China_Domain.list','GEOIP,CN,DIRECT','DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
+const canonicalClash = ['deepseek.com','RULE-SET,Advertising,','RULE-SET,Advertising_Domain,','RULE-SET,Apple,','RULE-SET,Apple_Domain,','RULE-SET,Microsoft,','RULE-SET,GitHub,','RULE-SET,Telegram,','bytedance.com','RULE-SET,Twitter,','RULE-SET,Instagram,','RULE-SET,TikTok,','RULE-SET,YouTube,','RULE-SET,Google,','RULE-SET,China,','RULE-SET,China_Domain,','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'];
 function assertOrdered(rules, markers, label) { let previous = -1; for (const marker of markers) { const index = rules.findIndex((rule, i) => i > previous && rule.includes(marker)); assert(index !== -1, label + ' missing order marker: ' + marker); assert(index > previous, label + ' rule order drift near: ' + marker); previous = index; } }
 assertOrdered(shadowRules, canonicalShadow, 'Shadowrocket'); assertOrdered(clash.rules, canonicalClash, 'Clash'); console.log('PASS: Shadowrocket and Clash parity checks');
