@@ -77,7 +77,7 @@ function main(config) {
 
   config['proxy-groups'] = [
     { name: '🚀 默认代理', type: 'select', proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '👆 手动选择'] },
-    { name: '🌍 国际兜底', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡'] },
+    { name: '🌍 国际兜底', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '👆 手动选择'] },
     allNodesGroup,
     { name: '🤖 AI', type: 'select', proxies: ['🇸🇬 新加坡', '🇺🇸 美国', '🇯🇵 日本', '🚀 默认代理'] },
     { name: '🍎 Apple', type: 'select', proxies: ['DIRECT', '🚀 默认代理', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '👆 手动选择'] },

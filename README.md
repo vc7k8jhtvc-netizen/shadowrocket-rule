@@ -61,9 +61,13 @@ DOMAIN-SUFFIX,deepseek.com,DIRECT
 
 覆盖官网、`chat.deepseek.com` 与 `api.deepseek.com` 等官方子域，并置于 ChatGPT / Gemini / Grok 的代理规则之前。
 
+### 国际兜底手动节点
+
+v2.7.11 起，“🌍 国际兜底”在保留“🚀 默认代理”为默认出口的同时，增加“👆 手动选择”候选项。需要临时指定某个具体节点时，可从国际兜底直接进入完整节点池，不必先修改默认代理。
+
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.10`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.11`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
 - 规则顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 显式国际兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
@@ -104,7 +108,7 @@ Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 �
 | 策略组 / 服务 | 初始出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
-| 🌍 国际兜底 | 🚀 默认代理 |
+| 🌍 国际兜底 | 🚀 默认代理（可切换 👆 手动选择） |
 | DeepSeek | DIRECT |
 | 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft | DIRECT |

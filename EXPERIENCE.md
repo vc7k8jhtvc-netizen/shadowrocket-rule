@@ -30,13 +30,14 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
 - DeepSeek 官方 `deepseek.com` 域固定 DIRECT，并位于 ChatGPT / Gemini / Grok 的 AI 代理规则之前。
+- “🌍 国际兜底”默认仍为“🚀 默认代理”，但必须保留“👆 手动选择”候选项，允许临时指定任意 WestData 节点。
 - 分流顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他专项服务 → China / China_Domain → GEOIP → 显式国际兜底。AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
 - Shadowrocket 不使用 `FINAL`；末端固定为 `DOMAIN-WILDCARD,*`、IPv4 全网段、IPv6 全网段三条显式终结规则，用于让 WestData `[Rule]` 不再承接剩余流量。
 - Clash 最终使用 `MATCH,🌍 国际兜底`；两端最终分流语义一致，实现方式不同。
 - 代理分组显示顺序固定为：总控 → 业务 → 广告拦截 → 地区节点池；地区节点池置底，避免挤占高频业务组。
 - Apple 与中国服务均保留主规则和域名集两部分。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
-- Shadowrocket Routing 与 Clash 的业务策略组、广告拦截主体和规则优先级应保持语义一致；Shadowrocket 的 URL-REGEX 细节由其客户端规则支持。
+- Shadowrocket Routing 与 Clash 的业务策略组、广告拦截主体和规则优先级应保持语义一致；Shadowrocket 的 URL-REGEX 细节由 Shadowrocket 客户端支持。
 - Clash 保留订阅 DNS、hosts、IPv6 和节点入口参数；LAN 使用 `no-resolve`。
 - Clash 继续整体重建策略组并继承节点/DNS 参数；暂不处理保留参数对原策略组的引用依赖。
 - YouTube Worker 精确分流保留在模块内，使用“▶️ YouTube”出口，不扩展到整个 workers.dev。
@@ -53,6 +54,7 @@ bash scripts/check-config.sh
 
 - Routing 仅包含 include / Proxy Group / Rule；
 - DeepSeek DIRECT 规则存在且位于 AI 代理规则与国际兜底之前；
+- “🌍 国际兜底”默认出口为“🚀 默认代理”，并包含“👆 手动选择”；
 - 代理分组名称、默认出口与显示顺序；
 - Shadowrocket 不存在 `FINAL`，且三条显式终结规则完整、顺序固定；
 - Advertising 主规则、域名集及其默认 REJECT 选择；
