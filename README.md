@@ -61,6 +61,19 @@ DOMAIN-SUFFIX,deepseek.com,DIRECT
 
 覆盖官网、`chat.deepseek.com` 与 `api.deepseek.com` 等官方子域，并置于 ChatGPT / Gemini / Grok 的代理规则之前。
 
+### Grok / xAI
+
+v2.7.14 补齐 Grok 当前功能域名。除已有的 `x.ai`、`grok.com` 外，增加：
+
+- `grokusercontent.com`：图片、文件与生成产物资源；
+- `grok-sandbox.com`：代码/沙箱连接；
+- `groktpcontent.com`：Grok 嵌入内容；
+- `grok.me`：Grok Build 官方发布域名；
+- `grokipedia.com`：xAI / Grok 体系内容与认证；
+- `featureassets.org`：Grok 与 ChatGPT 均使用的 Statsig 功能配置域名。
+
+不把 `stapecdn.com`、Server GTM、OneTrust、Google Ads 等共享分析/广告依赖整体划入 AI，避免扩大误匹配。
+
 ### 漏网之鱼
 
 v2.7.13 起，原“🌍 国际兜底”重命名为“🐟 漏网之鱼”，并从顶部总控区移动到“🛑 广告拦截”之后，更直观地表达其职责：只接收前面所有专项、中国规则都未命中的剩余流量。
@@ -69,7 +82,7 @@ v2.7.13 起，原“🌍 国际兜底”重命名为“🐟 漏网之鱼”，�
 
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.13`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.14`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
 - 规则顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 漏网之鱼。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
@@ -123,6 +136,8 @@ Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 �
 |---|---|
 | deepseek.com、chat.deepseek.com、api.deepseek.com | DIRECT |
 | chatgpt.com、gemini.google.com | 🤖 AI |
+| grok.com、x.ai、grokusercontent.com、grok-sandbox.com、groktpcontent.com、grok.me、grokipedia.com | 🤖 AI |
+| featureassets.org | 🤖 AI |
 | ad.doubleclick.net | 🛑 广告拦截 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |

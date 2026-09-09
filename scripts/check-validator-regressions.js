@@ -37,12 +37,12 @@ try {
 
   const readmePath = path.join(temp, 'README.md');
   const readme = fs.readFileSync(readmePath, 'utf8');
-  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.13`', '内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.14`', '内部版本为 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(readmePath, readme);
   const changelogPath = path.join(temp, 'CHANGELOG.md');
   const changelog = fs.readFileSync(changelogPath, 'utf8');
-  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.13`', '内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.14`', '内部版本升至 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(changelogPath, changelog);
   const clashPath = path.join(temp, 'Clash_Verge_Rev_Script.js');
