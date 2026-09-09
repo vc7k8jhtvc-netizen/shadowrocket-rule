@@ -11,7 +11,7 @@
 1. 在 Shadowrocket 中保留并正常更新原始 `WestData.conf`。
 2. 导入下列 Routing 配置并设为当前配置。
 3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
-4. 检查五个地区组及“👆 手动选择”是否正常取到 WestData 节点，并确认“🛑 广告拦截”默认选择 `REJECT`。
+4. 检查“🚀 默认代理”“🌍 国际兜底”和常用业务组是否正常，再按需检查底部地区节点池；确认“🛑 广告拦截”默认选择 `REJECT`。
 
 Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供自动回退到“👆 手动选择”的配置机制。若某个地区组没有可用节点，请直接使用“👆 手动选择”，并检查 WestData 节点是否符合“地区 | 节点”的命名格式；空组在客户端中的具体呈现以实际设备行为为准。
 
@@ -25,14 +25,14 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
 
-包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与最终 Global 兜底的实际命中。
+包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、中国直连与最终国际兜底的实际命中。
 
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.7`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.8`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
-- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 最终 Global 兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
+- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 最终国际兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
 - 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
 - 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
 - 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
@@ -42,7 +42,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 
 1. 添加并更新 WestData 订阅。
 2. 将下列文件设为该订阅的扩展脚本，启用后更新订阅。
-3. 检查地区组；匹配异常可查看脚本控制台。
+3. 检查总控和业务组；匹配异常可查看脚本控制台。
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
 
@@ -54,17 +54,27 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | 含 provider，地区组或全部节点组筛选为空 | 使用 REJECT 阻断 |
 | 无节点来源，或无 provider 且没有符合命名的静态节点 | 停止生成并报错 |
 
+## 代理分组顺序
+
+两端统一按使用频率与语义层级展示：
+
+1. 总控：🚀 默认代理、🌍 国际兜底、👆 手动选择
+2. 业务：🤖 AI、🍎 Apple、🔎 Google、💻 GitHub、🪟 Microsoft、📱 社交媒体、▶️ YouTube、✈️ Telegram
+3. 功能：🛑 广告拦截
+4. 地区节点池：🇭🇰 香港、🏝️ 台湾、🇸🇬 新加坡、🇯🇵 日本、🇺🇸 美国
+
 ## 默认分流
 
-规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 🌍 Global。最后的 Shadowrocket `FINAL` / Clash `MATCH` 规则直接指向 🌍 Global，不再设置额外 FINAL 策略组。
+规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 🌍 国际兜底。最后的 Shadowrocket `FINAL` / Clash `MATCH` 规则直接指向 🌍 国际兜底。
 
 | 策略组 | 初始出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
+| 🌍 国际兜底 | 🚀 默认代理 |
 | 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft | DIRECT |
 | 🛑 广告拦截 | REJECT |
-| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🌍 Global | 🚀 默认代理 |
+| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram | 🚀 默认代理 |
 
 配置更新通常不会覆盖客户端已保存的选择。可从连接日志核对：
 
@@ -74,9 +84,9 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | ad.doubleclick.net | 🛑 广告拦截 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
-| wikipedia.org | 🌍 Global |
+| wikipedia.org | 🌍 国际兜底 |
 | bytedance.com、bilibili.com | DIRECT |
-| 未匹配域名 | 🌍 Global |
+| 未匹配域名 | 🌍 国际兜底 |
 
 ## 可选：YouTube 增强模块
 
