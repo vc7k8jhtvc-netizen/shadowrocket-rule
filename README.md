@@ -39,25 +39,38 @@ IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve
 IP-CIDR,::/0,🌍 国际兜底,no-resolve
 ```
 
-该机制已于 2026-09-09 通过 Shadowrocket 实机连接日志验证，能够让剩余域名与直接 IP 流量在当前高优先级配置层被接管，同时继续继承 WestData 基础能力。
+目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🌍 国际兜底”接管，不继续进入 WestData 的 `[Rule]`。
 
-### 国内服务直连
+该机制已于 2026-09-09 通过 Shadowrocket 实机连接日志验证：
 
-v2.7.10 起补充 DeepSeek 官方域名直连：
+| 验证目标 | WestData 原行为 | 实机结果 |
+|---|---|---|
+| steampowered.com / steamstatic.com | DIRECT | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
+| wikipedia.org / wikimedia.org | PROXY | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
+| 1.1.1.1 与其他直接 IP | 可能继续进入 WestData IP 规则 | 命中当前 Routing 的 `IP-CIDR` 全网段终结规则 |
+
+实机同时确认 AI、Google、GitHub、YouTube、Apple、中国直连与广告拦截等专项规则仍能正常命中，MITM 日志仍正常出现。因此当前架构已达到“继续继承 WestData 基础能力，但由 Routing 接管实际分流”的目标。
+
+### 国内 AI 直连
+
+v2.7.10 起，DeepSeek 官方 `deepseek.com` 域固定直连：
 
 ```ini
 DOMAIN-SUFFIX,deepseek.com,DIRECT
 ```
 
-该规则覆盖 `www.deepseek.com`、`chat.deepseek.com`、`api.deepseek.com` 等官方子域，并置于 AI 代理规则与最终国际兜底之前。
+覆盖官网、`chat.deepseek.com` 与 `api.deepseek.com` 等官方子域，并置于 ChatGPT / Gemini / Grok 的代理规则之前。
 
 ### 广告拦截
 
 正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.10`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
-- 规则顺序：LAN → 国内直连例外 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 显式国际兜底。
-- 不新增 DNS、Rewrite、MITM 或脚本；这些继续继承 WestData。
+- 规则顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他业务 → 中国直连 → 显式国际兜底。未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
+- 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
+- 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
+- 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
+- 广告拦截已同步到 Clash 扩展脚本；Clash 使用官方 `Advertising.yaml` 与 `Advertising_Domain.txt`，Shadowrocket 的 14 条 URL-REGEX 由 Shadowrocket 规则端支持。
 
 ## Clash Verge Rev
 
@@ -69,7 +82,15 @@ DOMAIN-SUFFIX,deepseek.com,DIRECT
 
 脚本重建策略组、规则和规则提供器，保留订阅的 DNS、hosts、IPv6 及节点入口参数，支持 `proxies` 和 `proxy-providers`；广告拦截使用与 Shadowrocket 对应的完整 Advertising 规则集。
 
+| 节点情况 | 处理方式 |
+|---|---|
+| 仅静态节点，某地区为空 | 该地区回退到“👆 手动选择” |
+| 含 provider，地区组或全部节点组筛选为空 | 使用 REJECT 阻断 |
+| 无节点来源，或无 provider 且没有符合命名的静态节点 | 停止生成并报错 |
+
 ## 代理分组顺序
+
+两端统一按使用频率与语义层级展示：
 
 1. 总控：🚀 默认代理、🌍 国际兜底、👆 手动选择
 2. 业务：🤖 AI、🍎 Apple、🔎 Google、💻 GitHub、🪟 Microsoft、📱 社交媒体、▶️ YouTube、✈️ Telegram
@@ -78,7 +99,7 @@ DOMAIN-SUFFIX,deepseek.com,DIRECT
 
 ## 默认分流
 
-Shadowrocket 依次匹配：局域网 → 国内直连例外 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 显式国际兜底。Clash 使用同等业务顺序，并最终以 `MATCH,🌍 国际兜底` 收口。
+Shadowrocket 依次匹配：局域网 → 国内 AI 直连 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → 显式国际兜底。Clash 使用同等业务顺序，并最终以 `MATCH,🌍 国际兜底` 收口。
 
 | 策略组 / 服务 | 初始出口 |
 |---|---|
@@ -109,7 +130,21 @@ Shadowrocket 依次匹配：局域网 → 国内直连例外 → AI 专项例外
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 
+1. 在模块管理中添加并启用。
+2. 确保当前配置的 HTTPS 解密证书已安装并信任。
+3. 更新脚本资源后测试普通视频、Shorts 和 YouTube Music。
+
+模块固定 Maasea 的脚本版本。部分播放请求会转到第三方 `init-stream.maasea.workers.dev`；该精确域名跟随 YouTube 出口，Worker 不加入 MITM。自动检查只验证结构与规则范围，播放增强仍需设备实测。
+
 ## 更新与排查
+
+| 更新内容 | 操作 |
+|---|---|
+| WestData 节点 / 基础配置 | 更新原始 `WestData.conf` |
+| Shadowrocket 分流与广告拦截 | 更新 `Shadowrocket_Routing.conf` |
+| 第三方专项规则 | 由远程规则源更新 |
+| Clash 分流与广告拦截 | 替换脚本后更新订阅 |
+| YouTube 模块 | 更新模块及脚本资源 |
 
 地区组为空时先检查 WestData 节点命名；网站出口不对时检查已保存的策略选择与连接日志；Routing 的 DNS、Host、Rewrite 或 MITM 异常时优先检查被包含的 `WestData.conf`。
 
