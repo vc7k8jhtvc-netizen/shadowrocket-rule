@@ -28,6 +28,7 @@ const expectedGroups = ['🚀 默认代理','🌍 国际兜底','👆 手动选�
 assert(JSON.stringify([...groups.keys()]) === JSON.stringify(expectedGroups), 'proxy group display order changed unexpectedly');
 const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🌍 国际兜底':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理','🛑 广告拦截':'REJECT'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
+assert(groups.get('🌍 国际兜底').includes('DIRECT'), 'international fallback must include DIRECT');
 assert(groups.get('🌍 国际兜底').includes('👆 手动选择'), 'international fallback must include manual selection');
 const expectedFilters = {'👆 手动选择':'^.+ \\| .+$','🇭🇰 香港':'^.*Hong Kong \\| .+$','🏝️ 台湾':'^.*Taiwan \\| .+$','🇸🇬 新加坡':'^.*Singapore \\| .+$','🇯🇵 日本':'^.*Japan \\| .+$','🇺🇸 美国':'^.*United States \\| .+$'};
 for (const [name, filter] of Object.entries(expectedFilters)) assert(groups.get(name).includes('policy-regex-filter=' + filter), name + ' node filter changed unexpectedly');

@@ -4,6 +4,7 @@
 
 ## 2026-09-09
 
+- 内部版本升至 `v2.7.12`：“🌍 国际兜底”增加 `DIRECT` 候选项，并保留“👆 手动选择”；默认仍为“🚀 默认代理”，Shadowrocket / Clash 同步。
 - 内部版本升至 `v2.7.11`：“🌍 国际兜底”增加“👆 手动选择”候选项，默认仍保持“🚀 默认代理”；Shadowrocket / Clash 同步，允许国际兜底临时指定任意 WestData 节点。
 - 内部版本升至 `v2.7.10`：补充 DeepSeek 官方 `deepseek.com` 域直连，覆盖官网、Web Chat 与 API 子域；规则置于 AI 代理规则之前，并同步 Shadowrocket / Clash 与检查器。
 - Shadowrocket 内部版本升至 `v2.7.9`：继续 `include = WestData.conf` 以继承 DNS / MITM / Host / Rewrite / 节点；移除特殊 `FINAL` 兜底，改为当前配置层的 `DOMAIN-WILDCARD,*` 与 IPv4 / IPv6 全网段显式终结规则，目标是让所有剩余流量在进入 WestData `[Rule]` 前由“🌍 国际兜底”接管。

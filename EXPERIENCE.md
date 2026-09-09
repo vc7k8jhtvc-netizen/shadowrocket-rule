@@ -30,7 +30,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
 - DeepSeek 官方 `deepseek.com` 域固定 DIRECT，并位于 ChatGPT / Gemini / Grok 的 AI 代理规则之前。
-- “🌍 国际兜底”默认仍为“🚀 默认代理”，但必须保留“👆 手动选择”候选项，允许临时指定任意 WestData 节点。
+- “🌍 国际兜底”默认仍为“🚀 默认代理”，并必须同时保留 `DIRECT` 与“👆 手动选择”候选项，允许临时直连或指定任意 WestData 节点。
 - 分流顺序：LAN → 国内 AI 直连 → AI 专项例外 → Advertising → 其他专项服务 → China / China_Domain → GEOIP → 显式国际兜底。AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
 - Shadowrocket 不使用 `FINAL`；末端固定为 `DOMAIN-WILDCARD,*`、IPv4 全网段、IPv6 全网段三条显式终结规则，用于让 WestData `[Rule]` 不再承接剩余流量。
 - Clash 最终使用 `MATCH,🌍 国际兜底`；两端最终分流语义一致，实现方式不同。
@@ -54,7 +54,7 @@ bash scripts/check-config.sh
 
 - Routing 仅包含 include / Proxy Group / Rule；
 - DeepSeek DIRECT 规则存在且位于 AI 代理规则与国际兜底之前；
-- “🌍 国际兜底”默认出口为“🚀 默认代理”，并包含“👆 手动选择”；
+- “🌍 国际兜底”默认出口为“🚀 默认代理”，并同时包含 `DIRECT` 与“👆 手动选择”；
 - 代理分组名称、默认出口与显示顺序；
 - Shadowrocket 不存在 `FINAL`，且三条显式终结规则完整、顺序固定；
 - Advertising 主规则、域名集及其默认 REJECT 选择；

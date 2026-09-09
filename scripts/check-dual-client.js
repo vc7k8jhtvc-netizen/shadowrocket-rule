@@ -25,6 +25,10 @@ assert(JSON.stringify([...shadowGroups.keys()]) === JSON.stringify(expectedOrder
 assert(JSON.stringify([...clashGroups.keys()]) === JSON.stringify(expectedOrder), 'Clash display order drift');
 const parityGroups = ['🚀 默认代理','🌍 国际兜底','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🛑 广告拦截'];
 for (const name of parityGroups) { assert(shadowGroups.has(name), 'Shadowrocket missing parity group: ' + name); assert(clashGroups.has(name), 'Clash missing parity group: ' + name); const shadowOptions = shadowGroups.get(name); const clashOptions = clashGroups.get(name).proxies || []; assert(JSON.stringify(shadowOptions) === JSON.stringify(clashOptions), 'proxy group drift between clients: ' + name); }
+assert(shadowGroups.get('🌍 国际兜底').includes('DIRECT'), 'Shadowrocket international fallback missing DIRECT');
+assert(clashGroups.get('🌍 国际兜底').proxies.includes('DIRECT'), 'Clash international fallback missing DIRECT');
+assert(shadowGroups.get('🌍 国际兜底').includes('👆 手动选择'), 'Shadowrocket international fallback missing manual selection');
+assert(clashGroups.get('🌍 国际兜底').proxies.includes('👆 手动选择'), 'Clash international fallback missing manual selection');
 assert(!shadowGroups.has('🐟 FINAL'), 'Shadowrocket obsolete FINAL group must be absent');
 assert(!clashGroups.has('🐟 FINAL'), 'Clash obsolete FINAL group must be absent');
 const nodeGroups = ['👆 手动选择','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];

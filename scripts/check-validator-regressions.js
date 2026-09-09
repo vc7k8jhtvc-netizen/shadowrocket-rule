@@ -27,6 +27,8 @@ try {
 
   fs.writeFileSync(routingPath, routing.replace('DOMAIN-SUFFIX,deepseek.com,DIRECT\n', ''));
   check('check-shadowrocket-routing.js', [], 1, 'DeepSeek DIRECT rule missing');
+  fs.writeFileSync(routingPath, routing.replace('🌍 国际兜底 = select,🚀 默认代理,DIRECT,', '🌍 国际兜底 = select,🚀 默认代理,'));
+  check('check-shadowrocket-routing.js', [], 1, 'international fallback must include DIRECT');
   fs.writeFileSync(routingPath, routing.replace('DOMAIN-WILDCARD,*,🌍 国际兜底\n', ''));
   check('check-shadowrocket-routing.js', [], 1, 'explicit terminal rules');
   fs.writeFileSync(routingPath, routing.replace('IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve', 'FINAL,🌍 国际兜底'));
@@ -35,12 +37,12 @@ try {
 
   const readmePath = path.join(temp, 'README.md');
   const readme = fs.readFileSync(readmePath, 'utf8');
-  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.10`', '内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath, readme.replace('内部版本为 `v2.7.12`', '内部版本为 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(readmePath, readme);
   const changelogPath = path.join(temp, 'CHANGELOG.md');
   const changelog = fs.readFileSync(changelogPath, 'utf8');
-  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.10`', '内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath, changelog.replace('内部版本升至 `v2.7.12`', '内部版本升至 `v9.9.9`'));
   check('check-version.js', [], 1, 'version mismatch');
   fs.writeFileSync(changelogPath, changelog);
   const clashPath = path.join(temp, 'Clash_Verge_Rev_Script.js');
@@ -69,5 +71,5 @@ try {
   const candidate = path.join(temp,'candidate.sgmodule'); fs.writeFileSync(candidate,'[MITM]\n'); execFileSync('git',['-C',temp,'add','candidate.sgmodule','scripts/check-sensitive-data.js']);
   for (const field of ['ca-passphrase','ca-p12']) for (const value of ['AuditFixture9876','test-only','placeholder']) { fs.writeFileSync(candidate,'[MITM]\n'+field+' = '+value+'\n'); check('check-sensitive-data.js',[],1,'MITM CA material'); }
   fs.writeFileSync(candidate,'[MITM]\nca-passphrase =\nca-p12 = ""\n# ca-p12 = documentation\n'); check('check-sensitive-data.js',[],0);
-  console.log('PASS: validator regressions reject DeepSeek drift, terminal-rule drift, missing/cyclic groups, invalid redirects and CA exports');
+  console.log('PASS: validator regressions reject fallback-option drift, DeepSeek drift, terminal-rule drift, missing/cyclic groups, invalid redirects and CA exports');
 } finally { fs.rmSync(temp, { recursive:true, force:true }); }
