@@ -39,7 +39,17 @@ IP-CIDR,0.0.0.0/0,🌍 国际兜底,no-resolve
 IP-CIDR,::/0,🌍 国际兜底,no-resolve
 ```
 
-目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🌍 国际兜底”接管，不继续进入 WestData 的 `[Rule]`。该跨 `include` 的最终编译行为必须以 Shadowrocket 实机连接日志确认；重点测试 `steampowered.com`（WestData 原规则为 DIRECT）与 `wikipedia.org`（WestData 原规则为 PROXY），两者都应命中“🌍 国际兜底”。
+目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🌍 国际兜底”接管，不继续进入 WestData 的 `[Rule]`。
+
+该机制已于 2026-09-09 通过 Shadowrocket 实机连接日志验证：
+
+| 验证目标 | WestData 原行为 | 实机结果 |
+|---|---|---|
+| steampowered.com / steamstatic.com | DIRECT | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
+| wikipedia.org / wikimedia.org | PROXY | 命中 `DOMAIN-WILDCARD,*`，进入国际兜底 |
+| 1.1.1.1 与其他直接 IP | 可能继续进入 WestData IP 规则 | 命中当前 Routing 的 `IP-CIDR` 全网段终结规则 |
+
+实机同时确认 AI、Google、GitHub、YouTube、Apple、中国直连与广告拦截等专项规则仍能正常命中，MITM 日志仍正常出现。因此当前架构已达到“继续继承 WestData 基础能力，但由 Routing 接管实际分流”的目标。
 
 ### 广告拦截
 

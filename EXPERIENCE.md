@@ -29,7 +29,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
 - 分流顺序：LAN → AI 专项例外 → Advertising → 其他专项服务 → China / China_Domain → GEOIP → 显式国际兜底。AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
-- Shadowrocket 不使用 `FINAL`；末端固定为 `DOMAIN-WILDCARD,*`、IPv4 全网段、IPv6 全网段三条显式终结规则，目标是让 WestData `[Rule]` 不再承接剩余流量。
+- Shadowrocket 不使用 `FINAL`；末端固定为 `DOMAIN-WILDCARD,*`、IPv4 全网段、IPv6 全网段三条显式终结规则，用于让 WestData `[Rule]` 不再承接剩余流量。
 - Clash 最终使用 `MATCH,🌍 国际兜底`；两端最终分流语义一致，实现方式不同。
 - 代理分组显示顺序固定为：总控 → 业务 → 广告拦截 → 地区节点池；地区节点池置底，避免挤占高频业务组。
 - Apple 与中国服务均保留主规则和域名集两部分。
@@ -65,11 +65,18 @@ node scripts/check-westdata-local.js /path/to/private-westdata.conf
 
 私人 WestData 配置不得提交。WestData 大改后，必须在设备上核对包含关系、总控与业务组、地区节点、AI / 广告 / YouTube / GitHub、中国直连与国际兜底，以及 Google Rewrite/MITM。
 
-v2.7.9 还必须用连接日志验证：
+## v2.7.9 实机验证结论
 
-- `steampowered.com` 命中 🌍 国际兜底，而不是 WestData DIRECT；
-- `wikipedia.org` 命中 🌍 国际兜底，而不是 WestData PROXY。
+已于 2026-09-09 通过 Shadowrocket 连接日志确认：
 
-若这两个冲突样本仍进入 WestData Rule，不得通过手工补域名掩盖，应重新评估 Shadowrocket 的跨 include 编译顺序。
+- `steampowered.com` / `steamstatic.com` 命中当前 Routing 的 `DOMAIN-WILDCARD,*`，没有落入 WestData DIRECT；
+- `wikipedia.org` / `wikimedia.org` 命中当前 Routing 的 `DOMAIN-WILDCARD,*`，没有落入 WestData PROXY；
+- `1.1.1.1` 及其他直接 IP 流量命中当前 Routing 的 `IP-CIDR` 全网段终结规则；
+- AI、Google、GitHub、YouTube、Apple、中国直连与广告拦截等专项规则仍正常；
+- MITM 日志仍正常出现，说明继承的 WestData 基础能力未因终结机制失效。
+
+因此当前架构已验证达到：**WestData 提供基础能力，Routing 接管实际分流，WestData Rule 不再承担剩余流量。**
+
+后续若调整 Shadowrocket 的 include、终结规则类型或规则顺序，必须重新执行上述冲突样本与纯 IP 回归验证；不得通过手工补域名掩盖架构回归。
 
 普通维护可直接更新 `main`；较大改动按需使用分支/PR。

@@ -4,7 +4,8 @@
 
 ## 2026-09-09
 
-- Shadowrocket 内部版本升至 `v2.7.9`：继续 `include = WestData.conf` 以继承 DNS / MITM / Host / Rewrite / 节点；移除特殊 `FINAL` 兜底，改为当前配置层的 `DOMAIN-WILDCARD,*` 与 IPv4 / IPv6 全网段显式终结规则，目标是让所有剩余流量在进入 WestData `[Rule]` 前由“🌍 国际兜底”接管。该跨 include 编译行为需以实机连接日志验证。
+- Shadowrocket 内部版本升至 `v2.7.9`：继续 `include = WestData.conf` 以继承 DNS / MITM / Host / Rewrite / 节点；移除特殊 `FINAL` 兜底，改为当前配置层的 `DOMAIN-WILDCARD,*` 与 IPv4 / IPv6 全网段显式终结规则，目标是让所有剩余流量在进入 WestData `[Rule]` 前由“🌍 国际兜底”接管。
+- v2.7.9 已完成实机验证：`steampowered.com` / `steamstatic.com` 与 `wikipedia.org` / `wikimedia.org` 均命中当前 Routing 的 `DOMAIN-WILDCARD,*`，未落入 WestData 的 DIRECT / PROXY；`1.1.1.1` 等直接 IP 命中当前 Routing 的 `IP-CIDR` 全网段终结规则。专项规则及 WestData MITM 基础能力同时保持正常。
 - 优化代理分组展示结构，内部版本升至 `v2.7.8`：将“🚀 默认代理 / 🌍 国际兜底 / 👆 手动选择”置顶，业务分组居中，广告拦截单列，地区节点池下沉到底部；同时将 `🌍 Global` 重命名为 `🌍 国际兜底`，不改变实际分流语义。
 - 删除冗余的 `🐟 FINAL` 策略组，内部版本升至 `v2.7.7`：Shadowrocket `FINAL` 与 Clash `MATCH` 直接指向 `🌍 Global`，减少一层无独立业务语义的策略跳转；同步检查器与文档。
 - 将主分流逻辑改为“中国大陆白名单直连、其余未知流量默认代理”，内部版本升至 `v2.7.6`：移除两端对 `Global.list` 的引用，🐟 FINAL 默认转入 🌍 Global；删除手工维护的 `Global.list`，同步更新检查器与文档。
