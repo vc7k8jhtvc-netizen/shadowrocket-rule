@@ -126,6 +126,7 @@ function main(config) {
 
   config.rules = [
     'RULE-SET,Lan,DIRECT,no-resolve',
+    'DOMAIN-SUFFIX,deepseek.com,DIRECT',
     'DOMAIN-SUFFIX,chatgpt.com,🤖 AI','DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI','DOMAIN-SUFFIX,intercom.io,🤖 AI','DOMAIN-SUFFIX,intercomcdn.com,🤖 AI','DOMAIN-SUFFIX,oaistatic.com,🤖 AI','DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI','DOMAIN-SUFFIX,openai.com,🤖 AI','DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
     'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,cdn.workos.com,🤖 AI','DOMAIN,challenges.cloudflare.com,🤖 AI','DOMAIN,forwarder.workos.com,🤖 AI','DOMAIN,humb.apple.com,🤖 AI','DOMAIN,images.workoscdn.com,🤖 AI','DOMAIN,js.stripe.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI','DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI','DOMAIN,setup.workos.com,🤖 AI','DOMAIN,workos.imgix.net,🤖 AI',
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI','DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI',
