@@ -15,21 +15,20 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 
 | 修改内容 | 维护要求 |
 |---|---|
-| 个人未分类国际服务域名 | 只修改 Global.list，两端远程共用；不重复收录已有专项规则覆盖的服务 |
+| 未分类国际服务域名 | 不再单独维护域名清单；中国规则与 GEOIP 未命中后，由 FINAL 默认进入 🌍 Global |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
 | 广告拦截规则 | Shadowrocket 使用 `Advertising.list` 与 `Advertising_Domain.list`；Clash 使用 `Advertising.yaml` 与 `Advertising_Domain.txt`；两端保持默认 REJECT 与规则优先级一致 |
 | Shadowrocket 基础网络参数 | Routing 不复制；由被包含的 WestData.conf 负责 |
 | Shadowrocket Rewrite / MITM / Host | Routing 不维护；供应商基础功能由 WestData.conf 提供，额外增强继续模块化 |
 | 兼容性修复或默认出口调整 | 记录 CHANGELOG，并保持 Routing 职责边界不变 |
 | 新增主分流功能、策略组结构或规则优先级变化 | 升级 Routing 版本并同步双端检查 |
-| 仅更新 Global.list 数据 | 记录 CHANGELOG；不要求升级 Routing 版本 |
 
-不重新镜像第三方完整规则库，不引入未经验证的大型 Global 规则。
+不重新镜像第三方完整规则库，不为普通国际站点维护大型手工域名补丁表。
 
 ## 必须保留的行为
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`，不得重新复制 DNS、TUN、Host、Rewrite、MITM 等基础设置。
-- 分流顺序：LAN → AI 专项例外 → Advertising → 其他专项服务 → Global → China / China_Domain → GEOIP → FINAL；AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
+- 分流顺序：LAN → AI 专项例外 → Advertising → 其他专项服务 → China / China_Domain → GEOIP → FINAL；FINAL 默认进入 🌍 Global。AI 在 Google 之前，字节跳动大陆直连规则在 TikTok 之前。
 - Apple 与中国服务均保留主规则和域名集两部分。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
 - Shadowrocket Routing 与 Clash 的业务策略组、广告拦截主体和规则优先级应保持语义一致；Shadowrocket 的 URL-REGEX 细节由其客户端规则支持。

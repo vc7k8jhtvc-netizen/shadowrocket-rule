@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 共用 [Global.list](Global.list)，分别维护策略组与分流逻辑。
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组与“中国大陆直连、其余未知流量默认代理”分流语义。
 
 ## Shadowrocket
 
@@ -29,10 +29,10 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 
 ### 广告拦截
 
-正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.5`。
+正式配置已合并经实机试用无异常的广告拦截规则，内部版本为 `v2.7.6`。
 
 - “🛑 广告拦截”默认 `REJECT`；使用 [blackmatrix7 完整 Advertising](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Advertising/README.md) 的 `Advertising.list` 和 `Advertising_Domain.list`，不叠加 Lite、Privacy 或 Hijacking。
-- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → Global → 中国直连 → FINAL。广告规则优先于业务规则，以保持拦截效果。
+- 规则顺序：LAN → AI 专项例外 → Advertising → 其他业务 → 中国直连 → FINAL。FINAL 默认转入 Global，因此未知非中国流量无需手工补域名。广告规则优先于业务规则，以保持拦截效果。
 - 不新增 DNS、Rewrite、MITM 或脚本。完整规则中的 HTTPS URL 正则只在相应域名已有 MITM 覆盖时生效。
 - 选 `DIRECT` 或“🚀 默认代理”可用于排障；命中后会直接使用所选出口，不会继续匹配后续规则。
 - 可从连接日志检查 `ad.doubleclick.net` 是否命中“🛑 广告拦截”；激励广告可能无法使用。
@@ -56,15 +56,16 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 
 ## 默认分流
 
-规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 个人 Global → 中国规则与中国 IP → FINAL。
+规则依次匹配：局域网 → AI 专项例外 → Advertising → 其他专项服务 → 中国规则与中国 IP → FINAL。FINAL 默认选择 🌍 Global，形成“中国大陆白名单直连、其余未知流量代理”的兜底。
 
 | 策略组 | 初始出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
 | 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
-| 🍎 Apple、🪟 Microsoft、🐟 FINAL | DIRECT |
+| 🍎 Apple、🪟 Microsoft | DIRECT |
 | 🛑 广告拦截 | REJECT |
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🌍 Global | 🚀 默认代理 |
+| 🐟 FINAL | 🌍 Global |
 
 配置更新通常不会覆盖客户端已保存的选择。可从连接日志核对：
 
@@ -74,9 +75,9 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | ad.doubleclick.net | 🛑 广告拦截 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
-| wikipedia.org | 🌍 Global |
+| wikipedia.org | 🐟 FINAL → 🌍 Global |
 | bytedance.com、bilibili.com | DIRECT |
-| 未匹配域名 | 🐟 FINAL |
+| 未匹配域名 | 🐟 FINAL → 🌍 Global |
 
 ## 可选：YouTube 增强模块
 
@@ -96,7 +97,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 |---|---|
 | WestData 节点 / 基础配置 | 更新原始 `WestData.conf` |
 | Shadowrocket 分流与广告拦截 | 更新 `Shadowrocket_Routing.conf` |
-| 专项规则、Global.list | 更新远程规则 |
+| 第三方专项规则 | 由远程规则源更新 |
 | Clash 分流与广告拦截 | 替换脚本后更新订阅 |
 | YouTube 模块 | 更新模块及脚本资源 |
 

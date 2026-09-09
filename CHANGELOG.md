@@ -2,6 +2,10 @@
 
 仅保留关键结果。当前用法见 [README](README.md)，完整修改与临时试验见 [Git 历史](https://github.com/vc7k8jhtvc-netizen/shadowrocket-rule/commits/main/)。
 
+## 2026-09-09
+
+- 将主分流逻辑改为“中国大陆白名单直连、其余未知流量默认代理”，内部版本升至 `v2.7.6`：移除两端对 `Global.list` 的引用，🐟 FINAL 默认转入 🌍 Global；删除手工维护的 `Global.list`，同步更新检查器与文档。
+
 ## 2026-09-08
 
 - 将完成实机试用且无异常的广告拦截方案合并到正式 `Shadowrocket_Routing.conf`，内部版本升至 `v2.7.5`，正式文件名保持不变；同步加入 Clash 扩展脚本。两端使用 blackmatrix7 完整 Advertising 规则输出，广告组默认 `REJECT`，置于 AI 专项后、其他业务前。
