@@ -6,7 +6,7 @@
  * 1. 继承原项目架构：“节点来源与分流逻辑分离”。
  * 2. 自动清空机场订阅中自带的杂乱策略组和规则，接管为本项目严格定义的策略组和分层规则。
  * 3. 同时兼容 proxies 与 proxy-providers，通过节点名称划分地区节点池。
- * 4. 与小火箭版本同步主要策略组、Advertising 与规则优先级。
+ * 4. 与小火箭版本同步主要策略组、Advertising、自定义规则与规则优先级。
  */
 
 function main(config) {
@@ -86,6 +86,7 @@ function main(config) {
     { name: '📱 社交媒体', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇸🇬 新加坡', '🇯🇵 日本'] },
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇯🇵 日本', '🇺🇸 美国', '🇸🇬 新加坡'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
+    { name: '🧩 自定义', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡'] },
     { name: '🛑 广告拦截', type: 'select', proxies: ['REJECT', 'DIRECT', '🚀 默认代理'] },
     { name: '🐟 漏网之鱼', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '👆 手动选择'] },
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
@@ -118,6 +119,11 @@ function main(config) {
     TikTok: classicalProvider('TikTok'),
     YouTube: classicalProvider('YouTube'),
     Google: classicalProvider('Google'),
+    Custom: {
+      type: 'http', behavior: 'classical', format: 'text',
+      url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list',
+      path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理'
+    },
     Advertising: { type: 'http', behavior: 'classical', format: 'yaml', url: `${blackmatrix}/Clash/Advertising/Advertising.yaml`, path: './rule_providers/Advertising.yaml', interval: 86400, proxy: '🚀 默认代理' },
     Advertising_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/Advertising/Advertising_Domain.txt`, path: './rule_providers/Advertising_Domain.txt', interval: 86400, proxy: '🚀 默认代理' },
     China: classicalProvider('China'),
@@ -135,6 +141,7 @@ function main(config) {
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',
+    'RULE-SET,Custom,🧩 自定义',
     'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🐟 漏网之鱼'
   ];
 
