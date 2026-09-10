@@ -45,6 +45,12 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 bash scripts/check-config.sh
 ```
 
+私有 `WestData.conf` 不提交仓库；需要检查本地实际订阅时，显式传入文件路径：
+
+```bash
+WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
+```
+
 检查覆盖：
 
 - Routing 仅包含 include / Proxy Group / Rule；
@@ -56,6 +62,7 @@ bash scripts/check-config.sh
 - Advertising 默认 REJECT；
 - 当前树敏感信息；
 - Routing 配置、README 与当前 CHANGELOG 的版本一致性。
+- 若设置 `WESTDATA_CONFIG`，额外检查本地私有订阅的兼容性。
 
 ## v2.7.9 实机验证结论
 

@@ -4,6 +4,7 @@
 
 ## 2026-09-10
 
+- 修复同一日期下多条版本记录导致的 CI 版本校验误报；恢复 Clash 检查器生成 Mihomo 测试配置，并支持通过 `WESTDATA_CONFIG` 校验本地私有订阅。
 - 内部版本升至 `v2.7.15`：恢复原 `Global.list` 的完整个人规则内容并更名为 `Custom.list`，原“🌍 Global”策略组改为“🧩 自定义”；规则恢复到 Google 之后、中国规则之前。Shadowrocket / Clash 双端同步；“🐟 漏网之鱼”仍保持最终兜底，不恢复旧 FINAL 架构。
 - 内部版本升至 `v2.7.14`：补齐 Grok / xAI 功能域名，新增 `grokusercontent.com`、`grok-sandbox.com`、`groktpcontent.com`、`grok.me`、`grokipedia.com` 与 `featureassets.org` 到“🤖 AI”，并同步 Shadowrocket / Clash；共享广告、统计与 Cookie 依赖不纳入 AI。
 

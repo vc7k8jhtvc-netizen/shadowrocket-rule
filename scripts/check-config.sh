@@ -40,5 +40,9 @@ node "$dual_check"
 node "$clash_check" "$clash_script"
 node "$youtube_check"
 node "$validator_check"
+if [[ -n "${WESTDATA_CONFIG:-}" ]]; then
+  [[ -f "$WESTDATA_CONFIG" ]] || fail "WESTDATA_CONFIG file not found: $WESTDATA_CONFIG"
+  node "$westdata_check" "$WESTDATA_CONFIG"
+fi
 node "$version_check"
 printf 'PASS: configuration static checks\n'

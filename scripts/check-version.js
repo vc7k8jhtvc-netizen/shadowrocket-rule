@@ -16,6 +16,12 @@ function extractExactly(text, pattern, label) {
   return matches[0];
 }
 
+function extractFirst(text, pattern, label) {
+  const match = pattern.exec(text);
+  if (!match) fail(label + ' must contain a current version');
+  return match[1];
+}
+
 const routingVersion = extractExactly(
   read('Shadowrocket_Routing.conf'),
   /^# 版本：(v\d+\.\d+\.\d+)$/gm,
@@ -29,7 +35,7 @@ const readmeVersion = extractExactly(
 
 const changelogSections = read('CHANGELOG.md').split(/^## /m).slice(1);
 if (!changelogSections.length) fail('CHANGELOG has no dated section');
-const changelogVersion = extractExactly(
+const changelogVersion = extractFirst(
   changelogSections[0],
   /内部版本(?:升至|为)\s+`(v\d+\.\d+\.\d+)`/g,
   'current CHANGELOG section'

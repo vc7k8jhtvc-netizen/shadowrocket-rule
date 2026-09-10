@@ -49,14 +49,56 @@ assert(!group(direct,'👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'),
 assert(JSON.stringify(group(direct,'🏝️ 台湾').proxies)===JSON.stringify(['👆 手动选择']),'empty region fallback');
 assert(logs.some(item=>item.message.includes('开始生成')),'start log');
 assert(logs.some(item=>item.message.includes('完成：')),'completion log');
+assert(logs.some(item=>item.level==='warn'&&item.message.includes('台湾')),'fallback warning');
+assert(!logs.some(item=>item.message.includes('HK-01')),'console must not expose node names');
+assert(direct.rules[0]==='RULE-SET,Lan,DIRECT,no-resolve','LAN must not resolve domains before service rules');
+assert(JSON.stringify(group(direct,'🛑 广告拦截').proxies)===JSON.stringify(['REJECT','DIRECT','🚀 默认代理']),'Advertising group options');
+assert(direct['rule-providers'].Advertising.behavior==='classical','Advertising classical provider');
+assert(direct['rule-providers'].Advertising.format==='yaml','Advertising YAML provider');
+assert(direct['rule-providers'].Advertising.url.includes('/Clash/Advertising/Advertising.yaml'),'Advertising provider source');
+assert(direct['rule-providers'].Advertising_Domain.behavior==='domain','Advertising domain provider');
+assert(direct['rule-providers'].Advertising_Domain.url.includes('/Clash/Advertising/Advertising_Domain.txt'),'Advertising domain provider source');
+assert(direct['rule-providers'].Apple_Domain.behavior==='domain','Apple domain provider');
+assert(direct['rule-providers'].China_Domain.behavior==='domain','China domain provider');
+assert(!group(direct,'🐟 FINAL'),'obsolete FINAL policy group must be absent');
+
+const ruleSetNames=new Set(Object.keys(direct['rule-providers']));
+for(const rule of direct.rules){
+  if(!rule.startsWith('RULE-SET,'))continue;
+  const name=rule.split(',')[1];
+  assert(ruleSetNames.has(name),`missing rule provider: ${name}`);
+}
+const advertisingIndex=direct.rules.indexOf('RULE-SET,Advertising,🛑 广告拦截');
+const advertisingDomainIndex=direct.rules.indexOf('RULE-SET,Advertising_Domain,🛑 广告拦截');
+const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple');
+const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
+const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
+assert(advertisingIndex<advertisingDomainIndex&&advertisingDomainIndex<appleIndex,'Advertising/Apple order');
+assert(chinaIndex<chinaDomainIndex&&chinaDomainIndex<fallbackIndex,'China/China_Domain/fallback order');
+assert(direct['rule-providers'].China_Domain.url.includes('China_Domain.list'),'China domain rule-provider source');
 
 const provider=context.main({'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
 assert(group(provider,'👆 手动选择').use.includes('WestData'),'provider support');
 assert(group(provider,'👆 手动选择')['empty-fallback']==='REJECT','provider all-node fail closed');
+assert(group(provider,'👆 手动选择').filter==='^.+ \\| .+$','all-node provider filter');
 for(const name of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国']){
   const region=group(provider,name);
   assert(region.use.includes('WestData'),name+' provider inclusion');
+  assert(!region.filter.startsWith('(?i)'),name+' provider filter must remain case-sensitive');
   assert(region['empty-fallback']==='REJECT',name+' fail closed');
+  assert(!region.proxies||!region.proxies.includes('👆 手动选择'),name+' provider fallback must not mask filtering');
 }
 let rejected=false;try{context.main({});}catch(error){rejected=/proxies/.test(error.message);}assert(rejected,'empty subscriptions must fail closed');
+for(const name of ['HK-01','剩余流量：10GB']){
+  const input={proxies:[{...directInput.proxies[0],name}],rules:['MATCH,DIRECT']};
+  const before=JSON.stringify(input);
+  let rejectedSubscription=false;
+  try{context.main(input);}catch(error){rejectedSubscription=/WestData/.test(error.message);}
+  assert(rejectedSubscription,'subscriptions with no matching static nodes must be rejected');
+  assert(JSON.stringify(input)===before,'rejected subscription must not be partially rewritten');
+}
+const mixed=context.main({proxies:[{...directInput.proxies[0],name:'HK-01'}],'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
+assert(group(mixed,'👆 手动选择').use.includes('WestData'),'unmatched static nodes must not reject a provider subscription');
+assert(group(mixed,'👆 手动选择')['empty-fallback']==='REJECT','mixed subscription must fail closed');
+if(process.env.MIHOMO_CONFIG_OUTPUT)fs.writeFileSync(process.env.MIHOMO_CONFIG_OUTPUT,JSON.stringify(direct,null,2));
 console.log('PASS: Clash Verge Rev Custom routing checks');
