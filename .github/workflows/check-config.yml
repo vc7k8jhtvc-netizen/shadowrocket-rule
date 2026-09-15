@@ -23,13 +23,13 @@ jobs:
           MIHOMO_CONFIG_OUTPUT: ${{ runner.temp }}/generated-mihomo.json
         run: node scripts/check-clash-script.js Clash_Verge_Rev_Script.js
 
-      - name: Validate with Mihomo core v1.19.30
+      - name: Validate with Mihomo core v1.19.31
         env:
-          MIHOMO_VERSION: v1.19.30
+          MIHOMO_VERSION: v1.19.31
         run: |
           archive="${RUNNER_TEMP}/mihomo.gz"
           curl -fsSL "https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-amd64-${MIHOMO_VERSION}.gz" -o "${archive}"
-          echo "cf06ce2c7d1421bdbda14ee4a5b6046672dc35ebf8eecd8e77504ec3c0ed9a84  ${archive}" | sha256sum -c -
+          echo "d5e74bbddbdfff49a1aef7775bf5911da59f0d7196ed509a0ac914b3653dd5f1  ${archive}" | sha256sum -c -
           gzip -dc "${archive}" > "${RUNNER_TEMP}/mihomo"
           chmod +x "${RUNNER_TEMP}/mihomo"
           "${RUNNER_TEMP}/mihomo" -t -f "${RUNNER_TEMP}/generated-mihomo.json"
