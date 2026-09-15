@@ -4,6 +4,7 @@
 
 ## 2026-09-15
 
+- 内部版本升至 `v2.7.17`：将 YouTube 增强与 Advertising 官方 HTTPS MITM 主机范围合并为单一 Shadowrocket 模块，保留原有脚本/规则与安全边界；删除独立广告模块及其专用校验器，私人 `WestData.conf` 不变。
 - 内部版本升至 `v2.7.16`：修复 Clash 错用 Shadowrocket `China_Domain.list` 的问题，改用上游 Clash `China_Domain.txt`；移除 Clash `GEOIP,CN,DIRECT` 的 `no-resolve`，与 Shadowrocket 保持中国直连语义一致。
 - 新增可选 `Advertising.MITM.Shadowrocket.sgmodule`，仅提供官方广告主机名的 HTTPS MITM 覆盖；不修改私人 `WestData.conf`，并加入模块范围、CA 安全与中国规则语义回归检查。
 

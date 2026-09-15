@@ -41,5 +41,7 @@ for (const [name, type, file, sample] of cases) {
   const argument = line.match(/,argument="(.*)"$/);
   if (argument) assert(JSON.parse(argument[1]).captionLang === 'off', 'caption default changed');
 }
-assert(JSON.stringify(section('MITM')) === JSON.stringify(['hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com']), 'unexpected MITM scope');
-console.log('PASS: YouTube module routing, pinned hooks and MITM scope (not device playback)');
+assert(/^#!name=YouTube \+ Advertising Enhance \(Pinned\)$/m.test(text), 'combined module metadata drift');
+assert(JSON.stringify(section('MITM')) === JSON.stringify(["hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com, *.beacon.qq.com,*.gdt.qq.com,*.l.qq.com,ad*.sina.com,ad*.sina.com.cn,app.58.com,cdn-1rtb.caiyunapp.com,d*.sinaimg.cn,goblin.hupu.com,sa*.tuisong.baidu.com,sax*.sina.com.cn,update.pan.baidu.com"]), 'unexpected combined MITM scope');
+assert(!/\b(?:ca-passphrase|ca-p12)\s*=/.test(text), 'combined module must not contain CA material');
+console.log('PASS: combined YouTube/Advertising module routing, pinned hooks and MITM scope (not device playback)');

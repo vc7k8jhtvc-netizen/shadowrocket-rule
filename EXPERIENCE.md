@@ -9,8 +9,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置。
 - `Shadowrocket_Routing.conf`：Proxy Group 与 Rule。
 - `Custom.list`：个人显式自定义域名规则，Shadowrocket / Clash 共用；由原 `Global.list` 恢复并更名。
-- `Advertising.MITM.Shadowrocket.sgmodule`：Shadowrocket 可选模块，仅提供官方广告主机名的 HTTPS MITM 覆盖；不包含 CA 材料。
-- YouTube Enhance：Shadowrocket 专属功能模块。
+- `YouTube.Enhance.Shadowrocket.sgmodule`：Shadowrocket 专属合并模块，包含 YouTube 增强脚本/规则和 Advertising 官方 HTTPS MITM 主机范围；不包含 CA 材料。
 - Clash Verge Rev：保留订阅基础参数，扩展脚本重建策略组与规则。
 
 ## 修改范围
@@ -21,7 +20,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主路径：
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
 | 国内明确应直连服务 | 若中国规则未覆盖且实机落入漏网之鱼，可增加最小官方域名直连例外 |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
-| 广告拦截规则 | 两端保持默认 REJECT 与规则优先级一致；URL-REGEX HTTPS 拦截仅在可选 MITM 模块或 WestData 覆盖下生效 |
+| 广告拦截规则 | 两端保持默认 REJECT 与规则优先级一致；URL-REGEX HTTPS 拦截仅在合并模块或 WestData 覆盖下生效 |
 | Shadowrocket 基础网络参数 | Routing 不复制；由被包含的 WestData.conf 负责 |
 
 ## 必须保留的行为
@@ -61,16 +60,16 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 - “🐟 漏网之鱼”终结规则完整；
 - 代理分组名称、默认出口与显示顺序；
 - Advertising 默认 REJECT；
-- Advertising 的 URL-REGEX 规则需要 WestData 或可选 MITM 模块提供对应 HTTPS 覆盖；
+- Advertising 的 URL-REGEX 规则需要 WestData 或合并的 YouTube 增强模块提供对应 HTTPS 覆盖；
 - 当前树敏感信息；
 - Routing 配置、README 与当前 CHANGELOG 的版本一致性。
 - 若设置 `WESTDATA_CONFIG`，额外检查本地私有订阅的兼容性。
 
-## v2.7.16 修正
+## v2.7.17 修正
 
-- Clash 改用上游 Clash 专用 `China_Domain.txt`，并移除 `GEOIP,CN,DIRECT` 的 `no-resolve`，使中国规则与 Shadowrocket 保持一致。
-- 增加可选 Advertising MITM 模块及其安全范围校验；不改写私人 `WestData.conf`。
-- 回归校验覆盖中国 provider 来源、GEOIP 语义和 MITM 模块不得携带 CA 材料。
+- 将 YouTube 增强与 Advertising 官方 HTTPS MITM 主机范围合并为单一 Shadowrocket 模块，保留原有脚本/规则与安全边界。
+- 不改写私人 `WestData.conf`；合并模块不包含 CA 材料。
+- 回归校验覆盖中国 provider 来源、GEOIP 语义和合并模块的 MITM 范围。
 
 ## v2.7.9 实机验证结论
 

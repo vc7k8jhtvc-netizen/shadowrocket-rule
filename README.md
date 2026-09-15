@@ -24,8 +24,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 及供应商基础设置 |
 | Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
 | Custom.list | 个人显式自定义域名规则，Shadowrocket / Clash 共用 |
-| YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
-| Advertising.MITM.Shadowrocket.sgmodule | 可选的广告 HTTPS URL-REGEX MITM 主机范围 |
+| YouTube.Enhance.Shadowrocket.sgmodule | YouTube 增强脚本、YouTube 专属规则 / MITM，以及 Advertising HTTPS URL-REGEX MITM 主机范围 |
 
 包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、自定义、中国直连与“🐟 漏网之鱼”的实际命中。
 
@@ -84,14 +83,12 @@ v2.7.13 起，原兜底策略组重命名为“🐟 漏网之鱼”，只接收�
 
 ### 广告拦截
 
-Advertising 规则已合并到正式配置，内部版本为 `v2.7.16`。
+Advertising 规则已合并到正式配置，内部版本为 `v2.7.17`。
 
 - “🛑 广告拦截”默认 `REJECT`。
 - 规则顺序：LAN → 国内 AI 直连 → AI 专项 → Advertising → 其他业务 → 自定义 → 中国直连 → 漏网之鱼。
 - `Advertising.list` 中的域名、关键词和 IP 规则默认生效；当前其中 14 条 `URL-REGEX` 规则只有在对应 HTTPS 请求被 MITM 时才会生效。
-- 不自动扩大 `WestData.conf` 的 MITM 范围；需要完整 URL-REGEX 广告拦截时，单独安装可选模块：
-
-[下载 Advertising.MITM.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Advertising.MITM.Shadowrocket.sgmodule)
+- 完整 HTTPS URL-REGEX 覆盖与 YouTube 增强已合并到同一个 Shadowrocket 模块；启用它会同时加入两类 MITM 主机，不能单独关闭广告 MITM 范围。
 
 ## Clash Verge Rev
 
@@ -134,9 +131,11 @@ Clash 扩展脚本同步维护同一“🧩 自定义”策略组，并通过 `C
 | bytedance.com、bilibili.com | DIRECT |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-## 可选：YouTube 增强模块
+## 可选：YouTube 增强与广告 HTTPS MITM 模块
 
 **仅适用于 Shadowrocket**，依赖“▶️ YouTube”策略组。
+
+该模块同时包含 YouTube 脚本/规则与 Advertising URL-REGEX 所需的官方 12 个 MITM 主机；不包含 CA 材料，也不修改 `WestData.conf`。
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 

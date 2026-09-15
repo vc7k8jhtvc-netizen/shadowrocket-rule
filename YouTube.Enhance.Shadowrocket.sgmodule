@@ -1,6 +1,6 @@
-#!name=YouTube Enhance (Pinned)
-#!desc=YouTube/YouTube Music 去广告增强；PIP、后台播放；固定 Maasea 上游版本，避免 master 漂移
-#!author=Maasea / Shadowrocket adaptation
+#!name=YouTube + Advertising Enhance (Pinned)
+#!desc=YouTube/YouTube Music 去广告增强；PIP、后台播放；合并官方 Advertising MITM 主机范围；固定 Maasea 上游版本，避免 master 漂移
+#!author=Maasea / Shadowrocket adaptation + blackmatrix7
 #!homepage=https://github.com/Maasea/sgmodule
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
 
@@ -23,4 +23,5 @@ youtube.request.init = type=http-request,pattern=^https?:\/\/[\w-]+\.googlevideo
 youtube.request.log_event = type=http-request,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.request.js
 
 [MITM]
-hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com
+# Advertising URL-REGEX 主机范围；本模块不包含 CA 材料
+hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com, *.beacon.qq.com,*.gdt.qq.com,*.l.qq.com,ad*.sina.com,ad*.sina.com.cn,app.58.com,cdn-1rtb.caiyunapp.com,d*.sinaimg.cn,goblin.hupu.com,sa*.tuisong.baidu.com,sax*.sina.com.cn,update.pan.baidu.com
