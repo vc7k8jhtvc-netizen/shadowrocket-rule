@@ -14,7 +14,7 @@ function check(script,args,expected,diagnostic){
 try{
   fs.mkdirSync(path.join(temp,'scripts'));
   for(const file of [
-    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-advertising-mitm-module.js',
+    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-advertising-mitm-module.js','Advertising.MITM.Shadowrocket.sgmodule',
     'scripts/check-westdata-local.js','scripts/check-sensitive-data.js','scripts/check-version.js',
     'Shadowrocket_Routing.conf','Clash_Verge_Rev_Script.js','Custom.list','README.md','CHANGELOG.md'
   ])fs.copyFileSync(path.join(root,file),path.join(temp,file));
