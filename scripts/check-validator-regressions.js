@@ -14,7 +14,7 @@ function check(script,args,expected,diagnostic){
 try{
   fs.mkdirSync(path.join(temp,'scripts'));
   for(const file of [
-    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js',
+    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-advertising-mitm-module.js',
     'scripts/check-westdata-local.js','scripts/check-sensitive-data.js','scripts/check-version.js',
     'Shadowrocket_Routing.conf','Clash_Verge_Rev_Script.js','Custom.list','README.md','CHANGELOG.md'
   ])fs.copyFileSync(path.join(root,file),path.join(temp,file));
@@ -27,7 +27,14 @@ try{
   check('check-shadowrocket-routing.js',[],0);
   check('check-dual-client.js',[],0);
   check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],0);
+  check('check-advertising-mitm-module.js',[],0);
   check('check-version.js',[],0);
+
+  const advertisingMitmPath=path.join(temp,'Advertising.MITM.Shadowrocket.sgmodule');
+  const advertisingMitm=fs.readFileSync(advertisingMitmPath,'utf8');
+  fs.writeFileSync(advertisingMitmPath,advertisingMitm+'\nca-passphrase = test-only\n');
+  check('check-advertising-mitm-module.js',[],1,'Advertising MITM module must not contain CA material');
+  fs.writeFileSync(advertisingMitmPath,advertisingMitm);
 
   fs.writeFileSync(routingPath,routing.replace('RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义\n',''));
   check('check-shadowrocket-routing.js',[],1,'Custom.list routing rule missing');
@@ -59,6 +66,11 @@ try{
 
   const clashPath=path.join(temp,'Clash_Verge_Rev_Script.js');
   const clash=fs.readFileSync(clashPath,'utf8');
+  fs.writeFileSync(clashPath,clash.replace("url: `${blackmatrix}/Clash/China/China_Domain.txt`","url: `${blackmatrix}/Shadowrocket/China/China_Domain.list`"));
+  check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],1,'China domain rule-provider source');
+  fs.writeFileSync(clashPath,clash.replace("'GEOIP,CN,DIRECT',","'GEOIP,CN,DIRECT,no-resolve',"));
+  check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],1,'Clash GEOIP rule must not use no-resolve');
+  fs.writeFileSync(clashPath,clash);
   fs.writeFileSync(clashPath,clash.replace("'RULE-SET,Custom,🧩 自定义',\n",''));
   check('check-dual-client.js',[],1,'Clash Custom rule missing');
   fs.writeFileSync(clashPath,clash);

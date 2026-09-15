@@ -25,6 +25,7 @@ Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供�
 | Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
 | Custom.list | 个人显式自定义域名规则，Shadowrocket / Clash 共用 |
 | YouTube 模块 | YouTube 增强脚本及其专属规则 / MITM |
+| Advertising.MITM.Shadowrocket.sgmodule | 可选的广告 HTTPS URL-REGEX MITM 主机范围 |
 
 包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、自定义、中国直连与“🐟 漏网之鱼”的实际命中。
 
@@ -83,15 +84,18 @@ v2.7.13 起，原兜底策略组重命名为“🐟 漏网之鱼”，只接收�
 
 ### 广告拦截
 
-正式配置已合并完整 Advertising 规则，内部版本为 `v2.7.15`。
+Advertising 规则已合并到正式配置，内部版本为 `v2.7.16`。
 
 - “🛑 广告拦截”默认 `REJECT`。
 - 规则顺序：LAN → 国内 AI 直连 → AI 专项 → Advertising → 其他业务 → 自定义 → 中国直连 → 漏网之鱼。
-- 不新增 DNS、Rewrite、MITM 或脚本；这些继续继承 WestData。
+- `Advertising.list` 中的域名、关键词和 IP 规则默认生效；当前其中 14 条 `URL-REGEX` 规则只有在对应 HTTPS 请求被 MITM 时才会生效。
+- 不自动扩大 `WestData.conf` 的 MITM 范围；需要完整 URL-REGEX 广告拦截时，单独安装可选模块：
+
+[下载 Advertising.MITM.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Advertising.MITM.Shadowrocket.sgmodule)
 
 ## Clash Verge Rev
 
-Clash 扩展脚本同步维护同一“🧩 自定义”策略组，并通过 `Custom` rule-provider 读取仓库中的 `Custom.list`。最终兜底仍使用 `MATCH,🐟 漏网之鱼`，不会恢复旧 FINAL 架构。
+Clash 扩展脚本同步维护同一“🧩 自定义”策略组，并通过 `Custom` rule-provider 读取仓库中的 `Custom.list`。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，并使用 `GEOIP,CN,DIRECT` 保持与 Shadowrocket 的中国直连语义一致。最终兜底仍使用 `MATCH,🐟 漏网之鱼`，不会恢复旧 FINAL 架构。
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
 

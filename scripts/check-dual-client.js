@@ -47,6 +47,8 @@ assert(clash['rule-providers'].Custom,'Clash Custom rule-provider missing');
 assert(clash['rule-providers'].Custom.url.endsWith('/Custom.list'),'Clash Custom provider URL drift');
 assert(clash['rule-providers'].Custom.path==='./rule_providers/Custom.list','Clash Custom provider path drift');
 assert(!clash['rule-providers'].Global,'old Clash Global rule-provider must not return');
+assert(clash['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'Clash China domain provider source drift');
+assert(clash['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','Clash China domain provider path drift');
 
 const nodeGroups=['👆 手动选择','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 const provider=context.main({'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
@@ -58,6 +60,9 @@ for(const name of nodeGroups){
 }
 
 const shadowRules=activeLines(section(shadowrocket,'Rule'));
+assert(shadowRules.includes('GEOIP,CN,DIRECT'),'Shadowrocket GEOIP direct rule missing');
+assert(clash.rules.includes('GEOIP,CN,DIRECT'),'Clash GEOIP direct rule missing');
+assert(!clash.rules.includes('GEOIP,CN,DIRECT,no-resolve'),'Clash GEOIP must not use no-resolve for parity');
 const shadowAi=shadowRules.filter(r=>r.endsWith(',🤖 AI'));
 const clashAi=clash.rules.filter(r=>r.endsWith(',🤖 AI'));
 assert(JSON.stringify(shadowAi)===JSON.stringify(clashAi),'AI manual rules drift between clients');

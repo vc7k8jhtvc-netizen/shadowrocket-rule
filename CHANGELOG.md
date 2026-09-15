@@ -2,6 +2,11 @@
 
 仅保留关键结果。当前用法见 [README](README.md)，完整修改与临时试验见 [Git 历史](https://github.com/vc7k8jhtvc-netizen/shadowrocket-rule/commits/main/)。
 
+## 2026-09-15
+
+- 内部版本升至 `v2.7.16`：修复 Clash 错用 Shadowrocket `China_Domain.list` 的问题，改用上游 Clash `China_Domain.txt`；移除 Clash `GEOIP,CN,DIRECT` 的 `no-resolve`，与 Shadowrocket 保持中国直连语义一致。
+- 新增可选 `Advertising.MITM.Shadowrocket.sgmodule`，仅提供官方广告主机名的 HTTPS MITM 覆盖；不修改私人 `WestData.conf`，并加入模块范围、CA 安全与中国规则语义回归检查。
+
 ## 2026-09-10
 
 - 修复同一日期下多条版本记录导致的 CI 版本校验误报；恢复 Clash 检查器生成 Mihomo 测试配置，并支持通过 `WESTDATA_CONFIG` 校验本地私有订阅。

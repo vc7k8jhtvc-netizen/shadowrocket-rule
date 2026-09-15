@@ -127,7 +127,7 @@ function main(config) {
     Advertising: { type: 'http', behavior: 'classical', format: 'yaml', url: `${blackmatrix}/Clash/Advertising/Advertising.yaml`, path: './rule_providers/Advertising.yaml', interval: 86400, proxy: '🚀 默认代理' },
     Advertising_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/Advertising/Advertising_Domain.txt`, path: './rule_providers/Advertising_Domain.txt', interval: 86400, proxy: '🚀 默认代理' },
     China: classicalProvider('China'),
-    China_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Shadowrocket/China/China_Domain.list`, path: './rule_providers/China_Domain.list', interval: 86400, proxy: '🚀 默认代理' }
+    China_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/China/China_Domain.txt`, path: './rule_providers/China_Domain.txt', interval: 86400, proxy: '🚀 默认代理' }
   };
 
   config.rules = [
@@ -142,7 +142,7 @@ function main(config) {
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',
     'RULE-SET,Custom,🧩 自定义',
-    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT,no-resolve','MATCH,🐟 漏网之鱼'
+    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
   ];
 
   writeLog('log', `完成：策略组=${config['proxy-groups'].length}，规则集=${Object.keys(config['rule-providers']).length}，规则=${config.rules.length}，DNS/hosts=继承订阅`);

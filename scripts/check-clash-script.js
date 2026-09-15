@@ -75,7 +75,10 @@ const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
 const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
 assert(advertisingIndex<advertisingDomainIndex&&advertisingDomainIndex<appleIndex,'Advertising/Apple order');
 assert(chinaIndex<chinaDomainIndex&&chinaDomainIndex<fallbackIndex,'China/China_Domain/fallback order');
-assert(direct['rule-providers'].China_Domain.url.includes('China_Domain.list'),'China domain rule-provider source');
+assert(direct['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'China domain rule-provider source');
+assert(direct['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','China domain rule-provider path');
+assert(direct.rules.includes('GEOIP,CN,DIRECT'),'GEOIP CN direct rule');
+assert(!direct.rules.includes('GEOIP,CN,DIRECT,no-resolve'),'Clash GEOIP rule must not use no-resolve');
 
 const provider=context.main({'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
 assert(group(provider,'👆 手动选择').use.includes('WestData'),'provider support');
