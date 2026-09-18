@@ -40,9 +40,19 @@ for (const [name, type, file, sample] of cases) {
   assert(pattern.test(sample), 'hook does not match expected endpoint');
   assert(!pattern.test('https://example.invalid/youtubei/v1/player'), 'hook matches unrelated host');
   const argument = line.match(/,argument="(.*)"$/);
-  if (argument) assert(JSON.parse(argument[1]).captionLang === 'off', 'caption default changed');
+  if (argument) {
+    const options = JSON.parse(argument[1]);
+    assert(options.captionLang === 'off', 'caption default changed');
+    if (name === 'youtube.response') {
+      assert(options.blockShorts === true, 'Shorts blocking must be enabled by default');
+      assert(options.blockUpload === true && options.blockImmersive === true && options.debug === false,
+        'unrelated YouTube feature defaults changed');
+      assert(JSON.stringify(Object.keys(options).sort()) === JSON.stringify(['blockImmersive','blockShorts','blockUpload','captionLang','debug'].sort()),
+        'unexpected YouTube response arguments');
+    }
+  }
 }
 assert(/^#!name=YouTube Enhance \(Pinned\)$/m.test(text), 'YouTube-only module metadata drift');
 assert(JSON.stringify(section('MITM')) === JSON.stringify(['hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com']), 'unexpected YouTube-only MITM scope');
 assert(!/\b(?:ca-passphrase|ca-p12)\s*=/.test(text), 'YouTube module must not contain CA material');
-console.log('PASS: YouTube-only module routing, pinned hooks and minimal MITM scope (not device playback)');
+console.log('PASS: YouTube-only module routing, Shorts enabled, pinned hooks and minimal MITM scope (not device playback)');
