@@ -4,6 +4,7 @@
 
 ## 2026-09-18
 
+- 内部版本升至 `v2.7.19`：为 Shadowrocket / Clash 的现有 🤖 AI 分组新增 Claude/Anthropic 四个专属域名后缀 `claude.ai`、`claude.com`、`anthropic.com`、`claudeusercontent.com`，涵盖网页、API 与 Artifacts；不新建分组、不引入共享 CDN、MITM 或 DNS，原有出口与顺序保持不变。新增双端规则回归测试；设备验证待完成。
 - 内部版本升至 `v2.7.18`：移除 Shadowrocket 与 Clash 的通用 Advertising 规则、Providers 及广告策略组；原有业务分流、国内直连、Custom.list、兜底及 WestData 基础订阅均保持原有职责。
 - YouTube 合并模块去除第三方 Advertising MITM 主机，仅保留 `*.googlevideo.com`、`youtubei.googleapis.com` 与既有 YouTube 脚本、UDP 回退规则。同步更新检查器、文档；本次设备端误杀回归仍待实际验证。
 
@@ -22,7 +23,7 @@
 ## 2026-09-09
 
 - 内部版本升至 `v2.7.13`：将“🌍 国际兜底”重命名为“🐟 漏网之鱼”，并把 UI 位置移动到“🛑 广告拦截”之后；默认出口与候选项不变，Shadowrocket / Clash 及检查器同步。
-- 内部版本升至 `v2.7.12`：“🌍 国际兜底”增加 `DIRECT` 候选项，并保留“👆 手动选择”；默认仍为“🚀 默认代理”，Shadowrocket / Clash 同步。
+- 内部版本升至 `v2.7.12`：“🌍 国际兜底”增加 `DIRECT` 候选项，并保留“👆 手动选择”。
 - 内部版本升至 `v2.7.11`：“🌍 国际兜底”增加“👆 手动选择”候选项。
 - 内部版本升至 `v2.7.10`：补充 DeepSeek 官方 `deepseek.com` 域直连。
 - Shadowrocket 内部版本升至 `v2.7.9`：保留 `include = WestData.conf`，使用显式域名 / IP 终结规则隔离 WestData `[Rule]`。

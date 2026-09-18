@@ -130,6 +130,7 @@ function main(config) {
     'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,cdn.workos.com,🤖 AI','DOMAIN,challenges.cloudflare.com,🤖 AI','DOMAIN,forwarder.workos.com,🤖 AI','DOMAIN,humb.apple.com,🤖 AI','DOMAIN,images.workoscdn.com,🤖 AI','DOMAIN,js.stripe.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI','DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI','DOMAIN,setup.workos.com,🤖 AI','DOMAIN,workos.imgix.net,🤖 AI',
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
+    'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',

@@ -14,7 +14,7 @@ function check(script,args,expected,diagnostic){
 try{
   fs.mkdirSync(path.join(temp,'scripts'));
   for(const file of [
-    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-youtube-module.js',
+    'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-claude-routing.js','scripts/check-youtube-module.js',
     'scripts/check-westdata-local.js','scripts/check-sensitive-data.js','scripts/check-version.js',
     'Shadowrocket_Routing.conf','Clash_Verge_Rev_Script.js','Custom.list','README.md','CHANGELOG.md','YouTube.Enhance.Shadowrocket.sgmodule'
   ])fs.copyFileSync(path.join(root,file),path.join(temp,file));
@@ -27,6 +27,7 @@ try{
   check('check-shadowrocket-routing.js',[],0);
   check('check-dual-client.js',[],0);
   check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],0);
+  check('check-claude-routing.js',[],0);
   check('check-youtube-module.js',[],0);
   check('check-version.js',[],0);
 
@@ -47,6 +48,13 @@ try{
   check('check-shadowrocket-routing.js',[],1,'proxy group display order');
   fs.writeFileSync(routingPath,routing);
 
+  // Claude rules must be complete, use the AI policy, and preserve ordering.
+  fs.writeFileSync(routingPath,routing.replace('DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI\n',''));
+  check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
+  fs.writeFileSync(routingPath,routing.replace('DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.ai,DIRECT'));
+  check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
+  fs.writeFileSync(routingPath,routing);
+
   fs.writeFileSync(customPath,custom+'DOMAIN-SUFFIX,wikipedia.org\n');
   check('check-shadowrocket-routing.js',[],1,'duplicate Custom.list entry');
   fs.writeFileSync(customPath,custom+'INVALID,example.com\n');
@@ -61,13 +69,13 @@ try{
 
   const readmePath=path.join(temp,'README.md');
   const readme=fs.readFileSync(readmePath,'utf8');
-  fs.writeFileSync(readmePath,readme.replace('内部版本为 `v2.7.18`','内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath,readme.replace('内部版本为 `v2.7.19`','内部版本为 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(readmePath,readme);
 
   const changelogPath=path.join(temp,'CHANGELOG.md');
   const changelog=fs.readFileSync(changelogPath,'utf8');
-  fs.writeFileSync(changelogPath,changelog.replace('内部版本升至 `v2.7.18`','内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath,changelog.replace('内部版本升至 `v2.7.19`','内部版本升至 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(changelogPath,changelog);
 
@@ -83,6 +91,9 @@ try{
   fs.writeFileSync(clashPath,clash);
   fs.writeFileSync(clashPath,clash.replace('    China: classicalProvider(\'China\'),','    Advertising: classicalProvider(\'Advertising\'),\n    China: classicalProvider(\'China\'),'));
   check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],1,'legacy Advertising providers must be absent');
+  fs.writeFileSync(clashPath,clash);
+  fs.writeFileSync(clashPath,clash.replace("'DOMAIN-SUFFIX,anthropic.com,🤖 AI',",''));
+  check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
   fs.writeFileSync(clashPath,clash);
 
   const pool='👆 手动选择 = select,';
@@ -102,7 +113,7 @@ try{
   execFileSync('git',['-C',temp,'add','candidate.sgmodule','scripts/check-sensitive-data.js']);
   check('check-sensitive-data.js',[],1,'MITM CA material');
 
-  console.log('PASS: validator regressions reject Advertising/Custom/fallback/version/group/security drift');
+  console.log('PASS: validator regressions reject Claude/Advertising/Custom/fallback/version/group/security drift');
 }finally{
   fs.rmSync(temp,{recursive:true,force:true});
 }
