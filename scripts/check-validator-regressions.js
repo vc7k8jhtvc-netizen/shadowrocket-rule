@@ -32,12 +32,19 @@ try{
 
   const youtubePath=path.join(temp,'YouTube.Enhance.Shadowrocket.sgmodule');
   const youtubeModule=fs.readFileSync(youtubePath,'utf8');
-  fs.writeFileSync(youtubePath,youtubeModule.replace('*.beacon.qq.com',''));
-  check('check-youtube-module.js',[],1,'unexpected combined MITM scope');
+  fs.writeFileSync(youtubePath,youtubeModule.replace('youtubei.googleapis.com\n','youtubei.googleapis.com, *.beacon.qq.com\n'));
+  check('check-youtube-module.js',[],1,'unexpected YouTube-only MITM scope');
   fs.writeFileSync(youtubePath,youtubeModule);
 
   fs.writeFileSync(routingPath,routing.replace('RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义\n',''));
   check('check-shadowrocket-routing.js',[],1,'Custom.list routing rule missing');
+  fs.writeFileSync(routingPath,routing);
+
+  // Reintroduction of either Advertising source or the old group must fail.
+  fs.writeFileSync(routingPath,routing.replace('[Rule]\n','[Rule]\nRULE-SET,https://example.invalid/Advertising.list,DIRECT\n'));
+  check('check-shadowrocket-routing.js',[],1,'legacy Advertising routing rule must be absent');
+  fs.writeFileSync(routingPath,routing.replace('# 功能分组\n','# 功能分组\n🛑 广告拦截 = select,REJECT,DIRECT,select=0\n'));
+  check('check-shadowrocket-routing.js',[],1,'proxy group display order');
   fs.writeFileSync(routingPath,routing);
 
   fs.writeFileSync(customPath,custom+'DOMAIN-SUFFIX,wikipedia.org\n');
@@ -54,13 +61,13 @@ try{
 
   const readmePath=path.join(temp,'README.md');
   const readme=fs.readFileSync(readmePath,'utf8');
-  fs.writeFileSync(readmePath,readme.replace('内部版本为 `v2.7.17`','内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath,readme.replace('内部版本为 `v2.7.18`','内部版本为 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(readmePath,readme);
 
   const changelogPath=path.join(temp,'CHANGELOG.md');
   const changelog=fs.readFileSync(changelogPath,'utf8');
-  fs.writeFileSync(changelogPath,changelog.replace('内部版本升至 `v2.7.17`','内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath,changelog.replace('内部版本升至 `v2.7.18`','内部版本升至 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(changelogPath,changelog);
 
@@ -73,6 +80,9 @@ try{
   fs.writeFileSync(clashPath,clash);
   fs.writeFileSync(clashPath,clash.replace("'RULE-SET,Custom,🧩 自定义',\n",''));
   check('check-dual-client.js',[],1,'Clash Custom rule missing');
+  fs.writeFileSync(clashPath,clash);
+  fs.writeFileSync(clashPath,clash.replace('    China: classicalProvider(\'China\'),','    Advertising: classicalProvider(\'Advertising\'),\n    China: classicalProvider(\'China\'),'));
+  check('check-clash-script.js',[path.join(temp,'Clash_Verge_Rev_Script.js')],1,'legacy Advertising providers must be absent');
   fs.writeFileSync(clashPath,clash);
 
   const pool='👆 手动选择 = select,';
@@ -92,7 +102,7 @@ try{
   execFileSync('git',['-C',temp,'add','candidate.sgmodule','scripts/check-sensitive-data.js']);
   check('check-sensitive-data.js',[],1,'MITM CA material');
 
-  console.log('PASS: validator regressions reject Custom/fallback/version/group/security drift');
+  console.log('PASS: validator regressions reject Advertising/Custom/fallback/version/group/security drift');
 }finally{
   fs.rmSync(temp,{recursive:true,force:true});
 }

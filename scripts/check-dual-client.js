@@ -1,10 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const root = path.resolve(__dirname,'..');
-const shadowrocket = fs.readFileSync(path.join(root,'Shadowrocket_Routing.conf'),'utf8');
-const clashSource = fs.readFileSync(path.join(root,'Clash_Verge_Rev_Script.js'),'utf8');
-const assert = (condition,message) => { if (!condition) throw new Error(message); };
+const fs=require('fs');
+const path=require('path');
+const vm=require('vm');
+const root=path.resolve(__dirname,'..');
+const shadowrocket=fs.readFileSync(path.join(root,'Shadowrocket_Routing.conf'),'utf8');
+const clashSource=fs.readFileSync(path.join(root,'Clash_Verge_Rev_Script.js'),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message);};
 function section(text,name) {
   const escaped=name.replace(/[.*+?^$()|[\]\\]/g,'\\$&');
   const match=text.match(new RegExp('\\['+escaped+'\\]\\s*\\n([\\s\\S]*?)(?=\\n\\[[^\\]]+\\]|$)'));
@@ -32,11 +32,13 @@ const clash=context.main({proxies:[
 ]});
 const clashGroups=new Map(clash['proxy-groups'].map(g=>[g.name,g]));
 
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🛑 广告拦截','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...shadowGroups.keys()])===JSON.stringify(expectedOrder),'Shadowrocket display order drift');
 assert(JSON.stringify([...clashGroups.keys()])===JSON.stringify(expectedOrder),'Clash display order drift');
+assert(!shadowGroups.has('🛑 广告拦截')&&!clashGroups.has('🛑 广告拦截'),'legacy Advertising group must be absent in both clients');
+assert(!clash['rule-providers'].Advertising&&!clash['rule-providers'].Advertising_Domain,'Clash Advertising providers must be absent');
 
-const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🛑 广告拦截','🐟 漏网之鱼'];
+const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
 for(const name of parityGroups){
   assert(shadowGroups.has(name),'Shadowrocket missing parity group: '+name);
   assert(clashGroups.has(name),'Clash missing parity group: '+name);
@@ -46,7 +48,7 @@ for(const name of parityGroups){
 assert(clash['rule-providers'].Custom,'Clash Custom rule-provider missing');
 assert(clash['rule-providers'].Custom.url.endsWith('/Custom.list'),'Clash Custom provider URL drift');
 assert(clash['rule-providers'].Custom.path==='./rule_providers/Custom.list','Clash Custom provider path drift');
-assert(!clash['rule-providers'].Global,'old Clash Global rule-provider must not return');
+assert(!clash['rule-providers'].Global,'old Clash Global rule-provider must be absent');
 assert(clash['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'Clash China domain provider source drift');
 assert(clash['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','Clash China domain provider path drift');
 
@@ -60,6 +62,7 @@ for(const name of nodeGroups){
 }
 
 const shadowRules=activeLines(section(shadowrocket,'Rule'));
+assert(!shadowRules.some(r=>/Advertising|广告拦截/.test(r))&&!clash.rules.some(r=>/Advertising|广告拦截/.test(r)),'Advertising must be absent in both routing rule lists');
 assert(shadowRules.includes('GEOIP,CN,DIRECT'),'Shadowrocket GEOIP direct rule missing');
 assert(clash.rules.includes('GEOIP,CN,DIRECT'),'Clash GEOIP direct rule missing');
 assert(!clash.rules.includes('GEOIP,CN,DIRECT,no-resolve'),'Clash GEOIP must not use no-resolve for parity');
@@ -79,8 +82,8 @@ assert(clash.rules.includes(clashCustom),'Clash Custom rule missing');
 assert(!shadowrocket.includes('/Global.list'),'Shadowrocket old Global.list reference must be absent');
 assert(!clashSource.includes('/Global.list'),'Clash old Global.list reference must be absent');
 
-const canonicalShadow=['Advertising/Advertising.list','Google/Google.list',shadowCustom,'/China/China.list','China_Domain.list','GEOIP,CN,DIRECT','DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
-const canonicalClash=['RULE-SET,Advertising,','RULE-SET,Google,',clashCustom,'RULE-SET,China,','RULE-SET,China_Domain,','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'];
+const canonicalShadow=['/Apple/Apple.list','Google/Google.list',shadowCustom,'/China/China.list','China_Domain.list','GEOIP,CN,DIRECT','DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
+const canonicalClash=['RULE-SET,Apple,','RULE-SET,Google,',clashCustom,'RULE-SET,China,','RULE-SET,China_Domain,','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'];
 function assertOrdered(rules,markers,label){
   let previous=-1;
   for(const marker of markers){
@@ -91,4 +94,4 @@ function assertOrdered(rules,markers,label){
 }
 assertOrdered(shadowRules,canonicalShadow,'Shadowrocket');
 assertOrdered(clash.rules,canonicalClash,'Clash');
-console.log('PASS: Shadowrocket and Clash Custom/parity checks');
+console.log('PASS: Shadowrocket and Clash Custom/parity checks (no Advertising)');

@@ -1,38 +1,45 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组与“中国大陆直连、其余未知流量默认代理”分流语义。
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.18`。本版本移除通用 Advertising 黑名单，保留正常分流和可选的 YouTube 专项增强。**
 
 ## Shadowrocket
 
-### Shadowrocket Routing
+1. 保留并正常更新原始 `WestData.conf`。
+2. [下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf) 并设为当前配置。
+3. 确认 `[General]` 中的 `include = WestData.conf` 有效；若本地文件名不同，在配置详情的“通用 → 包含配置”中手动选择原订阅。
+4. 核对“🚀 默认代理”、业务组、“🧩 自定义”、地区节点池及“🐟 漏网之鱼”。
 
-新版只负责**策略组与分流规则**，基础网络能力由原始 `WestData.conf` 提供。
-
-1. 在 Shadowrocket 中保留并正常更新原始 `WestData.conf`。
-2. 导入下列 Routing 配置并设为当前配置。
-3. 确认 `[General]` 中的 `include = WestData.conf` 已建立包含关系；若本地文件名不同，可在配置详情的“通用 → 包含配置”中手动选择原订阅。
-4. 检查“🚀 默认代理”和常用业务组是否正常，再按需检查“🧩 自定义”“🐟 漏网之鱼”与底部地区节点池；确认“🛑 广告拦截”默认选择 `REJECT`。
-
-Shadowrocket 的地区组依靠 `policy-regex-filter` 筛选节点，不提供自动回退到“👆 手动选择”的配置机制。若某个地区组没有可用节点，请直接使用“👆 手动选择”，并检查 WestData 节点是否符合“地区 | 节点”的命名格式；空组在客户端中的具体呈现以实际设备行为为准。
-
-[下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf)
-
-职责边界：
-
-| 来源 | 负责内容 |
+| 来源 | 职责 |
 |---|---|
-| WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 及供应商基础设置 |
-| Shadowrocket_Routing.conf | Proxy Group、Rule（含广告拦截） |
-| Custom.list | 个人显式自定义域名规则，Shadowrocket / Clash 共用 |
-| YouTube.Enhance.Shadowrocket.sgmodule | YouTube 增强脚本、YouTube 专属规则 / MITM，以及 Advertising HTTPS URL-REGEX MITM 主机范围 |
+| WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础能力；不要将私人订阅提交仓库 |
+| Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组** |
+| Custom.list | 两端共用的个人显式分流规则 |
+| YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机，不再包含通用广告 HTTPS MITM |
+| Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts |
 
-包含配置中，当前配置优先于被包含配置。当前路由与广告拦截已完成实机试用；更新 WestData 或分流后仍建议从连接日志核对 AI、广告、YouTube、GitHub、自定义、中国直连与“🐟 漏网之鱼”的实际命中。
+当前 Routing 优先于被包含的配置。保留末尾三条显式终结规则，让剩余域名和纯 IP 流量优先归入“🐟 漏网之鱼”，避免进入 WestData 的旧 `[Rule]`；该机制在 2026-09-09 曾通过 Shadowrocket 实机日志验证。**本次 v2.7.18 仅做静态/CI 验证，尚未声称重新完成设备实测。**
 
-### 显式终结与 WestData Rule 隔离
+## 广告拦截策略（v2.7.18）
 
-v2.7.9 起，Shadowrocket 保留 `include = WestData.conf`，继续继承 WestData 的 DNS、MITM、Host、Rewrite、节点与其他基础能力；但不再使用特殊 `FINAL` 作为最终兜底。
+由于通用 Advertising 规则存在误杀风险，正式分流已同时取消 Shadowrocket 的 `Advertising.list` / `Advertising_Domain.list` 以及 Clash 的 Advertising Providers、引用和“🛑 广告拦截”策略组。命中普通广告域名不再由本项目直接拒绝，而是继续进入后续业务、中国直连或兜底规则。不要简单将旧广告策略组改为 DIRECT：那会绕过正常分流。
 
-当前 Routing 在中国规则之后加入：
+**以前已经导入客户端的旧版配置与缓存不会被仓库自动删除。** 更新当前分流配置并清理旧广告模块；若客户端仍启用独立的第三方去广告模块或其他 DNS 广告屏蔽，需要在客户端另行停用。保留 YouTube 专项增强不等于保留通用广告黑名单；X 时间线推广内容没有独立过滤脚本。
+
+## 业务分组与默认出口
+
+| 策略组 / 服务 | 默认出口 |
+|---|---|
+| 🚀 默认代理 | 🇭🇰 香港 |
+| 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
+| 🍎 Apple、🪟 Microsoft、DeepSeek | DIRECT |
+| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义 | 🚀 默认代理 |
+| 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
+
+地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
+
+### 显式终结与 Custom.list
+
+`Custom.list` 恢复自原 Global.list，仍放在 Google 之后、中国规则之前；“🧩 自定义”默认使用“🚀 默认代理”。末尾固定：
 
 ```ini
 DOMAIN-WILDCARD,*,🐟 漏网之鱼
@@ -40,107 +47,40 @@ IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve
 IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 ```
 
-目标是让所有剩余域名和直接 IP 流量在当前高优先级配置层即被“🐟 漏网之鱼”接管，不继续进入 WestData 的 `[Rule]`。
-
-该机制已于 2026-09-09 通过 Shadowrocket 实机连接日志验证。v2.7.15 恢复自定义规则后，原自定义列表内的域名会先命中“🧩 自定义”，不再作为漏网测试样本；例如 `wikipedia.org` 当前应命中“🧩 自定义”，而 `steampowered.com` 仍可用于验证“🐟 漏网之鱼”。
-
-### 国内 AI 直连
-
-v2.7.10 起，DeepSeek 官方 `deepseek.com` 域固定直连：
-
-```ini
-DOMAIN-SUFFIX,deepseek.com,DIRECT
-```
-
-覆盖官网、`chat.deepseek.com` 与 `api.deepseek.com` 等官方子域，并置于 ChatGPT / Gemini / Grok 的代理规则之前。
-
-### Grok / xAI
-
-v2.7.14 补齐 Grok 当前功能域名。除已有的 `x.ai`、`grok.com` 外，增加 `grokusercontent.com`、`grok-sandbox.com`、`groktpcontent.com`、`grok.me`、`grokipedia.com` 与 `featureassets.org`。
-
-### 自定义规则
-
-v2.7.15 恢复原 `Global.list` 的完整规则内容，并重命名为 `Custom.list`；对应策略组由原“🌍 Global”改名为“🧩 自定义”。
+不再使用特殊 `FINAL`；Clash 的对应终结规则为 `MATCH,🐟 漏网之鱼`。DeepSeek `deepseek.com` 固定直连，Grok/xAI 域名归入 AI，字节跳动 `bytedance.com` / `bytedance.net` 固定直连。
 
 [查看 Custom.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list)
 
-规则位置固定在 Google 之后、中国规则之前：
-
-```text
-Google
-→ Custom.list → 🧩 自定义
-→ China / China_Domain / GEOIP,CN
-→ 🐟 漏网之鱼
-```
-
-因此 `Custom.list` 是**显式个人规则层**，而“🐟 漏网之鱼”仍是未被任何规则命中的最终兜底，两者职责不混用。“🧩 自定义”沿用旧 Global 的出口选择：默认“🚀 默认代理”，并提供美国、日本、新加坡。
-
-### 漏网之鱼
-
-v2.7.13 起，原兜底策略组重命名为“🐟 漏网之鱼”，只接收前面所有专项、自定义、中国规则都未命中的剩余流量。
-
-“🐟 漏网之鱼”默认仍为“🚀 默认代理”，并保留 `DIRECT`、美国、日本、新加坡与“👆 手动选择”候选项。
-
-### 广告拦截
-
-Advertising 规则已合并到正式配置，内部版本为 `v2.7.17`。
-
-- “🛑 广告拦截”默认 `REJECT`。
-- 规则顺序：LAN → 国内 AI 直连 → AI 专项 → Advertising → 其他业务 → 自定义 → 中国直连 → 漏网之鱼。
-- `Advertising.list` 中的域名、关键词和 IP 规则默认生效；当前其中 14 条 `URL-REGEX` 规则只有在对应 HTTPS 请求被 MITM 时才会生效。
-- 完整 HTTPS URL-REGEX 覆盖与 YouTube 增强已合并到同一个 Shadowrocket 模块；启用它会同时加入两类 MITM 主机，不能单独关闭广告 MITM 范围。
-
 ## Clash Verge Rev
-
-Clash 扩展脚本同步维护同一“🧩 自定义”策略组，并通过 `Custom` rule-provider 读取仓库中的 `Custom.list`。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，并使用 `GEOIP,CN,DIRECT` 保持与 Shadowrocket 的中国直连语义一致。最终兜底仍使用 `MATCH,🐟 漏网之鱼`，不会恢复旧 FINAL 架构。
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
 
-## 代理分组顺序
+Clash 扩展脚本与小火箭同步业务组、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
 
-两端统一：
-
-1. 总控：🚀 默认代理、👆 手动选择
-2. 业务：🤖 AI、🍎 Apple、🔎 Google、💻 GitHub、🪟 Microsoft、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义
-3. 功能：🛑 广告拦截、🐟 漏网之鱼
-4. 地区节点池：🇭🇰 香港、🏝️ 台湾、🇸🇬 新加坡、🇯🇵 日本、🇺🇸 美国
-
-## 默认分流
-
-| 策略组 / 服务 | 初始出口 |
-|---|---|
-| 🚀 默认代理 | 🇭🇰 香港 |
-| 🧩 自定义 | 🚀 默认代理 |
-| 🐟 漏网之鱼 | 🚀 默认代理（可切换 DIRECT / 👆 手动选择） |
-| DeepSeek | DIRECT |
-| 🤖 AI（ChatGPT / Gemini / Grok） | 🇸🇬 新加坡 |
-| 🍎 Apple、🪟 Microsoft | DIRECT |
-| 🛑 广告拦截 | REJECT |
-| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram | 🚀 默认代理 |
-
-当前连接日志可重点核对：
-
-| 域名 | 应命中的策略 |
-|---|---|
-| deepseek.com | DIRECT |
-| chatgpt.com、gemini.google.com、grok.com | 🤖 AI |
-| wikipedia.org、jable.tv、missav.ws | 🧩 自定义 |
-| ad.doubleclick.net | 🛑 广告拦截 |
-| youtube.com | ▶️ YouTube |
-| github.com | 💻 GitHub |
-| bytedance.com、bilibili.com | DIRECT |
-| steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
-
-## 可选：YouTube 增强与广告 HTTPS MITM 模块
-
-**仅适用于 Shadowrocket**，依赖“▶️ YouTube”策略组。
-
-该模块同时包含 YouTube 脚本/规则与 Advertising URL-REGEX 所需的官方 12 个 MITM 主机；不包含 CA 材料，也不修改 `WestData.conf`。
+## 可选：仅 YouTube 增强（Shadowrocket）
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 
-## 维护文档
+提供 YouTube / YouTube Music 去广告、画中画与后台播放脚本。继续保留两个 YouTube UDP 拒绝规则，用于回退 TCP/TLS；它们不是全局广告黑名单。MITM 只追加 `*.googlevideo.com` 和 `youtubei.googleapis.com`。模块不携带证书或 CA 私钥，依赖设备已正确配置的 Shadowrocket MITM 证书。更新后请确认客户端没有并存旧版合并模块。
+
+## 连接日志核验
+
+| 样本 | 预期 |
+|---|---|
+| deepseek.com、bytedance.com | DIRECT |
+| chatgpt.com、gemini.google.com、grok.com | 🤖 AI |
+| wikipedia.org、jable.tv、missav.ws | 🧩 自定义 |
+| youtube.com | ▶️ YouTube |
+| github.com | 💻 GitHub |
+| bilibili.com | DIRECT（依赖上游中国规则） |
+| steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
+
+更新后还需在真实设备上对先前误杀的 App 进行复测；仓库静态检测无法替代运行时连接日志。
+
+## 维护
 
 - [维护约定](EXPERIENCE.md)
 - [变更记录](CHANGELOG.md)
 - [安全说明](SECURITY.md)
+
+本地发布前运行 `bash scripts/check-config.sh`；私人订阅可使用 `WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh` 单独校验，但不得提交到仓库。
