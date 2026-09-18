@@ -36,10 +36,11 @@ for (const line of groupLines) {
   groups.set(name, parts.slice(1));
 }
 
-const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🛑 广告拦截','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...groups.keys()]) === JSON.stringify(expectedGroups), 'proxy group display order changed unexpectedly');
+assert(!groups.has('🛑 广告拦截'), 'legacy Advertising group must be absent');
 
-const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理','🛑 广告拦截':'REJECT'};
+const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
 
 assert(JSON.stringify(groups.get('🧩 自定义').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇺🇸 美国','🇯🇵 日本','🇸🇬 新加坡']), 'custom group options changed unexpectedly');
@@ -68,6 +69,7 @@ for (const name of groups.keys()) visitGroup(name);
 
 const rules = activeLines(section(routing,'Rule'));
 assert(new Set(rules).size === rules.length, 'duplicate Shadowrocket rules detected');
+assert(!rules.some(rule => /Advertising|广告拦截/.test(rule)), 'legacy Advertising routing rule must be absent');
 const builtins = new Set(['DIRECT','REJECT']);
 for (const rule of rules) {
   const parts = rule.split(',');
@@ -97,7 +99,7 @@ const requiredOrder = [
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
   'DOMAIN,gemini.google.com,🤖 AI',
   'DOMAIN-SUFFIX,grok.com,🤖 AI',
-  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising.list,🛑 广告拦截',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',
   customMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT',
@@ -114,4 +116,4 @@ for (const marker of requiredOrder) {
 }
 
 assert(!routing.includes('🐟 FINAL'), 'obsolete FINAL policy group must be absent');
-console.log('PASS: Shadowrocket routing and Custom.list checks');
+console.log('PASS: Shadowrocket routing, no Advertising, and Custom.list checks');

@@ -1,12 +1,8 @@
 /**
  * Clash Verge Rev 订阅扩展脚本
- * 与小火箭分流策略保持一致
- *
- * 原理与优势：
- * 1. 继承原项目架构：“节点来源与分流逻辑分离”。
- * 2. 自动清空机场订阅中自带的杂乱策略组和规则，接管为本项目严格定义的策略组和分层规则。
- * 3. 同时兼容 proxies 与 proxy-providers，通过节点名称划分地区节点池。
- * 4. 与小火箭版本同步主要策略组、Advertising、自定义规则与规则优先级。
+ * 与小火箭分流策略保持一致。
+ * 继承订阅 DNS / hosts / 节点入口，重建代理组和正常分流。
+ * 不加载通用 Advertising 广告黑名单；YouTube 增强为 Shadowrocket 专属模块。
  */
 
 function main(config) {
@@ -87,7 +83,6 @@ function main(config) {
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇯🇵 日本', '🇺🇸 美国', '🇸🇬 新加坡'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
     { name: '🧩 自定义', type: 'select', proxies: ['🚀 默认代理', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡'] },
-    { name: '🛑 广告拦截', type: 'select', proxies: ['REJECT', 'DIRECT', '🚀 默认代理'] },
     { name: '🐟 漏网之鱼', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '👆 手动选择'] },
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
     regionalGroup('🏝️ 台湾', regionPatterns.tw, regionMatches.tw),
@@ -124,8 +119,6 @@ function main(config) {
       url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list',
       path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理'
     },
-    Advertising: { type: 'http', behavior: 'classical', format: 'yaml', url: `${blackmatrix}/Clash/Advertising/Advertising.yaml`, path: './rule_providers/Advertising.yaml', interval: 86400, proxy: '🚀 默认代理' },
-    Advertising_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/Advertising/Advertising_Domain.txt`, path: './rule_providers/Advertising_Domain.txt', interval: 86400, proxy: '🚀 默认代理' },
     China: classicalProvider('China'),
     China_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/China/China_Domain.txt`, path: './rule_providers/China_Domain.txt', interval: 86400, proxy: '🚀 默认代理' }
   };
@@ -137,7 +130,6 @@ function main(config) {
     'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,cdn.workos.com,🤖 AI','DOMAIN,challenges.cloudflare.com,🤖 AI','DOMAIN,forwarder.workos.com,🤖 AI','DOMAIN,humb.apple.com,🤖 AI','DOMAIN,images.workoscdn.com,🤖 AI','DOMAIN,js.stripe.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI','DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI','DOMAIN,setup.workos.com,🤖 AI','DOMAIN,workos.imgix.net,🤖 AI',
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
-    'RULE-SET,Advertising,🛑 广告拦截','RULE-SET,Advertising_Domain,🛑 广告拦截',
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',

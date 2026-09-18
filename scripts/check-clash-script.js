@@ -8,7 +8,7 @@ vm.createContext(context);vm.runInContext(source,context,{filename:scriptPath});
 if(typeof context.main!=='function')throw new Error('main(config) is missing');
 const assert=(c,m)=>{if(!c)throw new Error(m);};
 const group=(config,name)=>config['proxy-groups'].find(item=>item.name===name);
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🛑 广告拦截','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 
 const directInput={dns:{enable:false,marker:'subscription-dns'},hosts:{'subscription.example':'192.0.2.1'},ipv6:true,proxies:[
 {name:'Hong Kong | HK-01',type:'ss',server:'127.0.0.1',port:8388,cipher:'aes-128-gcm',password:'test-only'},
@@ -18,6 +18,7 @@ const directInput={dns:{enable:false,marker:'subscription-dns'},hosts:{'subscrip
 
 const direct=context.main(JSON.parse(JSON.stringify(directInput)));
 assert(JSON.stringify(direct['proxy-groups'].map(item=>item.name))===JSON.stringify(expectedOrder),'proxy group display order');
+assert(!group(direct,'🛑 广告拦截'),'legacy Advertising group must be absent');
 assert(group(direct,'🤖 AI').proxies[0]==='🇸🇬 新加坡','AI default');
 assert(JSON.stringify(group(direct,'🧩 自定义').proxies)===JSON.stringify(['🚀 默认代理','🇺🇸 美国','🇯🇵 日本','🇸🇬 新加坡']),'Custom group options');
 assert(group(direct,'🐟 漏网之鱼').proxies[0]==='🚀 默认代理','fallback default');
@@ -28,7 +29,8 @@ assert(direct.hosts&&direct.hosts['subscription.example']==='192.0.2.1','must pr
 assert(direct.ipv6===true,'must not override subscription IPv6');
 assert(direct.mode==='rule','must set rule mode');
 assert(direct.profile&&direct.profile['store-selected'],'must persist selection');
-assert(group(direct,'🛑 广告拦截').proxies[0]==='REJECT','Advertising default');
+assert(!direct['rule-providers'].Advertising&&!direct['rule-providers'].Advertising_Domain,'legacy Advertising providers must be absent');
+assert(!direct.rules.some(rule=>/Advertising|广告拦截/.test(rule)),'legacy Advertising rules must be absent');
 assert(direct['rule-providers'].Custom,'Custom provider missing');
 assert(direct['rule-providers'].Custom.behavior==='classical','Custom provider behavior');
 assert(direct['rule-providers'].Custom.format==='text','Custom provider format');
@@ -52,12 +54,6 @@ assert(logs.some(item=>item.message.includes('完成：')),'completion log');
 assert(logs.some(item=>item.level==='warn'&&item.message.includes('台湾')),'fallback warning');
 assert(!logs.some(item=>item.message.includes('HK-01')),'console must not expose node names');
 assert(direct.rules[0]==='RULE-SET,Lan,DIRECT,no-resolve','LAN must not resolve domains before service rules');
-assert(JSON.stringify(group(direct,'🛑 广告拦截').proxies)===JSON.stringify(['REJECT','DIRECT','🚀 默认代理']),'Advertising group options');
-assert(direct['rule-providers'].Advertising.behavior==='classical','Advertising classical provider');
-assert(direct['rule-providers'].Advertising.format==='yaml','Advertising YAML provider');
-assert(direct['rule-providers'].Advertising.url.includes('/Clash/Advertising/Advertising.yaml'),'Advertising provider source');
-assert(direct['rule-providers'].Advertising_Domain.behavior==='domain','Advertising domain provider');
-assert(direct['rule-providers'].Advertising_Domain.url.includes('/Clash/Advertising/Advertising_Domain.txt'),'Advertising domain provider source');
 assert(direct['rule-providers'].Apple_Domain.behavior==='domain','Apple domain provider');
 assert(direct['rule-providers'].China_Domain.behavior==='domain','China domain provider');
 assert(!group(direct,'🐟 FINAL'),'obsolete FINAL policy group must be absent');
@@ -68,12 +64,10 @@ for(const rule of direct.rules){
   const name=rule.split(',')[1];
   assert(ruleSetNames.has(name),`missing rule provider: ${name}`);
 }
-const advertisingIndex=direct.rules.indexOf('RULE-SET,Advertising,🛑 广告拦截');
-const advertisingDomainIndex=direct.rules.indexOf('RULE-SET,Advertising_Domain,🛑 广告拦截');
 const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple');
 const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
 const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
-assert(advertisingIndex<advertisingDomainIndex&&advertisingDomainIndex<appleIndex,'Advertising/Apple order');
+assert(appleIndex>0&&appleIndex<googleIndex,'AI/Apple/Google order');
 assert(chinaIndex<chinaDomainIndex&&chinaDomainIndex<fallbackIndex,'China/China_Domain/fallback order');
 assert(direct['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'China domain rule-provider source');
 assert(direct['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','China domain rule-provider path');
@@ -104,4 +98,4 @@ const mixed=context.main({proxies:[{...directInput.proxies[0],name:'HK-01'}],'pr
 assert(group(mixed,'👆 手动选择').use.includes('WestData'),'unmatched static nodes must not reject a provider subscription');
 assert(group(mixed,'👆 手动选择')['empty-fallback']==='REJECT','mixed subscription must fail closed');
 if(process.env.MIHOMO_CONFIG_OUTPUT)fs.writeFileSync(process.env.MIHOMO_CONFIG_OUTPUT,JSON.stringify(direct,null,2));
-console.log('PASS: Clash Verge Rev Custom routing checks');
+console.log('PASS: Clash Verge Rev Custom routing checks (no Advertising)');
