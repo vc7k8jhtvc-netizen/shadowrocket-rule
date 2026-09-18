@@ -23,6 +23,14 @@ DOMAIN-SUFFIX,tavily.com
 
 
 # ===== 开发工具 =====
+# Supabase：官网 / 控制台、项目 API / Auth / Storage / Realtime 等服务
+# supabase.in 也为 Supabase 客户端识别的服务域；自定义域名需单独明确配置
+# 来源：https://supabase.com/docs/guides/platform/custom-domains
+# 来源：https://supabase.com/docs/guides/observability/client-side-tracing
+DOMAIN-SUFFIX,supabase.com
+DOMAIN-SUFFIX,supabase.co
+DOMAIN-SUFFIX,supabase.in
+
 DOMAIN-SUFFIX,docker.io
 DOMAIN-SUFFIX,docker.com
 # Docker 官方镜像与认证依赖；共享平台使用精确主机
