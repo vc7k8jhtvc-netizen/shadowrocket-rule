@@ -1,5 +1,5 @@
 #!name=YouTube Enhance (Pinned)
-#!desc=YouTube/YouTube Music 专项去广告、PIP、后台播放；固定 Maasea 上游版本，不再包含通用 Advertising MITM 主机
+#!desc=YouTube/YouTube Music 专项去广告、PIP、后台播放；默认屏蔽 Shorts 按钮；固定 Maasea 上游版本，不包含通用 Advertising MITM 主机
 #!author=Maasea / Shadowrocket adaptation
 #!homepage=https://github.com/Maasea/sgmodule
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
@@ -12,9 +12,10 @@ AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP)),REJECT
 AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP)),REJECT
 
 [Script]
-# Innertube protobuf 响应：去广告、PIP、后台播放等
-# 默认：屏蔽上传按钮=true；屏蔽选段按钮=true；屏蔽 Shorts=false；字幕翻译=off；调试=false
-youtube.response = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch|log_event|config))(\?(.*))?$,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.response.js,argument="{"captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}"
+# Innertube protobuf 响应：去广告、PIP、后台播放及 Shorts 入口处理
+# 默认：屏蔽上传按钮=true；屏蔽选段按钮=true；屏蔽 Shorts=true；字幕翻译=off；调试=false
+# 使用 Maasea 原生 blockShorts 参数，不额外添加 Shorts 域名拦截或扩大 MITM 范围。
+youtube.response = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch|log_event|config))(\?(.*))?$,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.response.js,argument="{"captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":true,"debug":false}"
 
 # 新版 Onesie/initplayback 请求处理；会按上游逻辑使用 init-stream.maasea.workers.dev
 youtube.request.init = type=http-request,pattern=^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&ack.*,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.request.js,argument="{"captionLang":"off"}"
