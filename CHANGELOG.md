@@ -4,6 +4,7 @@
 
 ## 2026-09-18
 
+- YouTube 专项模块默认开启 Maasea 原生 `blockShorts:true`，用于屏蔽 Shorts 导航入口；不新增 Shorts 域名拦截、不扩大 MITM、不更换固定上游脚本。新增自动检查，防止该开关回退并锁定其他参数。仅确认配置与 CI；当前开关不保证封锁所有 Shorts 视频，客户端呈现仍待设备实测。
 - 内部版本升至 `v2.7.19`：为 Shadowrocket / Clash 的现有 🤖 AI 分组新增 Claude/Anthropic 四个专属域名后缀 `claude.ai`、`claude.com`、`anthropic.com`、`claudeusercontent.com`，涵盖网页、API 与 Artifacts；不新建分组、不引入共享 CDN、MITM 或 DNS，原有出口与顺序保持不变。新增双端规则回归测试；设备验证待完成。
 - 内部版本升至 `v2.7.18`：移除 Shadowrocket 与 Clash 的通用 Advertising 规则、Providers 及广告策略组；原有业务分流、国内直连、Custom.list、兜底及 WestData 基础订阅均保持原有职责。
 - YouTube 合并模块去除第三方 Advertising MITM 主机，仅保留 `*.googlevideo.com`、`youtubei.googleapis.com` 与既有 YouTube 脚本、UDP 回退规则。同步更新检查器、文档；本次设备端误杀回归仍待实际验证。
@@ -17,7 +18,7 @@
 ## 2026-09-10
 
 - 修复同一日期下多条版本记录导致的 CI 版本校验误报；恢复 Clash 检查器生成 Mihomo 测试配置，并支持通过 `WESTDATA_CONFIG` 校验本地私有订阅。
-- 内部版本升至 `v2.7.15`：恢复原 `Global.list` 的完整个人规则内容并更名为 `Custom.list`，原“🌍 Global”策略组改名为“🧩 自定义”；规则恢复到 Google 之后、中国规则之前。Shadowrocket / Clash 双端同步；“🐟 漏网之鱼”仍保持最终兜底，不恢复旧 FINAL 架构。
+- 内部版本升至 `v2.7.15`：恢复原 `Global.list` 的完整个人规则内容并更名为 `Custom.list`，原“🌍 Global”策略组改为“🧩 自定义”；规则恢复到 Google 之后、中国规则之前。Shadowrocket / Clash 双端同步；“🐟 漏网之鱼”仍保持最终兜底，不恢复旧 FINAL 架构。
 - 内部版本升至 `v2.7.14`：补齐 Grok / xAI 功能域名，新增 `grokusercontent.com`、`grok-sandbox.com`、`groktpcontent.com`、`grok.me`、`grokipedia.com` 与 `featureassets.org` 到“🤖 AI”，并同步 Shadowrocket / Clash；共享广告、统计与 Cookie 依赖不纳入 AI。
 
 ## 2026-09-09
