@@ -27,7 +27,7 @@ assert(group(direct,'🐟 漏网之鱼').proxies.includes('👆 手动选择'),'
 assert(direct.dns&&direct.dns.marker==='subscription-dns','must preserve subscription DNS');
 assert(direct.hosts&&direct.hosts['subscription.example']==='192.0.2.1','must preserve subscription hosts');
 assert(direct.ipv6===true,'must not override subscription IPv6');
-assert(direct.mode==='rule','must set rule mode');
+assert(!Object.prototype.hasOwnProperty.call(direct,'mode'),'must not force application-managed mode');
 assert(direct.profile&&direct.profile['store-selected'],'must persist selection');
 assert(!direct['rule-providers'].Advertising&&!direct['rule-providers'].Advertising_Domain,'legacy Advertising providers must be absent');
 assert(!direct.rules.some(rule=>/Advertising|广告拦截/.test(rule)),'legacy Advertising rules must be absent');

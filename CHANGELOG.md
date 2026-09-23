@@ -1,5 +1,9 @@
 # 变更记录
 
+## 2026-09-23
+
+- 内部版本升至 `v2.7.20`：移除扩展脚本对 `mode` 的强制赋值，遵循 Clash Verge Rev 应用设置优先级；客户端运行模式请设为“规则”。同步调整静态回归校验。
+
 仅保留关键结果。当前用法见 [README](README.md)，完整修改与临时试验见 [Git 历史](https://github.com/vc7k8jhtvc-netizen/shadowrocket-rule/commits/main/)。
 
 ## 2026-09-18

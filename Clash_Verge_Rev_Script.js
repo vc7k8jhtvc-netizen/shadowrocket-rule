@@ -92,7 +92,6 @@ function main(config) {
   ];
 
   writeLog('log', '保留订阅 DNS 与 hosts，不改写节点入口解析链路');
-  config.mode = 'rule';
   config.profile = Object.assign({}, config.profile || {}, { 'store-selected': true, 'store-fake-ip': true });
 
   const blackmatrix = 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule';

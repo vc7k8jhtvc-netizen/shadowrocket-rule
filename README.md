@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.19`。本版本将 Claude / Anthropic 专属域名加入原有 🤖 AI 分组，保留 v2.7.18 移除通用 Advertising 黑名单的行为。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.20`。本版本将 Claude / Anthropic 专属域名加入原有 🤖 AI 分组，保留 v2.7.18 移除通用 Advertising 黑名单的行为。**
 
 ## Shadowrocket
 
@@ -56,6 +56,8 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 ## Clash Verge Rev
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
+
+Clash Verge Rev 的运行模式由应用设置控制；请在客户端设置中选择“规则”。扩展脚本不强制改写 `mode`。
 
 Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
 
