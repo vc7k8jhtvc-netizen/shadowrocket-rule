@@ -97,5 +97,48 @@ for(const name of ['HK-01','剩余流量：10GB']){
 const mixed=context.main({proxies:[{...directInput.proxies[0],name:'HK-01'}],'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
 assert(group(mixed,'👆 手动选择').use.includes('WestData'),'unmatched static nodes must not reject a provider subscription');
 assert(group(mixed,'👆 手动选择')['empty-fallback']==='REJECT','mixed subscription must fail closed');
+
+const dependencyInput={
+  proxies:[{...directInput.proxies[0],'dialer-proxy':'🚀 默认代理'}],
+  'proxy-groups':[
+    {name:'🚀 默认代理',type:'select',proxies:['Transport']},
+    {name:'Transport',type:'select',proxies:['DIRECT']},
+    {name:'Unused',type:'select',proxies:['REJECT']}
+  ],
+  'proxy-providers':{WestData:{type:'inline',payload:[{...directInput.proxies[1],'dialer-proxy':'Transport'}],proxy:'Transport',override:{'dialer-proxy':'Transport'}}},
+  dns:{enable:true,nameserver:['1.1.1.1'],'nameserver-policy':{'rule-set:China,SubscriptionDomain':['1.1.1.1']},'fake-ip-filter':['rule-set:SubscriptionDomain']},
+  'rule-providers':{
+    China:{type:'inline',behavior:'domain',payload:['+.fixture.invalid']},
+    SubscriptionDomain:{type:'inline',behavior:'domain',payload:['+.subscription.invalid'],proxy:'Transport'},
+    Unused:{type:'inline',behavior:'domain',payload:['+.unused.invalid']}
+  }
+};
+const dependencies=context.main(JSON.parse(JSON.stringify(dependencyInput)));
+const dialerGroup=group(dependencies,dependencies.proxies[0]['dialer-proxy']);
+assert(dialerGroup&&dialerGroup.name!=='🚀 默认代理','original colliding dialer group must be retained separately');
+const transportGroup=group(dependencies,dialerGroup.proxies[0]);
+assert(JSON.stringify(transportGroup.proxies)==='["DIRECT"]','transitive dialer group dependency must retain its exit');
+assert(!group(dependencies,'Unused'),'unreferenced subscription groups must be discarded');
+assert(dependencies['proxy-providers'].WestData.proxy===transportGroup.name,'provider download policy dependency');
+assert(dependencies['proxy-providers'].WestData.override['dialer-proxy']===transportGroup.name,'provider override dialer dependency');
+assert(dependencies['proxy-providers'].WestData.payload[0]['dialer-proxy']===transportGroup.name,'inline provider node dialer dependency');
+const dnsKey=Object.keys(dependencies.dns['nameserver-policy'])[0];
+const dnsSets=dnsKey.slice('rule-set:'.length).split(',');
+assert(dnsSets.length===2&&dnsSets[0]!=='China','colliding DNS rule-provider must be retained separately');
+assert(JSON.stringify(dependencies['rule-providers'][dnsSets[0]].payload)==='["+.fixture.invalid"]','DNS rule-provider payload must be preserved');
+assert(dependencies['rule-providers'][dnsSets[1]].proxy===transportGroup.name,'DNS rule-provider download dependency');
+assert(dependencies.dns['fake-ip-filter'][0]==='rule-set:'+dnsSets[1],'fake-ip-filter must reference retained DNS rule-provider');
+assert(!dependencies['rule-providers'].Unused,'unreferenced subscription rule-providers must be discarded');
+assert(group(dependencies,'🚀 默认代理').proxies[0]==='🇭🇰 香港','dependency preservation must keep routing default');
+assert(dependencies['rule-providers'].China.url.endsWith('/Clash/China/China.yaml'),'dependency preservation must keep routing provider');
+for(const invalid of [
+  {...dependencyInput,'proxy-groups':[{name:'🚀 默认代理',type:'select',proxies:['🚀 默认代理']}]},
+  {...dependencyInput,'rule-providers':{}}
+]){
+  const input=JSON.parse(JSON.stringify(invalid)),before=JSON.stringify(input);
+  let failed=false;try{context.main(input);}catch(error){failed=/订阅/.test(error.message);}
+  assert(failed,'invalid subscription dependencies must be rejected');
+  assert(JSON.stringify(input)===before,'dependency rejection must not partially mutate input');
+}
 if(process.env.MIHOMO_CONFIG_OUTPUT)fs.writeFileSync(process.env.MIHOMO_CONFIG_OUTPUT,JSON.stringify(direct,null,2));
 console.log('PASS: Clash Verge Rev Custom routing checks (no Advertising)');

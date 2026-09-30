@@ -24,8 +24,19 @@ const patterns = [
   ['credential assignment', /\b(?:password|passwd|secret|token|api[_-]?key)\s*[:=]\s*["']?[^\s"',}]{8,}/i]
 ];
 
-const allowLine = line =>
-  /test-only|example\.invalid|placeholder|changeme|YOUR_[A-Z0-9_]+|<[^>]+>/.test(line);
+// Exempt the matched placeholder value, never an entire line or a real token.
+const placeholder = /^(?:test-only|placeholder|changeme|YOUR_[A-Z0-9_]+|<[^<>\r\n]+>)$/;
+const allowMatch = (label, match) => {
+  if (label === 'credential assignment') {
+    const value = match.replace(/^.*?[:=]\s*["']?/, '');
+    return placeholder.test(value);
+  }
+  if (label === 'proxy URI' || label === 'credentialed URL') {
+    try { return new URL(match).hostname === 'example.invalid'; } catch { return false; }
+  }
+  if (label === 'secret query parameter') return placeholder.test(match.slice(match.indexOf('=') + 1));
+  return false;
+};
 
 const findings = [];
 for (const file of files) {
@@ -57,10 +68,9 @@ for (const file of files) {
       }
       continue;
     }
-    if (allowLine(lines[i])) continue;
     for (const [label, pattern] of patterns) {
-      pattern.lastIndex = 0;
-      if (pattern.test(lines[i])) findings.push({ file, line: i + 1, label });
+      const matches = lines[i].matchAll(new RegExp(pattern.source, pattern.flags + 'g'));
+      if ([...matches].some(match => !allowMatch(label, match[0]))) findings.push({ file, line: i + 1, label });
     }
   }
 }

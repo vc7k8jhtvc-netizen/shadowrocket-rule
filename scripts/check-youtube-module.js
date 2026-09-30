@@ -40,6 +40,7 @@ for (const [name, type, file, sample] of cases) {
   assert(pattern.test(sample), 'hook does not match expected endpoint');
   assert(!pattern.test('https://example.invalid/youtubei/v1/player'), 'hook matches unrelated host');
   const argument = line.match(/,argument="(.*)"$/);
+  if (name !== 'youtube.request.log_event') assert(argument, 'missing arguments: ' + name);
   if (argument) {
     const options = JSON.parse(argument[1]);
     assert(options.captionLang === 'off', 'caption default changed');

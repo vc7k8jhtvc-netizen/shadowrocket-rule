@@ -5,7 +5,7 @@ const path = require('path');
 const vm = require('vm');
 const net = require('net');
 const dgram = require('dgram');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const { once } = require('events');
 
 const binary = process.argv[2];
@@ -33,6 +33,37 @@ async function freePort() {
   let child;
   let logs = '';
   try {
+    const fixtureNode = { name: 'Hong Kong | Dependency', type: 'ss', server: '127.0.0.1', port: 1, cipher: 'aes-128-gcm', password: 'test-only' };
+    const dependencyInput = {
+      mode: 'rule',
+      proxies: [{ ...fixtureNode, 'dialer-proxy': '🚀 默认代理' }],
+      'proxy-groups': [
+        { name: '🚀 默认代理', type: 'select', proxies: ['Transport'] },
+        { name: 'Transport', type: 'select', proxies: ['DIRECT'] }
+      ],
+      'proxy-providers': { Fixture: { type: 'inline', payload: [{ ...fixtureNode, name: 'Singapore | Provider', 'dialer-proxy': 'Transport' }], override: { 'dialer-proxy': 'Transport' } } },
+      dns: { enable: true, nameserver: ['1.1.1.1'], 'nameserver-policy': { 'rule-set:China,SubscriptionDomain': ['1.1.1.1'] }, 'fake-ip-filter': ['rule-set:SubscriptionDomain'] },
+      'rule-providers': {
+        China: { type: 'inline', behavior: 'domain', payload: ['+.fixture.invalid'] },
+        SubscriptionDomain: { type: 'inline', behavior: 'domain', payload: ['+.subscription.invalid'] }
+      },
+      rules: ['MATCH,REJECT']
+    };
+    const dependencyOutput = ctx.main(JSON.parse(JSON.stringify(dependencyInput)));
+    // Avoid Internet/GeoIP downloads while keeping every generated rule-set reference.
+    for (const [name, provider] of Object.entries(dependencyOutput['rule-providers'])) {
+      if (provider.type === 'inline') continue;
+      dependencyOutput['rule-providers'][name] = { type: 'inline', behavior: provider.behavior,
+        payload: provider.behavior === 'domain' ? ['+.audit.invalid'] : ['DOMAIN-SUFFIX,audit.invalid'] };
+    }
+    dependencyOutput.rules = dependencyOutput.rules.filter(rule => !rule.startsWith('GEOIP,'));
+    for (const [label, input] of [['before', dependencyInput], ['after', dependencyOutput]]) {
+      const fixturePath = path.join(dir, 'dependencies-' + label + '.json');
+      fs.writeFileSync(fixturePath, JSON.stringify(input));
+      const checked = spawnSync(binary, ['-t', '-d', dir, '-f', fixturePath], { encoding: 'utf8', timeout: 10000 });
+      assert(checked.status === 0, 'Mihomo subscription dependency validation failed (' + label + '):\n' + checked.stdout + checked.stderr);
+    }
+    console.log('PASS: Mihomo loads preserved dialer/provider groups and DNS rule-set dependencies');
     const apiPort = await freePort();
     const proxyPort = await freePort();
     const output = ctx.main({ 'proxy-providers': { Test: { type: 'inline', payload: [

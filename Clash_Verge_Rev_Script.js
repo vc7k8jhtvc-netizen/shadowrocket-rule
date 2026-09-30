@@ -71,7 +71,7 @@ function main(config) {
     allNodesGroup.filter = allPattern.source;
   }
 
-  config['proxy-groups'] = [
+  const proxyGroups = [
     { name: '🚀 默认代理', type: 'select', proxies: ['🇭🇰 香港', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🏝️ 台湾', '👆 手动选择'] },
     allNodesGroup,
     { name: '🤖 AI', type: 'select', proxies: ['🇸🇬 新加坡', '🇺🇸 美国', '🇯🇵 日本', '🚀 默认代理'] },
@@ -92,7 +92,6 @@ function main(config) {
   ];
 
   writeLog('log', '保留订阅 DNS 与 hosts，不改写节点入口解析链路');
-  config.profile = Object.assign({}, config.profile || {}, { 'store-selected': true, 'store-fake-ip': true });
 
   const blackmatrix = 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule';
   const classicalProvider = (name) => ({
@@ -101,7 +100,7 @@ function main(config) {
     path: `./rule_providers/${name}.yaml`, interval: 86400, proxy: '🚀 默认代理'
   });
 
-  config['rule-providers'] = {
+  const ruleProviders = {
     Lan: classicalProvider('Lan'),
     Apple: classicalProvider('Apple'),
     Apple_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Shadowrocket/Apple/Apple_Domain.list`, path: './rule_providers/Apple_Domain.list', interval: 86400, proxy: '🚀 默认代理' },
@@ -121,6 +120,77 @@ function main(config) {
     China: classicalProvider('China'),
     China_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/China/China_Domain.txt`, path: './rule_providers/China_Domain.txt', interval: 86400, proxy: '🚀 默认代理' }
   };
+
+  // Preserve only subscription dependencies used by nodes, provider downloads or DNS.
+  // Private names avoid changing either dependency semantics or our routing groups.
+  const originalGroups = new Map((config['proxy-groups'] || []).map(group => [group.name, group]));
+  const originalRuleProviders = config['rule-providers'] || {};
+  const policyNames = new Set([...allProxies, ...proxyGroups.map(group => group.name), ...originalGroups.keys()]);
+  const retainedGroups = new Map();
+  const retainedRuleProviders = new Map();
+  const visiting = new Set();
+  const privateName = (prefix, used) => {
+    let index = 0;
+    while (used.has(prefix + index)) index++;
+    const name = prefix + index;
+    used.add(name);
+    return name;
+  };
+  const preservePolicy = name => {
+    if (!originalGroups.has(name)) return name;
+    if (visiting.has(name)) throw new Error('订阅依赖策略组存在循环引用。');
+    if (retainedGroups.has(name)) return retainedGroups.get(name).name;
+    visiting.add(name);
+    const original = originalGroups.get(name);
+    const retained = { ...original, name: privateName('__subscription_group_', policyNames) };
+    retainedGroups.set(name, retained);
+    if (original.proxies) retained.proxies = original.proxies.map(preservePolicy);
+    visiting.delete(name);
+    return retained.name;
+  };
+  const preserveDialer = proxy => proxy && proxy['dialer-proxy']
+    ? { ...proxy, 'dialer-proxy': preservePolicy(proxy['dialer-proxy']) } : proxy;
+  const preserveDownload = provider => {
+    const retained = { ...provider };
+    if (provider.proxy) retained.proxy = preservePolicy(provider.proxy);
+    if (provider.override) retained.override = preserveDialer(provider.override);
+    if (provider.payload) retained.payload = provider.payload.map(preserveDialer);
+    return retained;
+  };
+  const ruleProviderNames = new Set([...Object.keys(ruleProviders), ...Object.keys(originalRuleProviders)]);
+  const preserveDnsRule = name => {
+    if (retainedRuleProviders.has(name)) return retainedRuleProviders.get(name);
+    if (!Object.prototype.hasOwnProperty.call(originalRuleProviders, name)) {
+      throw new Error('订阅 DNS 引用的规则集不存在。');
+    }
+    const retainedName = privateName('__subscription_rule_', ruleProviderNames);
+    retainedRuleProviders.set(name, retainedName);
+    ruleProviders[retainedName] = preserveDownload(originalRuleProviders[name]);
+    return retainedName;
+  };
+  const preserveDns = value => {
+    if (typeof value === 'string') {
+      if (!value.startsWith('rule-set:')) return value;
+      return 'rule-set:' + value.slice('rule-set:'.length).split(',').map(name => preserveDnsRule(name.trim())).join(',');
+    }
+    if (Array.isArray(value)) return value.map(preserveDns);
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [preserveDns(key), preserveDns(item)]));
+    }
+    return value;
+  };
+  const proxies = config.proxies && config.proxies.map(preserveDialer);
+  const proxyProviders = config['proxy-providers'] && Object.fromEntries(
+    Object.entries(config['proxy-providers']).map(([name, provider]) => [name, preserveDownload(provider)])
+  );
+  const dns = preserveDns(config.dns);
+  // Commit together after dependency checks, so rejected inputs are not half-rewritten.
+  config['proxy-groups'] = [...proxyGroups, ...retainedGroups.values()];
+  config['rule-providers'] = ruleProviders;
+  if (proxies) config.proxies = proxies;
+  if (proxyProviders) config['proxy-providers'] = proxyProviders;
+  if (dns !== undefined) config.dns = dns;
+  config.profile = Object.assign({}, config.profile || {}, { 'store-selected': true, 'store-fake-ip': true });
 
   config.rules = [
     'RULE-SET,Lan,DIRECT,no-resolve',

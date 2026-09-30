@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.20`。本版本将 Claude / Anthropic 专属域名加入原有 🤖 AI 分组，保留 v2.7.18 移除通用 Advertising 黑名单的行为。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.21`。本版本修复 Clash 订阅依赖丢失、凭据扫描漏报与 YouTube 参数缺失校验，保留 Claude / Anthropic 分流及 v2.7.18 移除通用 Advertising 黑名单的行为。**
 
 ## Shadowrocket
 
@@ -60,6 +60,8 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 Clash Verge Rev 的运行模式由应用设置控制；请在客户端设置中选择“规则”。扩展脚本不强制改写 `mode`。
 
 Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
+
+订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。
 
 ## 可选：仅 YouTube 增强（Shadowrocket）
 

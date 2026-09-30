@@ -37,6 +37,15 @@ try{
   check('check-youtube-module.js',[],1,'unexpected YouTube-only MITM scope');
   fs.writeFileSync(youtubePath,youtubeModule);
 
+  for(const hook of ['youtube.response','youtube.request.init']){
+    const missingArguments=youtubeModule.split('\n').map(line=>line.startsWith(hook+' = ')?line.replace(/,argument=.*$/,''):line).join('\n');
+    fs.writeFileSync(youtubePath,missingArguments);
+    check('check-youtube-module.js',[],1,'missing arguments: '+hook);
+  }
+  fs.writeFileSync(youtubePath,youtubeModule.replace('"blockShorts":true','"blockShorts":false'));
+  check('check-youtube-module.js',[],1,'Shorts blocking must be enabled');
+  fs.writeFileSync(youtubePath,youtubeModule);
+
   fs.writeFileSync(routingPath,routing.replace('RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义\n',''));
   check('check-shadowrocket-routing.js',[],1,'Custom.list routing rule missing');
   fs.writeFileSync(routingPath,routing);
@@ -69,13 +78,13 @@ try{
 
   const readmePath=path.join(temp,'README.md');
   const readme=fs.readFileSync(readmePath,'utf8');
-  fs.writeFileSync(readmePath,readme.replace('内部版本为 `v2.7.20`','内部版本为 `v9.9.9`'));
+  fs.writeFileSync(readmePath,readme.replace(/内部版本为 `v\d+\.\d+\.\d+`/,'内部版本为 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(readmePath,readme);
 
   const changelogPath=path.join(temp,'CHANGELOG.md');
   const changelog=fs.readFileSync(changelogPath,'utf8');
-  fs.writeFileSync(changelogPath,changelog.replace('内部版本升至 `v2.7.20`','内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath,changelog.replace(/内部版本升至 `v\d+\.\d+\.\d+`/,'内部版本升至 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(changelogPath,changelog);
 
@@ -112,6 +121,21 @@ try{
   fs.writeFileSync(candidate,'[MITM]\nca-passphrase = test-only\n');
   execFileSync('git',['-C',temp,'add','candidate.sgmodule','scripts/check-sensitive-data.js']);
   check('check-sensitive-data.js',[],1,'MITM CA material');
+
+  // Build synthetic credentials in pieces so this test source contains no credential.
+  const assignment='password'+'=';
+  const synthetic='synthetic-review-'+'secret';
+  for(const suffix of ['', ' # <note>', ' # placeholder', ' # test-only', ' # example.invalid']){
+    fs.writeFileSync(candidate,assignment+synthetic+suffix+'\n');
+    check('check-sensitive-data.js',[],1,'credential assignment');
+  }
+  fs.writeFileSync(candidate,assignment+'test-only, '+assignment+synthetic+'\n');
+  check('check-sensitive-data.js',[],1,'credential assignment');
+  const syntheticToken='ghp_'+'A'.repeat(24);
+  fs.writeFileSync(candidate,syntheticToken+' # placeholder\n');
+  check('check-sensitive-data.js',[],1,'GitHub token');
+  fs.writeFileSync(candidate,assignment+'test-only\n'+assignment+'placeholder\n'+assignment+'YOUR_PASSWORD\n');
+  check('check-sensitive-data.js',[],0);
 
   console.log('PASS: validator regressions reject Claude/Advertising/Custom/fallback/version/group/security drift');
 }finally{
