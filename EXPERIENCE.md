@@ -12,6 +12,11 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围。
 - Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers。
 
+## 外部配置文档
+
+- 本项目的 `.conf`、`.yaml` 配置文档保存在 Google Drive；必要时可通过 ChatGPT 的 Google Drive 插件调用，用于读取、核验、比对或维护。
+- 私人订阅及其他敏感配置仍不得提交 GitHub。
+
 ## 修改范围
 
 | 修改内容 | 维护要求 |
