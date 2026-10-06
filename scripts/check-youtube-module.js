@@ -24,7 +24,7 @@ assert(rules.length === 3, 'unexpected YouTube module rule scope');
 
 const scripts = section('Script');
 assert(scripts.length === 3, 'expected three YouTube script hooks');
-const pin = '65075cdb388fc5e3094afd7e7314c67b243f3525';
+const upstreamBase = 'https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/';
 const cases = [
   ['youtube.response', 'http-response', 'youtube.response.js', 'https://youtubei.googleapis.com/youtubei/v1/player?key=test'],
   ['youtube.request.init', 'http-request', 'youtube.request.js', 'https://rr1---test.googlevideo.com/initplayback?foo=1&ack=1'],
@@ -34,7 +34,7 @@ for (const [name, type, file, sample] of cases) {
   const line = scripts.find(item => item.startsWith(name + ' = '));
   assert(line && line.includes('type=' + type + ','), 'missing hook: ' + name);
   const url = line.match(/script-path=([^,]+)/)?.[1];
-  assert(url === 'https://raw.githubusercontent.com/Maasea/sgmodule/' + pin + '/Script/Youtube/' + file, 'unexpected upstream script');
+  assert(url === upstreamBase + file, 'unexpected upstream script');
   for (const field of ['requires-body=1', 'max-size=-1', 'binary-body-mode=1']) assert(line.includes(field), 'missing body option');
   const pattern = new RegExp(line.match(/pattern=(.*?),requires-body=/)[1]);
   assert(pattern.test(sample), 'hook does not match expected endpoint');
@@ -53,7 +53,8 @@ for (const [name, type, file, sample] of cases) {
     }
   }
 }
-assert(/^#!name=YouTube Enhance \(Pinned\)$/m.test(text), 'YouTube-only module metadata drift');
+assert(!/raw\.githubusercontent\.com\/Maasea\/sgmodule\/[0-9a-f]{40}\//i.test(text), 'YouTube scripts must not be pinned to a commit SHA');
+assert(/^#!name=YouTube Enhance \(Upstream\)$/m.test(text), 'YouTube-only module metadata drift');
 assert(JSON.stringify(section('MITM')) === JSON.stringify(['hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com']), 'unexpected YouTube-only MITM scope');
 assert(!/\b(?:ca-passphrase|ca-p12)\s*=/.test(text), 'YouTube module must not contain CA material');
-console.log('PASS: YouTube-only module routing, Shorts enabled, pinned hooks and minimal MITM scope (not device playback)');
+console.log('PASS: YouTube-only module routing, Shorts enabled, master-tracking hooks and minimal MITM scope (not device playback)');
