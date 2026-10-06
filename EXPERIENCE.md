@@ -16,6 +16,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - 本项目的 `.conf`、`.yaml` 配置文档保存在 Google Drive；必要时可通过 ChatGPT 的 Google Drive 插件调用，用于读取、核验、比对或维护。
 - 私人订阅及其他敏感配置仍不得提交 GitHub。
+- `WestData.conf` 是否需要更新以订阅上游实际内容变化为准，不以文件生成时间或 Drive 修改时间单独判断；确认内容无变化时无需仅为刷新时间戳而更新。
 
 ## 修改范围
 
@@ -58,6 +59,14 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝。
 
+## 2026-10-06 实机验证结论
+
+- `WestData.conf` 已核对，上游实际内容没有变化，因此无需仅因文件时间较旧而更新。
+- 当前 `v2.7.21` 扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
+- Claude / Anthropic 分流已完成设备端验证；网页、应用、API 与 Artifacts 路径结果正常。
+- YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常。
+- 以上结论适用于当前配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
+
 ## v2.7.18 修正
 
 - 删除 Shadowrocket / Clash 通用 Advertising 规则、Providers 和广告策略组。
@@ -66,6 +75,6 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 ## v2.7.9 实机验证结论
 
-此前已通过 Shadowrocket 日志验证，当前 Routing 的显式终结规则能够隔离 WestData 的旧规则。v2.7.15 恢复 Custom 后，该列表域名应优先命中“🧩 自定义”。本次修改仍需用户设备验证。
+此前已通过 Shadowrocket 日志验证，当前 Routing 的显式终结规则能够隔离 WestData 的旧规则。v2.7.15 恢复 Custom 后，该列表域名应优先命中“🧩 自定义”。当前基线的后续设备验证状态见上方 2026-10-06 记录。
 
 普通维护可直接更新 main；较大改动按需使用分支/PR。

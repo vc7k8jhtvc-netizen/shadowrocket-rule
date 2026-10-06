@@ -84,7 +84,7 @@ try{
 
   const changelogPath=path.join(temp,'CHANGELOG.md');
   const changelog=fs.readFileSync(changelogPath,'utf8');
-  fs.writeFileSync(changelogPath,changelog.replace(/内部版本升至 `v\d+\.\d+\.\d+`/,'内部版本升至 `v9.9.9`'));
+  fs.writeFileSync(changelogPath,changelog.replace(/内部版本(?:升至|为) `v\d+\.\d+\.\d+`/,'内部版本为 `v9.9.9`'));
   check('check-version.js',[],1,'version mismatch');
   fs.writeFileSync(changelogPath,changelog);
 
