@@ -9,7 +9,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置；私人文件不得提交仓库。
 - `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单。
 - `Custom.list`：两端共用的个人显式自定义域名规则，由原 `Global.list` 恢复并更名。
-- `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围。
+- `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围；脚本直接跟随 `Maasea/sgmodule` 的 `master` 分支。
 - Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers。
 
 ## 外部配置文档
@@ -42,6 +42,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；LAN 使用 no-resolve，中国域名 Provider 使用 Clash `China_Domain.txt`，GEOIP,CN 不使用 no-resolve。
 - Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
 - YouTube 专属 UDP 拒绝规则仅匹配 googlevideo.com / youtubei.googleapis.com，MITM 主机仅为 `*.googlevideo.com`、`youtubei.googleapis.com`。
+- YouTube `youtube.response.js` / `youtube.request.js` 必须直接引用 `Maasea/sgmodule/master`，不得重新锁定 commit SHA；这样上游更新可自动生效，无需人工同步版本。
 
 ## 检查与发布
 
@@ -55,16 +56,16 @@ bash scripts/check-config.sh
 WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 ```
 
-检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围与脚本固定版本；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
+检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
-回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝。
+回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
 ## 2026-10-06 实机验证结论
 
 - `WestData.conf` 已核对，上游实际内容没有变化，因此无需仅因文件时间较旧而更新。
-- 当前 `v2.7.21` 扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
+- 当前扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
 - Claude / Anthropic 分流已完成设备端验证；网页、应用、API 与 Artifacts 路径结果正常。
-- YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常。
+- YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常；该结论对应当时上游脚本版本。自 v2.7.22 起 YouTube 脚本自动跟随 `master`，上游行为发生变化时再重新验证。
 - 以上结论适用于当前配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
 
 ## v2.7.18 修正
