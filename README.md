@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.21`。本版本修复 Clash 订阅依赖丢失、凭据扫描漏报与 YouTube 参数缺失校验，保留 Claude / Anthropic 分流及 v2.7.18 移除通用 Advertising 黑名单的行为。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.22`。本版本将 YouTube 增强脚本改为直接跟随 Maasea `master` 最新分支，避免手动维护固定 commit SHA；其余 v2.7.21 分流行为保持不变。**
 
 ## Shadowrocket
 
@@ -14,7 +14,7 @@
 | WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础能力；不要将私人订阅提交仓库 |
 | Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组** |
 | Custom.list | 两端共用的个人显式分流规则 |
-| YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机，不再包含通用广告 HTTPS MITM |
+| YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机；脚本直接跟随 Maasea `master`，不再固定 commit SHA |
 | Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts |
 
 当前 Routing 优先于被包含的配置。保留末尾三条显式终结规则，让剩余域名和纯 IP 流量优先归入“🐟 漏网之鱼”，避免进入 WestData 的旧 `[Rule]`；该机制在 2026-09-09 曾通过 Shadowrocket 实机日志验证。**v2.7.19 新增的 Claude / Anthropic 分流已于 2026-10-06 完成设备端连接验证，结果正常。**
@@ -69,7 +69,9 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 
-提供 YouTube / YouTube Music 去广告、画中画与后台播放脚本。继续保留两个 YouTube UDP 拒绝规则，用于回退 TCP/TLS；它们不是全局广告黑名单。MITM 只追加 `*.googlevideo.com` 和 `youtubei.googleapis.com`。模块不携带证书或 CA 私钥，依赖设备已正确配置的 Shadowrocket MITM 证书。更新后请确认客户端没有并存旧版合并模块。**2026-10-06 已完成当前模块及 Shorts 屏蔽行为的设备端验证，结果正常。**
+提供 YouTube / YouTube Music 去广告、画中画与后台播放脚本。继续保留两个 YouTube UDP 拒绝规则，用于回退 TCP/TLS；它们不是全局广告黑名单。MITM 只追加 `*.googlevideo.com` 和 `youtubei.googleapis.com`。模块不携带证书或 CA 私钥，依赖设备已正确配置的 Shadowrocket MITM 证书。更新后请确认客户端没有并存旧版合并模块。
+
+**自 v2.7.22 起，`youtube.response.js` / `youtube.request.js` 的 `script-path` 直接引用 `Maasea/sgmodule` 的 `master` 分支，不再锁定 commit SHA。上游提交新脚本后会自动生效，无需手动更新本仓库。** 2026-10-06 的设备端验证适用于当时上游版本；后续上游脚本改变运行行为时，应以实际设备表现为准。
 
 ## 连接日志核验
 
@@ -84,7 +86,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 | bilibili.com | DIRECT（依赖上游中国规则） |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-2026-10-06 已完成当前基线的真实设备核验，包括 Claude 网页 / 应用 / API / Artifacts 分流与 YouTube 专项增强；结果通过。后续规则或客户端行为发生变化时再重新验证。
+2026-10-06 已完成当前基线的真实设备核验，包括 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强；结果通过。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
 ## 维护
 
