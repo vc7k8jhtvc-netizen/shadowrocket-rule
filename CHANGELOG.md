@@ -2,7 +2,7 @@
 
 ## 2026-10-06
 
-- 仅更新验证与维护状态，不调整内部版本及运行时规则：`WestData.conf` 已确认上游内容无变化，无需因文件时间较旧而刷新；当前 `v2.7.21` 扩展脚本在 Clash Verge Rev `v2.5.7` 正式版测试正常；Claude / Anthropic 分流及 YouTube 专项增强 / Shorts 屏蔽均完成设备端验证并通过。
+- 内部版本为 `v2.7.21`；本次仅更新验证与维护状态，不调整运行时规则：`WestData.conf` 已确认上游内容无变化，无需因文件时间较旧而刷新；当前扩展脚本在 Clash Verge Rev `v2.5.7` 正式版测试正常；Claude / Anthropic 分流及 YouTube 专项增强 / Shorts 屏蔽均完成设备端验证并通过。
 
 ## 2026-09-30
 
