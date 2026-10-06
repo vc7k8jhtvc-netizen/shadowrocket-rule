@@ -1,5 +1,5 @@
-#!name=YouTube Enhance (Pinned)
-#!desc=YouTube/YouTube Music 专项去广告、PIP、后台播放；默认屏蔽 Shorts 按钮；固定 Maasea 上游版本，不包含通用 Advertising MITM 主机
+#!name=YouTube Enhance (Upstream)
+#!desc=YouTube/YouTube Music 专项去广告、PIP、后台播放；默认屏蔽 Shorts 按钮；直接跟随 Maasea master 最新脚本，不包含通用 Advertising MITM 主机
 #!author=Maasea / Shadowrocket adaptation
 #!homepage=https://github.com/Maasea/sgmodule
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
@@ -15,13 +15,14 @@ AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP)),REJECT
 # Innertube protobuf 响应：去广告、PIP、后台播放及 Shorts 入口处理
 # 默认：屏蔽上传按钮=true；屏蔽选段按钮=true；屏蔽 Shorts=true；字幕翻译=off；调试=false
 # 使用 Maasea 原生 blockShorts 参数，不额外添加 Shorts 域名拦截或扩大 MITM 范围。
-youtube.response = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch|log_event|config))(\?(.*))?$,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.response.js,argument="{"captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":true,"debug":false}"
+# script-path 直接引用 Maasea master，上游更新将自动生效，无需手动维护 commit SHA。
+youtube.response = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch|log_event|config))(\?(.*))?$,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js,argument="{"captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":true,"debug":false}"
 
 # 新版 Onesie/initplayback 请求处理；会按上游逻辑使用 init-stream.maasea.workers.dev
-youtube.request.init = type=http-request,pattern=^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&ack.*,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.request.js,argument="{"captionLang":"off"}"
+youtube.request.init = type=http-request,pattern=^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&ack.*,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js,argument="{"captionLang":"off"}"
 
 # 配合新版 config/hot-key 链路处理 log_event 请求头
-youtube.request.log_event = type=http-request,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/65075cdb388fc5e3094afd7e7314c67b243f3525/Script/Youtube/youtube.request.js
+youtube.request.log_event = type=http-request,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event,requires-body=1,max-size=-1,binary-body-mode=1,script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js
 
 [MITM]
 # 仅允许 YouTube 专属主机；不包含第三方广告 MITM 范围或 CA 材料。
