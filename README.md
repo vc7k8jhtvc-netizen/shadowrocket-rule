@@ -4,7 +4,7 @@
 
 ## Shadowrocket
 
-1. 保留并正常更新原始 `WestData.conf`。
+1. 保留原始 `WestData.conf`；仅在订阅上游实际内容发生变化时更新，确认内容无变化时无需因文件时间戳较旧而刷新。
 2. [下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf) 并设为当前配置。
 3. 确认 `[General]` 中的 `include = WestData.conf` 有效；若本地文件名不同，在配置详情的“通用 → 包含配置”中手动选择原订阅。
 4. 核对“🚀 默认代理”、业务组、“🧩 自定义”、地区节点池及“🐟 漏网之鱼”。
@@ -17,7 +17,7 @@
 | YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机，不再包含通用广告 HTTPS MITM |
 | Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts |
 
-当前 Routing 优先于被包含的配置。保留末尾三条显式终结规则，让剩余域名和纯 IP 流量优先归入“🐟 漏网之鱼”，避免进入 WestData 的旧 `[Rule]`；该机制在 2026-09-09 曾通过 Shadowrocket 实机日志验证。**v2.7.19 新增的 Claude 分流仍需设备端连接日志验证，CI 不等于实机验证。**
+当前 Routing 优先于被包含的配置。保留末尾三条显式终结规则，让剩余域名和纯 IP 流量优先归入“🐟 漏网之鱼”，避免进入 WestData 的旧 `[Rule]`；该机制在 2026-09-09 曾通过 Shadowrocket 实机日志验证。**v2.7.19 新增的 Claude / Anthropic 分流已于 2026-10-06 完成设备端连接验证，结果正常。**
 
 ## 广告拦截策略（自 v2.7.18 起）
 
@@ -63,11 +63,13 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 
 订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。
 
+**2026-10-06 已在 Clash Verge Rev v2.5.7 正式版完成测试，现有扩展脚本运行正常。**
+
 ## 可选：仅 YouTube 增强（Shadowrocket）
 
 [下载 YouTube.Enhance.Shadowrocket.sgmodule](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/YouTube.Enhance.Shadowrocket.sgmodule)
 
-提供 YouTube / YouTube Music 去广告、画中画与后台播放脚本。继续保留两个 YouTube UDP 拒绝规则，用于回退 TCP/TLS；它们不是全局广告黑名单。MITM 只追加 `*.googlevideo.com` 和 `youtubei.googleapis.com`。模块不携带证书或 CA 私钥，依赖设备已正确配置的 Shadowrocket MITM 证书。更新后请确认客户端没有并存旧版合并模块。
+提供 YouTube / YouTube Music 去广告、画中画与后台播放脚本。继续保留两个 YouTube UDP 拒绝规则，用于回退 TCP/TLS；它们不是全局广告黑名单。MITM 只追加 `*.googlevideo.com` 和 `youtubei.googleapis.com`。模块不携带证书或 CA 私钥，依赖设备已正确配置的 Shadowrocket MITM 证书。更新后请确认客户端没有并存旧版合并模块。**2026-10-06 已完成当前模块及 Shorts 屏蔽行为的设备端验证，结果正常。**
 
 ## 连接日志核验
 
@@ -82,7 +84,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 | bilibili.com | DIRECT（依赖上游中国规则） |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-更新后还需在真实设备上测试 Claude 网页、应用、API 和 Artifacts 的连接日志；仓库静态检测无法替代运行时验证。
+2026-10-06 已完成当前基线的真实设备核验，包括 Claude 网页 / 应用 / API / Artifacts 分流与 YouTube 专项增强；结果通过。后续规则或客户端行为发生变化时再重新验证。
 
 ## 维护
 
