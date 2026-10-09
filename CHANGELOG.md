@@ -1,5 +1,10 @@
 # 变更记录
 
+## 2026-10-10
+
+- 当前内部版本为 `v2.7.22`；仅更新 CI 使用的 Mihomo 核心版本及 SHA-256 校验和，不调整分流规则或内部版本。
+- CI 校验基线升至 Mihomo `v1.19.32`。该版本将默认 TUN 栈改为 `mips`；扩展脚本不改写订阅中的 `tun` 字段，也不设置 `tun.stack`。订阅明确设置的值继续保留，未设置时遵循 Mihomo 核心默认值。
+
 ## 2026-10-06
 
 - 内部版本升至 `v2.7.22`：YouTube 增强模块的 `youtube.response.js` / `youtube.request.js` 改为直接引用 `Maasea/sgmodule` 的 `master` 分支，不再固定 commit SHA；上游更新自动生效，无需人工维护脚本版本。同步更新校验器，要求脚本路径必须跟随 `master`，并拒绝重新锁定 40 位 commit SHA。
