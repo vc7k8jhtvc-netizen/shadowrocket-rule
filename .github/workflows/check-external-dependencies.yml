@@ -1,6 +1,13 @@
 name: Check external dependencies
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-external-dependencies.yml'
+      - 'scripts/check-external-dependencies.sh'
+      - 'scripts/check-youtube-module.js'
+      - 'YouTube.Enhance.Shadowrocket.sgmodule'
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:
@@ -9,7 +16,17 @@ permissions:
   contents: read
 
 jobs:
+  validate-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate external-check script syntax
+        run: bash -n scripts/check-external-dependencies.sh
+      - name: Validate local YouTube module contract
+        run: node scripts/check-youtube-module.js
+
   youtube-upstream:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
