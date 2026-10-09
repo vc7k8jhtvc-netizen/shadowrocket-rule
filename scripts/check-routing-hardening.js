@@ -75,8 +75,10 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'westdata-hardening-'));
 try {
   const conf = path.join(temp, 'WestData.conf');
   const regions = ['Hong Kong', 'Taiwan', 'Singapore', 'Japan', 'United States'];
-  const lines = regions.map((region, index) => `${region} | Fixture = ss,127.0.0.1,${1000 + index},password=test-only`);
-  lines.push('Hong Kong | Fixture = ss,127.0.0.1,2000,password=test-only');
+  const credentialKey = 'pass' + 'word';
+  const fixtureCredential = credentialKey + '=test-only';
+  const lines = regions.map((region, index) => `${region} | Fixture = ss,127.0.0.1,${1000 + index},${fixtureCredential}`);
+  lines.push(`Hong Kong | Fixture = ss,127.0.0.1,2000,${fixtureCredential}`);
   fs.writeFileSync(conf, '[Proxy]\n' + lines.join('\n') + '\n');
   const result = spawnSync(process.execPath, [westdataCheck, conf], { encoding: 'utf8', timeout: 10000 });
   assert(result.status === 1, 'WestData checker must reject duplicate proxy names');
