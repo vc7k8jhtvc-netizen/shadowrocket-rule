@@ -17,12 +17,16 @@ function main(config) {
 
   const allProxies = (config.proxies || []).map(p => p && p.name).filter(Boolean);
   const providerNames = Object.keys(config['proxy-providers'] || {});
+  const providerNameSet = new Set(providerNames);
   writeLog('log', `节点来源：proxies=${allProxies.length}，proxy-providers=${providerNames.length}`);
 
   if (allProxies.length === 0 && providerNames.length === 0) {
     const message = '订阅中没有可用的 proxies 或 proxy-providers，已停止生成配置以避免静默直连。';
     writeLog('error', message);
     throw new Error(message);
+  }
+  if (new Set(allProxies).size !== allProxies.length) {
+    throw new Error('订阅 proxies 存在重复节点名称，已停止生成配置。');
   }
 
   const allPattern = /^.+ \| .+$/;
@@ -90,6 +94,10 @@ function main(config) {
     regionalGroup('🇯🇵 日本', regionPatterns.jp, regionMatches.jp),
     regionalGroup('🇺🇸 美国', regionPatterns.us, regionMatches.us)
   ];
+  const projectGroupNames = new Set(proxyGroups.map(group => group.name));
+  if (allProxies.some(name => projectGroupNames.has(name))) {
+    throw new Error('订阅节点名称与项目策略组名称冲突，已停止生成配置。');
+  }
 
   writeLog('log', '保留订阅 DNS 与 hosts，不改写节点入口解析链路');
 
@@ -123,12 +131,22 @@ function main(config) {
 
   // Preserve only subscription dependencies used by nodes, provider downloads or DNS.
   // Private names avoid changing either dependency semantics or our routing groups.
-  const originalGroups = new Map((config['proxy-groups'] || []).map(group => [group.name, group]));
+  const originalGroupList = config['proxy-groups'] || [];
+  const originalGroupNames = originalGroupList.map(group => group && group.name).filter(Boolean);
+  if (new Set(originalGroupNames).size !== originalGroupNames.length) {
+    throw new Error('订阅策略组存在重复名称，已停止生成配置。');
+  }
+  const staticProxyNames = new Set(allProxies);
+  if (originalGroupNames.some(name => staticProxyNames.has(name))) {
+    throw new Error('订阅节点名称与订阅策略组名称冲突，已停止生成配置。');
+  }
+  const originalGroups = new Map(originalGroupList.map(group => [group.name, group]));
   const originalRuleProviders = config['rule-providers'] || {};
   const policyNames = new Set([...allProxies, ...proxyGroups.map(group => group.name), ...originalGroups.keys()]);
   const retainedGroups = new Map();
   const retainedRuleProviders = new Map();
   const visiting = new Set();
+  const builtinPolicies = new Set(['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE']);
   const privateName = (prefix, used) => {
     let index = 0;
     while (used.has(prefix + index)) index++;
@@ -137,16 +155,26 @@ function main(config) {
     return name;
   };
   const preservePolicy = name => {
-    if (!originalGroups.has(name)) return name;
-    if (visiting.has(name)) throw new Error('订阅依赖策略组存在循环引用。');
-    if (retainedGroups.has(name)) return retainedGroups.get(name).name;
-    visiting.add(name);
-    const original = originalGroups.get(name);
-    const retained = { ...original, name: privateName('__subscription_group_', policyNames) };
-    retainedGroups.set(name, retained);
-    if (original.proxies) retained.proxies = original.proxies.map(preservePolicy);
-    visiting.delete(name);
-    return retained.name;
+    if (typeof name !== 'string' || !name) throw new Error('订阅依赖引用了无效策略。');
+    if (originalGroups.has(name)) {
+      if (visiting.has(name)) throw new Error('订阅依赖策略组存在循环引用。');
+      if (retainedGroups.has(name)) return retainedGroups.get(name).name;
+      visiting.add(name);
+      const original = originalGroups.get(name);
+      const retained = { ...original, name: privateName('__subscription_group_', policyNames) };
+      retainedGroups.set(name, retained);
+      if (original.proxies) retained.proxies = original.proxies.map(preservePolicy);
+      if (original.use) {
+        if (!Array.isArray(original.use) || original.use.some(provider => !providerNameSet.has(provider))) {
+          throw new Error('订阅依赖策略组引用了不存在的 proxy-provider。');
+        }
+        retained.use = [...original.use];
+      }
+      visiting.delete(name);
+      return retained.name;
+    }
+    if (staticProxyNames.has(name) || builtinPolicies.has(name)) return name;
+    throw new Error('订阅依赖引用了不存在的策略。');
   };
   const preserveDialer = proxy => proxy && proxy['dialer-proxy']
     ? { ...proxy, 'dialer-proxy': preservePolicy(proxy['dialer-proxy']) } : proxy;
@@ -195,8 +223,10 @@ function main(config) {
   config.rules = [
     'RULE-SET,Lan,DIRECT,no-resolve',
     'DOMAIN-SUFFIX,deepseek.com,DIRECT',
-    'DOMAIN-SUFFIX,chatgpt.com,🤖 AI','DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI','DOMAIN-SUFFIX,intercom.io,🤖 AI','DOMAIN-SUFFIX,intercomcdn.com,🤖 AI','DOMAIN-SUFFIX,oaistatic.com,🤖 AI','DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI','DOMAIN-SUFFIX,openai.com,🤖 AI','DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
-    'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,cdn.workos.com,🤖 AI','DOMAIN,challenges.cloudflare.com,🤖 AI','DOMAIN,forwarder.workos.com,🤖 AI','DOMAIN,humb.apple.com,🤖 AI','DOMAIN,images.workoscdn.com,🤖 AI','DOMAIN,js.stripe.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI','DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI','DOMAIN,setup.workos.com,🤖 AI','DOMAIN,workos.imgix.net,🤖 AI',
+    // Shared vendors from the OpenAI allowlist intentionally follow normal routing;
+    // only OpenAI-owned or instance-specific hosts are forced through the AI policy.
+    'DOMAIN-SUFFIX,chatgpt.com,🤖 AI','DOMAIN-SUFFIX,oaistatic.com,🤖 AI','DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI','DOMAIN-SUFFIX,openai.com,🤖 AI','DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
+    'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI',
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
     'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
