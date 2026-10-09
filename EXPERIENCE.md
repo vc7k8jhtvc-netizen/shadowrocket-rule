@@ -16,7 +16,10 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - 本项目的 `.conf`、`.yaml` 配置文档保存在 Google Drive；必要时可通过 ChatGPT 的 Google Drive 插件调用，用于读取、核验、比对或维护。
 - 私人订阅及其他敏感配置仍不得提交 GitHub。
+- `WestData.conf` 是供应商维护的只读订阅输入；项目不得要求修改其 General、Host、URL Rewrite、MITM、节点服务器或 TLS 参数来满足仓库检查。
+- 本地 WestData 检查只验证项目实际依赖的节点选择契约：存在受支持的 `[Proxy]` 节点、节点命名与筛选器兼容、香港/台湾/新加坡/日本/美国核心节点池非空；不固定供应商内部实现细节。
 - `WestData.conf` 是否需要更新以订阅上游实际内容变化为准，不以文件生成时间或 Drive 修改时间单独判断；确认内容无变化时无需仅为刷新时间戳而更新。
+- 私有 Drive 文件通过文件名与当前元数据定位，不在仓库文档中固化 Google Drive file ID，避免文件替换后形成失效引用。
 
 ## 修改范围
 
@@ -60,10 +63,13 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
+GitHub Actions 的 `Check external dependencies` 每日独立运行，实际下载当前模块引用的 Maasea `master` YouTube 脚本并执行 JavaScript 语法检查。该网络检查不加入普通 push/PR 主 CI，避免临时网络故障阻塞正常提交；它只能发现上游不可达、异常缩小或语法损坏，不能替代 Shadowrocket 实机播放/脚本行为验证。
+
 ## 2026-10-06 实机验证结论
 
 - `WestData.conf` 已核对，上游实际内容没有变化，因此无需仅因文件时间较旧而更新。
 - 当前扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
+- 截至 2026-10-10，Clash Verge Rev 最新正式版为 `v2.5.8`；尚未完成本项目设备端验证，因此 `v2.5.7` 仍是最后一个已验证基线，不得把 `v2.5.8` 记录为已通过。
 - Claude / Anthropic 分流已完成设备端验证；网页、应用、API 与 Artifacts 路径结果正常。
 - YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常；该结论对应当时上游脚本版本。自 v2.7.22 起 YouTube 脚本自动跟随 `master`，上游行为发生变化时再重新验证。
 - 以上结论适用于当前配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
