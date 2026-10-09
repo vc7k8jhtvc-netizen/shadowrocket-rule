@@ -65,11 +65,15 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行，实际下载当前模块引用的 Maasea `master` YouTube 脚本并执行 JavaScript 语法检查。该网络检查不加入普通 push/PR 主 CI，避免临时网络故障阻塞正常提交；它只能发现上游不可达、异常缩小或语法损坏，不能替代 Shadowrocket 实机播放/脚本行为验证。
 
+## 2026-10-10 实机验证结论
+
+- 当前扩展脚本已在 Clash Verge Rev `v2.5.8` 正式版完成实机验证并通过；`v2.5.8` 现为当前已验证基线。
+- `v2.5.7` 保留为此前已验证历史基线，不再作为当前客户端验证基线。
+
 ## 2026-10-06 实机验证结论
 
 - `WestData.conf` 已核对，上游实际内容没有变化，因此无需仅因文件时间较旧而更新。
 - 当前扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
-- 截至 2026-10-10，Clash Verge Rev 最新正式版为 `v2.5.8`；尚未完成本项目设备端验证，因此 `v2.5.7` 仍是最后一个已验证基线，不得把 `v2.5.8` 记录为已通过。
 - Claude / Anthropic 分流已完成设备端验证；网页、应用、API 与 Artifacts 路径结果正常。
 - YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常；该结论对应当时上游脚本版本。自 v2.7.22 起 YouTube 脚本自动跟随 `master`，上游行为发生变化时再重新验证。
 - 以上结论适用于当前配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
