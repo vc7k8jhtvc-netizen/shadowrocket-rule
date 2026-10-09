@@ -20,8 +20,8 @@ while (($#)); do
   esac
 done
 [[ -n "$out" && -n "$url" ]]
-printf '/* upstream fixture */\n' > "$out"
-for _ in $(seq 1 64); do printf 'const ok = true;\n' >> "$out"; done
+printf '/* upstream fixture */\nconst ok = true;\n' > "$out"
+for _ in $(seq 1 64); do printf '/* padding */\n' >> "$out"; done
 EOF
 chmod +x "$tmpdir/bin/curl"
 
