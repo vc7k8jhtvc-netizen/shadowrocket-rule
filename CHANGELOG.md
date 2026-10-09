@@ -6,7 +6,7 @@
 - Clash 新增订阅命名空间与依赖 fail-closed：拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用、缺失 proxy-provider，并保持失败前不部分写回配置；WestData 本地 checker 同步拒绝重复节点名。
 - 外部依赖定时巡检从 Maasea YouTube 脚本扩展到 Shadowrocket / Clash 使用的 Blackmatrix 规则源，检查可达性、异常内容和 Clash Provider 基础结构；PR 阶段继续只跑离线回归，避免临时网络故障阻塞合并。
 - CI 校验基线为 Mihomo `v1.19.32`。该版本将默认 TUN 栈改为 `mips`；扩展脚本不改写订阅中的 `tun` 字段，也不设置 `tun.stack`。订阅明确设置的值继续保留，未设置时遵循 Mihomo 核心默认值。
-- Clash Verge Rev `v2.5.8` 已完成当前基线实机验证并通过；`v2.5.7` 保留为历史验证记录。
+- Clash Verge Rev `v2.5.8` 客户端版本已完成实机验证；该结论对应 v2.7.22 及此前配置。`v2.7.23` 的新路由与 fail-closed 改动已通过静态回归和 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归。
 
 ## 2026-10-06
 
