@@ -65,7 +65,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 
 订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。v2.7.23 起，重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
 
-**2026-10-10 已在 Clash Verge Rev v2.5.8 正式版完成当前基线验证，扩展脚本运行正常；v2.5.7 仅保留为历史验证记录。**
+**Clash Verge Rev `v2.5.8` 正式版已完成客户端版本验证；该实机结论对应 v2.7.22 及此前配置。v2.7.23 的新路由与 fail-closed 改动已通过静态回归和 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归。**
 
 ## 可选：仅 YouTube 增强（Shadowrocket）
 
@@ -88,7 +88,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 | bilibili.com | DIRECT（依赖上游中国规则） |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验；2026-10-10 已完成 Clash Verge Rev v2.5.8 当前基线验证。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
+2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验；Clash Verge Rev `v2.5.8` 客户端版本已验证。**v2.7.23 仍需按上述样本补一次设备端回归后，才能将当前配置标记为实机验证完成。** YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
 ## 维护
 
