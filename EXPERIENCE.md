@@ -44,6 +44,8 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；LAN 使用 no-resolve，中国域名 Provider 使用 Clash `China_Domain.txt`，GEOIP,CN 不使用 no-resolve。
 - Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
+- Clash 必须拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
+- OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机不得被全局强制归入 AI；仅 OpenAI 自有或实例专属主机使用手工 AI 规则。
 - YouTube 专属 UDP 拒绝规则仅匹配 googlevideo.com / youtubei.googleapis.com，MITM 主机仅为 `*.googlevideo.com`、`youtubei.googleapis.com`。
 - YouTube `youtube.response.js` / `youtube.request.js` 必须直接引用 `Maasea/sgmodule/master`，不得重新锁定 commit SHA；这样上游更新可自动生效，无需人工同步版本。
 
@@ -63,7 +65,7 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
-GitHub Actions 的 `Check external dependencies` 每日独立运行，实际下载当前模块引用的 Maasea `master` YouTube 脚本并执行 JavaScript 语法检查。该网络检查不加入普通 push/PR 主 CI，避免临时网络故障阻塞正常提交；它只能发现上游不可达、异常缩小或语法损坏，不能替代 Shadowrocket 实机播放/脚本行为验证。
+GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 
 ## 2026-10-10 实机验证结论
 
