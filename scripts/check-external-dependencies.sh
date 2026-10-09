@@ -116,7 +116,7 @@ download() {
 
   sha256="$(sha256sum "$file" | awk '{print $1}')"
   echo "OK: bytes=$bytes sha256=$sha256"
-done
+}
 
 for url in "${youtube_urls[@]}"; do download youtube "$url"; done
 for url in "${shadowrocket_urls[@]}"; do download shadowrocket "$url"; done
