@@ -1,0 +1,20 @@
+name: Check external dependencies
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  youtube-upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate local YouTube module contract
+        run: node scripts/check-youtube-module.js
+      - name: Smoke-test live YouTube upstream scripts
+        run: bash scripts/check-external-dependencies.sh
