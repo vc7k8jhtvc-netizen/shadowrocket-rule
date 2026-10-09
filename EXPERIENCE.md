@@ -63,22 +63,23 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
-回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 的 argument 缺失必须被拒绝；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
+回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 
 ## 2026-10-10 实机验证结论
 
-- 当前扩展脚本已在 Clash Verge Rev `v2.5.8` 正式版完成实机验证并通过；`v2.5.8` 现为当前已验证基线。
-- `v2.5.7` 保留为此前已验证历史基线，不再作为当前客户端验证基线。
+- Clash Verge Rev `v2.5.8` 正式版已完成客户端版本验证；该实机结果对应 `v2.7.22` 及此前配置。
+- `v2.7.23` 的新路由和 fail-closed 改动已通过静态回归与 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归；在实机复测完成前不得把 `v2.7.23` 标记为实机验证通过。
+- `v2.5.7` 保留为此前已验证历史客户端基线。
 
 ## 2026-10-06 实机验证结论
 
 - `WestData.conf` 已核对，上游实际内容没有变化，因此无需仅因文件时间较旧而更新。
-- 当前扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
+- 当时扩展脚本已在 Clash Verge Rev `v2.5.7` 正式版测试，运行正常。
 - Claude / Anthropic 分流已完成设备端验证；网页、应用、API 与 Artifacts 路径结果正常。
 - YouTube 专项增强及 Shorts 屏蔽行为已完成设备端验证，结果正常；该结论对应当时上游脚本版本。自 v2.7.22 起 YouTube 脚本自动跟随 `master`，上游行为发生变化时再重新验证。
-- 以上结论适用于当前配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
+- 以上结论仅适用于当时配置基线；后续相关规则、上游脚本或客户端行为变化时再重新验证。
 
 ## v2.7.18 修正
 
@@ -88,6 +89,6 @@ GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下�
 
 ## v2.7.9 实机验证结论
 
-此前已通过 Shadowrocket 日志验证，当前 Routing 的显式终结规则能够隔离 WestData 的旧规则。v2.7.15 恢复 Custom 后，该列表域名应优先命中“🧩 自定义”。当前基线的后续设备验证状态见上方 2026-10-06 记录。
+此前已通过 Shadowrocket 日志验证，当前 Routing 的显式终结规则能够隔离 WestData 的旧规则。v2.7.15 恢复 Custom 后，该列表域名应优先命中“🧩 自定义”。当前基线的后续设备验证状态见上方记录。
 
 普通维护可直接更新 main；较大改动按需使用分支/PR。
