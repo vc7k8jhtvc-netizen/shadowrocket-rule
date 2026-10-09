@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.22`。本版本将 YouTube 增强脚本改为直接跟随 Maasea `master` 最新分支，避免手动维护固定 commit SHA；其余 v2.7.21 分流行为保持不变。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.23`。本版本收窄 OpenAI / ChatGPT 的强制 AI 分流范围：共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 等依赖继续按正常规则处理，仅保留 OpenAI 自有或实例专属主机；同时新增 Clash 订阅依赖与命名空间 fail-closed 校验，并扩展外部依赖巡检。**
 
 ## Shadowrocket
 
@@ -35,6 +35,8 @@
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义 | 🚀 默认代理 |
 | 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
 
+ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。
+
 Claude 新增四条专属后缀分流：`claude.ai`（Web / 登录 / 下载）、`claude.com`（平台与文档）、`anthropic.com`（API 与自有服务，包含 `api.anthropic.com`）、`claudeusercontent.com`（Artifacts / 内容预览），均指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
 
 地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
@@ -61,9 +63,9 @@ Clash Verge Rev 的运行模式由应用设置控制；请在客户端设置中�
 
 Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
 
-订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。
+订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。v2.7.23 起，重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
 
-**2026-10-06 已在 Clash Verge Rev v2.5.7 正式版完成测试，现有扩展脚本运行正常。**
+**2026-10-10 已在 Clash Verge Rev v2.5.8 正式版完成当前基线验证，扩展脚本运行正常；v2.5.7 仅保留为历史验证记录。**
 
 ## 可选：仅 YouTube 增强（Shadowrocket）
 
@@ -86,7 +88,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 | bilibili.com | DIRECT（依赖上游中国规则） |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-2026-10-06 已完成当前基线的真实设备核验，包括 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强；结果通过。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
+2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验；2026-10-10 已完成 Clash Verge Rev v2.5.8 当前基线验证。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
 ## 维护
 
@@ -94,4 +96,4 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 - [变更记录](CHANGELOG.md)
 - [安全说明](SECURITY.md)
 
-本地发布前运行 `bash scripts/check-config.sh`；私人订阅可使用 `WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh` 单独校验，但不得提交到仓库。
+本地发布前运行 `bash scripts/check-config.sh`；私人订阅可使用 `WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh` 单独校验，但不得提交到仓库。GitHub Actions 另每日检查 Maasea YouTube 脚本及 Blackmatrix 关键规则源的可达性和基础结构。
