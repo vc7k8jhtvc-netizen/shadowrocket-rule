@@ -63,6 +63,9 @@ function runSuite(eol) {
 
     // All JS checkers and shell gates must stay syntactically valid in both EOL modes,
     // including those the local gate checks but never executes.
+    // JS tolerates CRLF; Linux bash does not (which is why .gitattributes pins eol=lf).
+    // In the CRLF suite, syntax-check a normalized LF copy of each shell gate so the
+    // check covers file content on both EOL modes without pretending CRLF scripts run.
     const jsFiles=fixtures.filter(file=>file.endsWith('.js'));
     const shFiles=fixtures.filter(file=>file.endsWith('.sh'));
     assert(jsFiles.length>=12,`${label}: expected at least 12 JS fixtures, got ${jsFiles.length}`);
@@ -72,7 +75,13 @@ function runSuite(eol) {
       assert(result.status===0,`${label}: node --check failed for ${file}\n${result.stdout}${result.stderr}`);
     }
     for(const file of shFiles){
-      const result=spawnSync('bash',['-n',at(file)],{encoding:'utf8',timeout:10000});
+      let target=at(file);
+      if(eol==='\r\n'){
+        target=at(file+'.lf');
+        fs.writeFileSync(target,read(file));
+        assert(!fs.readFileSync(target,'utf8').includes('\r'),`${label}: shell fixture not normalized: ${file}`);
+      }
+      const result=spawnSync('bash',['-n',target],{encoding:'utf8',timeout:10000});
       assert(result.status===0,`${label}: bash -n failed for ${file}\n${result.stdout}${result.stderr}`);
     }
 
