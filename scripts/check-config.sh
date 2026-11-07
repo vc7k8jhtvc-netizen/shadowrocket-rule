@@ -14,6 +14,8 @@ youtube_check="$root/scripts/check-youtube-module.js"
 hardening_check="$root/scripts/check-routing-hardening.js"
 validator_check="$root/scripts/check-validator-regressions.js"
 version_check="$root/scripts/check-version.js"
+external_check="$root/scripts/check-external-dependencies.sh"
+external_test="$root/scripts/check-external-dependencies.test.sh"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$routing_config" ]] || fail "missing Shadowrocket routing config"
 [[ -f "$clash_script" ]] || fail "missing Clash Verge Rev script"
@@ -27,6 +29,8 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$hardening_check" ]] || fail "missing routing hardening checker"
 [[ -f "$validator_check" ]] || fail "missing validator regression checker"
 [[ -f "$version_check" ]] || fail "missing version consistency checker"
+[[ -f "$external_check" ]] || fail "missing external dependency checker"
+[[ -f "$external_test" ]] || fail "missing external dependency regression test"
 grep -qF 'Shadowrocket_Routing.conf' "$readme" || fail 'README routing config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
 grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf' "$readme" || fail 'README routing import URL'
@@ -39,7 +43,10 @@ node --check "$sensitive_check"
 node --check "$westdata_check"
 node --check "$youtube_check"
 node --check "$hardening_check"
+node --check "$validator_check"
 node --check "$version_check"
+bash -n "$external_check"
+bash -n "$external_test"
 node "$sensitive_check"
 node "$routing_check"
 node "$dual_check"

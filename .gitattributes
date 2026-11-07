@@ -1,0 +1,7 @@
+# Normalize line endings in the repository; CRLF checkouts break shell gates and hide negative fixtures.
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.conf text eol=lf
+*.list text eol=lf
+*.sgmodule text eol=lf
