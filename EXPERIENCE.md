@@ -26,6 +26,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 修改内容 | 维护要求 |
 |---|---|
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
+| 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，只改双端 AI 手工规则；必须同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
 | 国内明确应直连服务 | 若中国规则未覆盖且实机落入漏网之鱼，增加最小必要官方域名直连例外 |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
@@ -45,7 +46,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；LAN 使用 no-resolve，中国域名 Provider 使用 Clash `China_Domain.txt`，GEOIP,CN 不使用 no-resolve。
 - Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
 - Clash 必须拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
-- OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机不得被全局强制归入 AI；仅 OpenAI 自有或实例专属主机使用手工 AI 规则。
+- OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机不得被全局强制归入 AI；仅 OpenAI 自有或实例专属主机使用手工 AI 规则。个人 AI 中转 `a6api.vip` / `a6api.com` 是显式声明的例外，由 hardening 断言锁定，不得再扩大范围。
 - YouTube 专属 UDP 拒绝规则仅匹配 googlevideo.com / youtubei.googleapis.com，MITM 主机仅为 `*.googlevideo.com`、`youtubei.googleapis.com`。
 - YouTube `youtube.response.js` / `youtube.request.js` 必须直接引用 `Maasea/sgmodule/master`，不得重新锁定 commit SHA；这样上游更新可自动生效，无需人工同步版本。
 
@@ -63,9 +64,18 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
+本地门禁同时覆盖语法与换行：`node --check` 覆盖全部 JS 校验器，`bash -n` 覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。
+
+修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段并递增内部版本；该项为文档约定，不新增 CI 强制校验。
+
 回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
+
+## 2026-11-08 验证状态
+
+- `v2.7.24` 的规则调整（个人 AI 中转正式化）与校验器修复已通过全部静态回归、LF/CRLF 双换行负例回归及 Mihomo `v1.19.33` 加载验证。
+- 尚未完成新的设备端回归；在按 README 样本复测前，不得将 `v2.7.24` 标记为实机验证通过。
 
 ## 2026-10-10 实机验证结论
 

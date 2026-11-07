@@ -1,5 +1,14 @@
 # 变更记录
 
+## 2026-11-08
+
+- 内部版本升至 `v2.7.24`：将个人 AI 中转 `a6api.vip` / `a6api.com` 正式纳入双端“🤖 AI”，作为 OpenAI 自有域名之外的显式个人例外；新增 `check-routing-hardening.js` 断言与双端漂移负例，避免规则被静默删除或单端改动。
+- 修复 `check-validator-regressions.js` 在 CRLF 检出下负例失效的问题：读取统一规范化为 LF、写回保持目标换行，并在注入未生效时立即失败；回归同时覆盖 LF 与 CRLF。新增 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出再次漂移。
+- `check-config.sh` 补充语法覆盖：纳入 `check-validator-regressions.js` 的 `node --check`，以及对 `check-external-dependencies.sh`、`check-external-dependencies.test.sh` 的 `bash -n`。
+- CI 校验基线升级至 Mihomo `v1.19.33`（含 CVE-2026-97031 的 `crypto/tls` 修复）；扩展脚本仍不改写订阅 `tun` 字段，未设置 `tun.stack` 时遵循核心默认值。
+- `README` 说明 `Custom.list` 含个人用途的成人站点域名，不构成推荐；同步验证状态：v2.7.24 仅通过静态回归与 Mihomo 加载验证，设备端回归待完成。
+- 维护约定更新：修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段；该项为文档约定，不新增 CI 强制。
+
 ## 2026-10-10
 
 - 内部版本升至 `v2.7.23`：Shadowrocket / Clash 同步收窄 OpenAI / ChatGPT 手工分流，只强制 OpenAI 自有或实例专属主机进入“🤖 AI”；WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等 OpenAI 会使用但并非专属的共享依赖恢复正常分流，避免全局接管其他应用流量。

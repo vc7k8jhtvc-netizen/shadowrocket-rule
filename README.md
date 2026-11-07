@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.23`。本版本收窄 OpenAI / ChatGPT 的强制 AI 分流范围：共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 等依赖继续按正常规则处理，仅保留 OpenAI 自有或实例专属主机；同时新增 Clash 订阅依赖与命名空间 fail-closed 校验，并扩展外部依赖巡检。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.24`。本版本将个人 AI 中转 `a6api.vip` / `a6api.com` 正式纳入“🤖 AI”，补齐双端断言与文档；修复负例回归在 CRLF 检出下失效的问题，新增 `.gitattributes` 固定 LF；CI 校验基线升级至 Mihomo `v1.19.33`。OpenAI 显式规则仍只覆盖自有或实例专属主机，v2.7.23 的收窄结论不变。**
 
 ## Shadowrocket
 
@@ -35,7 +35,7 @@
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义 | 🚀 默认代理 |
 | 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
 
-ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。
+ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。`a6api.vip` / `a6api.com` 是本人使用的第三方 AI 中转，不属于 OpenAI 官方域名，作为显式声明的个人例外固定进入“🤖 AI”，并由 `check-routing-hardening.js` 锁定；除这两条外不得扩大 AI 手工规则。
 
 Claude 新增四条专属后缀分流：`claude.ai`（Web / 登录 / 下载）、`claude.com`（平台与文档）、`anthropic.com`（API 与自有服务，包含 `api.anthropic.com`）、`claudeusercontent.com`（Artifacts / 内容预览），均指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
 
@@ -55,6 +55,8 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 
 [查看 Custom.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list)
 
+`Custom.list` 为个人用途的完整显式分流清单，其中包含成人站点域名，仅代表个人使用偏好，不构成推荐或背书；仓库公开可读，如对外分享请自行评估可见性。
+
 ## Clash Verge Rev
 
 [下载 Clash_Verge_Rev_Script.js](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Clash_Verge_Rev_Script.js)
@@ -65,7 +67,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 
 订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。v2.7.23 起，重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
 
-**Clash Verge Rev `v2.5.8` 正式版已完成客户端版本验证；该实机结论对应 v2.7.22 及此前配置。v2.7.23 的新路由与 fail-closed 改动已通过静态回归和 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归。**
+**Clash Verge Rev `v2.5.8` 正式版已完成客户端版本验证；该实机结论对应 v2.7.22 及此前配置。v2.7.23 / v2.7.24 的路由与校验改动已通过静态回归和 Mihomo 加载验证；其中 v2.7.23 使用 `v1.19.32`，v2.7.24 基线为 `v1.19.33`，两者均尚未完成新的设备端回归。**
 
 ## 可选：仅 YouTube 增强（Shadowrocket）
 
@@ -88,7 +90,7 @@ Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国
 | bilibili.com | DIRECT（依赖上游中国规则） |
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
-2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验；Clash Verge Rev `v2.5.8` 客户端版本已验证。**v2.7.23 仍需按上述样本补一次设备端回归后，才能将当前配置标记为实机验证完成。** YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
+2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验；Clash Verge Rev `v2.5.8` 客户端版本已验证。**v2.7.24 仍需按上述样本补一次设备端回归后，才能将当前配置标记为实机验证完成；重点复核 `a6api.vip` / `a6api.com` 是否按预期进入“🤖 AI”。** YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
 ## 维护
 

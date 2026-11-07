@@ -45,6 +45,14 @@ for (const rule of [
   assert(valid.rules.includes(rule), 'Clash missing scoped OpenAI rule: ' + rule);
   assert(routing.includes(rule), 'Shadowrocket missing scoped OpenAI rule: ' + rule);
 }
+// Declared personal AI relay: an explicit exception to the OpenAI-only rule, asserted so it cannot drift silently.
+for (const rule of [
+  'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
+  'DOMAIN-SUFFIX,a6api.com,🤖 AI'
+]) {
+  assert(valid.rules.includes(rule), 'Clash missing personal AI relay rule: ' + rule);
+  assert(routing.includes(rule), 'Shadowrocket missing personal AI relay rule: ' + rule);
+}
 
 function expectReject(input, diagnostic) {
   const before = JSON.stringify(input);
