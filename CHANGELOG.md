@@ -6,11 +6,13 @@
 - 修复 `check-validator-regressions.js` 在 CRLF 检出下负例失效的问题：读取统一规范化为 LF、写回保持目标换行，并在注入未生效时立即失败；回归同时覆盖 LF 与 CRLF。新增 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出再次漂移。
 - `check-config.sh` 补充语法覆盖：纳入 `check-validator-regressions.js` 的 `node --check`，以及对 `check-external-dependencies.sh`、`check-external-dependencies.test.sh` 的 `bash -n`。
 - CI 校验基线升级至 Mihomo `v1.19.33`（含 CVE-2026-97031 的 `crypto/tls` 修复）；扩展脚本仍不改写订阅 `tun` 字段，未设置 `tun.stack` 时遵循核心默认值。
-- `README` 说明 `Custom.list` 含个人用途的成人站点域名，不构成推荐；同步验证状态：v2.7.24 仅通过静态回归与 Mihomo 加载验证，设备端回归待完成。
+- `README` 说明 `Custom.list` 含个人用途的成人站点域名，不构成推荐；同步验证状态：v2.7.24 当时仅通过静态回归与 Mihomo 加载验证，设备端回归待完成。（该验证欠账已于同日随 `v2.5.10` 回归关闭，见下方「状态更新」条。）
 - 维护约定更新：修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段；该项为文档约定，不新增 CI 强制。
 - 上游版本核对（仅文档）：Clash Verge Rev 最新正式版为 `v2.5.10`（2026-11-03），其中 `v2.5.9` 将内置 Mihomo 内核升至 `v1.19.33`，与 CI 基线一致；Shadowrocket 最新版为 `2.2.93`（2026-10-29），改动集中在 macOS 菜单栏、tunnel 路由选项优先级、iCloud 同步与全局通配 MITM 匹配崩溃修复。两端均未变更本项目依赖的规则与配置语义，`Shadowrocket_Routing.conf`、`Clash_Verge_Rev_Script.js`、`Custom.list` 无需修改，内部版本保持 `v2.7.24`。
-- README 与维护约定补充升级核对项：`v2.5.9` 起应用层「DNS 覆写」需与脚本 `preserveDns()` 保留的订阅 DNS 保持一致；`GEOIP,CN,DIRECT` 依赖 `v2.5.10` 的服务模式 GEO 库回写修复；Windows 覆盖安装前需完全退出客户端。客户端验证基线仍为 `v2.5.8`，`v2.7.23` / `v2.7.24` 设备端回归当时仍未完成。
+- README 与维护约定补充升级核对项：`v2.5.9` 起应用层「DNS 覆写」需与脚本 `preserveDns()` 保留的订阅 DNS 保持一致；`GEOIP,CN,DIRECT` 依赖 `v2.5.10` 的服务模式 GEO 库回写修复；Windows 覆盖安装前需完全退出客户端。客户端验证基线当时仍为 `v2.5.8`，`v2.7.23` / `v2.7.24` 设备端回归当时仍未完成。（该基线已于同日刷新为 `v2.5.10`，见下方「状态更新」条。）
 - 状态更新：`v2.7.24` 设备端回归已在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`，与 CI 基线一致）上完成并通过，覆盖 `v2.7.23` / `v2.7.24` 累计改动；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。此前“设备端回归待完成”的状态至此关闭，客户端验证基线由 `v2.5.8` 刷新为 `v2.5.10`。本轮仅更新文档，内部版本保持 `v2.7.24`。
+- 修复本地门禁语法覆盖缺口（审计 M4）：`check-config.sh` 的 `node --check` 改为遍历根目录主脚本与 `scripts/` 下全部 JS 文件，补齐此前遗漏的 `check-clash-script.js` 与 `check-mihomo-runtime.js`，并新增后者存在性检查；以遍历代替逐项列举，避免新增校验器再次被遗漏。维护约定同步修正「覆盖全部 JS 校验器」的表述，明确 `check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制、本地只做语法检查。仅改门禁与文档，内部版本保持 `v2.7.24`。
+- 修复负例回归覆盖缺口（审计 M6）：`check-validator-regressions.js` 的 fixtures 改为由 `git ls-files` 动态生成，覆盖全部跟踪文件；LF / CRLF 双换行下对全部 JS 校验器执行 `node --check`、对全部 shell 门禁执行 `bash -n`；新增 `check-routing-hardening.js` 漂移负例，并以源码级断言锁定 `check-mihomo-runtime.js` 的关键运行时断言与 `check-config.sh` 的 M4 遍历式语法门禁（两者分别因依赖 Mihomo 二进制、在套件内执行会递归而不实际运行）。同步修订同日段内两处过时的验证状态表述（审计 L4），明确「当时」并指向下方「状态更新」条。仅改校验器与文档，内部版本保持 `v2.7.24`。
 
 ## 2026-10-10
 

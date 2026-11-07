@@ -36,12 +36,15 @@ function runSuite(eol) {
 
   try {
     fs.mkdirSync(path.join(temp, 'scripts'));
-    const fixtures = [
-      'scripts/check-shadowrocket-routing.js','scripts/check-dual-client.js','scripts/check-clash-script.js','scripts/check-claude-routing.js','scripts/check-youtube-module.js',
-      'scripts/check-westdata-local.js','scripts/check-sensitive-data.js','scripts/check-version.js',
-      'Shadowrocket_Routing.conf','Clash_Verge_Rev_Script.js','Custom.list','README.md','CHANGELOG.md','YouTube.Enhance.Shadowrocket.sgmodule'
-    ];
-    for (const file of fixtures) fs.copyFileSync(path.join(root,file),at(file));
+    // Derive fixtures from the tracked file list: a newly added checker or gate can
+    // never be silently skipped by a hand-maintained list.
+    const fixtures = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+      .split('\0').filter(Boolean);
+    assert(fixtures.length > 0, `${label}: git ls-files returned no tracked files`);
+    for (const file of fixtures) {
+      fs.mkdirSync(path.dirname(at(file)), { recursive: true });
+      fs.copyFileSync(path.join(root, file), at(file));
+    }
     // Convert every fixture before the baseline pass, so the CRLF run validates all checkers, not only mutations.
     if (eol === '\r\n') for (const file of fixtures) write(file, read(file));
 
@@ -57,6 +60,33 @@ function runSuite(eol) {
     check('check-claude-routing.js',[],0);
     check('check-youtube-module.js',[],0);
     check('check-version.js',[],0);
+
+    // All JS checkers and shell gates must stay syntactically valid in both EOL modes,
+    // including those the local gate checks but never executes.
+    const jsFiles=fixtures.filter(file=>file.endsWith('.js'));
+    const shFiles=fixtures.filter(file=>file.endsWith('.sh'));
+    assert(jsFiles.length>=12,`${label}: expected at least 12 JS fixtures, got ${jsFiles.length}`);
+    assert(shFiles.length>=3,`${label}: expected at least 3 shell fixtures, got ${shFiles.length}`);
+    for(const file of jsFiles){
+      const result=spawnSync(process.execPath,['--check',at(file)],{encoding:'utf8',timeout:10000});
+      assert(result.status===0,`${label}: node --check failed for ${file}\n${result.stdout}${result.stderr}`);
+    }
+    for(const file of shFiles){
+      const result=spawnSync('bash',['-n',at(file)],{encoding:'utf8',timeout:10000});
+      assert(result.status===0,`${label}: bash -n failed for ${file}\n${result.stdout}${result.stderr}`);
+    }
+
+    // CI-only checkers cannot execute here (Mihomo binary) and the local gate would
+    // recurse into this suite. Guard their safety nets at source level instead.
+    const runtimeChecker=read('scripts/check-mihomo-runtime.js');
+    for(const marker of [
+      'empty filtered group is not blocked',
+      'LAN unexpectedly triggered DNS before domain routing',
+      'Mihomo subscription dependency validation failed'
+    ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
+    const gate=read('scripts/check-config.sh');
+    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]'])
+      assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
 
     let youtubeModule=read('YouTube.Enhance.Shadowrocket.sgmodule');
     write('YouTube.Enhance.Shadowrocket.sgmodule',mutate('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule,'youtubei.googleapis.com\n','youtubei.googleapis.com, *.beacon.qq.com\n'));
@@ -98,6 +128,12 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'DOMAIN-SUFFIX,a6api.com,🤖 AI'","'DOMAIN-SUFFIX,a6api.com,DIRECT'"));
     check('check-dual-client.js',[],1,'AI manual rules drift between clients');
     write('Clash_Verge_Rev_Script.js',clash);
+
+    // The hardening checker itself must reject drift; parity checks alone would not
+    // notice a weakened hardening assertion.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'personal AI relay rule');
+    write('Shadowrocket_Routing.conf',routing);
 
     write('Custom.list',custom+'DOMAIN-SUFFIX,wikipedia.org\n');
     check('check-shadowrocket-routing.js',[],1,'duplicate Custom.list entry');
@@ -166,7 +202,7 @@ function runSuite(eol) {
     fs.writeFileSync(candidate,assignment+'test-only\n'+assignment+'placeholder\n'+assignment+'YOUR_PASSWORD\n');
     check('check-sensitive-data.js',[],0);
 
-    console.log(`PASS: validator regressions reject Claude/Advertising/Custom/fallback/version/group/security drift (${label})`);
+    console.log(`PASS: validator regressions cover every tracked checker, EOL syntax, hardening and M4 guards (${label})`);
   }finally{
     fs.rmSync(temp,{recursive:true,force:true});
   }

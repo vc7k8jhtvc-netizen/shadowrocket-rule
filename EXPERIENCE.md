@@ -64,11 +64,13 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
-本地门禁同时覆盖语法与换行：`node --check` 覆盖全部 JS 校验器，`bash -n` 覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。
+本地门禁同时覆盖语法与换行：`node --check` 遍历根目录主脚本与 `scripts/` 下全部 JS 文件（含仅由 CI 执行的 `check-mihomo-runtime.js`），以文件遍历代替逐项列举，避免新增校验器被遗漏；`bash -n` 覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。`check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制，本地门禁只做语法检查、不执行运行时回归，因此本地全绿不等于 CI 运行时回归通过。
 
 修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段并递增内部版本；该项为文档约定，不新增 CI 强制校验。
 
 回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
+
+负例回归的 fixtures 由 `git ls-files` 动态生成，覆盖仓库全部跟踪文件，避免新增校验器被手写清单遗漏；LF 与 CRLF 两种换行下均对全部 JS 校验器执行 `node --check`、对全部 shell 门禁执行 `bash -n`。`check-routing-hardening.js` 有独立漂移负例；`check-mihomo-runtime.js`（依赖 CI 下载并校验的 Mihomo 二进制）与 `check-config.sh`（在本套件内执行会递归）不实际运行，改以源码级断言锁定关键运行时断言及 M4 的遍历式语法门禁，防止被静默削弱。该源码级断言不能替代 CI 的实际运行时回归。
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 

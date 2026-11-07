@@ -5,6 +5,7 @@ routing_config="$root/Shadowrocket_Routing.conf"
 readme="$root/README.md"
 clash_script="$root/Clash_Verge_Rev_Script.js"
 clash_check="$root/scripts/check-clash-script.js"
+mihomo_check="$root/scripts/check-mihomo-runtime.js"
 routing_check="$root/scripts/check-shadowrocket-routing.js"
 dual_check="$root/scripts/check-dual-client.js"
 claude_check="$root/scripts/check-claude-routing.js"
@@ -20,6 +21,7 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$routing_config" ]] || fail "missing Shadowrocket routing config"
 [[ -f "$clash_script" ]] || fail "missing Clash Verge Rev script"
 [[ -f "$clash_check" ]] || fail "missing Clash script checker"
+[[ -f "$mihomo_check" ]] || fail "missing Mihomo runtime checker"
 [[ -f "$routing_check" ]] || fail "missing Shadowrocket routing checker"
 [[ -f "$dual_check" ]] || fail "missing dual-client parity checker"
 [[ -f "$claude_check" ]] || fail "missing Claude routing checker"
@@ -35,16 +37,11 @@ grep -qF 'Shadowrocket_Routing.conf' "$readme" || fail 'README routing config re
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
 grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf' "$readme" || fail 'README routing import URL'
 command -v node >/dev/null 2>&1 || fail 'node is required for configuration checks'
-node --check "$clash_script"
-node --check "$routing_check"
-node --check "$dual_check"
-node --check "$claude_check"
-node --check "$sensitive_check"
-node --check "$westdata_check"
-node --check "$youtube_check"
-node --check "$hardening_check"
-node --check "$validator_check"
-node --check "$version_check"
+# Syntax-check every JS entry point, including CI-only checkers that the local
+# gate does not execute. Globbing keeps newly added scripts/*.js from being missed.
+for js_file in "$clash_script" "$root"/scripts/*.js; do
+  node --check "$js_file"
+done
 bash -n "$external_check"
 bash -n "$external_test"
 node "$sensitive_check"
