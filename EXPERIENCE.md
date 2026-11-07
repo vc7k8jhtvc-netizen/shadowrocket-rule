@@ -72,19 +72,19 @@ WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 
-## 2026-11-08 验证状态
+## 2026-11-08 实机验证结论
 
 - `v2.7.24` 的规则调整（个人 AI 中转正式化）与校验器修复已通过全部静态回归、LF/CRLF 双换行负例回归及 Mihomo `v1.19.33` 加载验证。
-- 尚未完成新的设备端回归；在按 README 样本复测前，不得将 `v2.7.24` 标记为实机验证通过。
-- 上游版本核对（2026-11-08）：Clash Verge Rev 当前最新正式版为 `v2.5.10`（2026-11-03），其 `v2.5.9` 已将内置 Mihomo 内核升至 `v1.19.33`；Shadowrocket 当前最新版为 `2.2.93`（2026-10-29）。两者均未改变本项目依赖的规则语义、策略组、模块格式或 `include` 行为，因此本轮**不修改配置**，只同步文档与验证基线说明。
-- 客户端验证基线仍为 Clash Verge Rev `v2.5.8`。升级至 `v2.5.9` / `v2.5.10` 后须补做设备端回归，通过后方可刷新基线；不得以“上游已发新版”为由跳过复测。
-- 升级注意事项：① 应用层「DNS 覆写」状态必须与实际一致，脚本用 `preserveDns()` 保留订阅 DNS，覆写会绕过该保留；② `GEOIP,CN,DIRECT` 依赖 `v2.5.10` 的服务模式 GEO 库回写修复，升级后确认国内站点仍为 DIRECT；③ Windows 覆盖安装前完全退出客户端；④ Shadowrocket 升级后确认 YouTube 模块的 `*.googlevideo.com` / `youtubei.googleapis.com` 通配 MITM 正常。
-- 建议一次性在 `v2.5.10` 上完成回归：可同时关闭 `v2.7.23` / `v2.7.24` 的验证欠账，并使实机内核版本与 CI 基线首次一致。
+- 设备端回归已于 2026-11-08 在 Clash Verge Rev `v2.5.10` 上完成并通过，覆盖 `v2.7.23` 与 `v2.7.24` 的累计改动；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。
+- 客户端版本基线由 `v2.5.8` 刷新为 `v2.5.10`；`v2.5.8` 保留为 `v2.7.22` 及此前配置的历史基线。
+- 环境核对（Windows，系统代理模式）：内置 Mihomo `v1.19.33`，与 CI 基线一致；`enable_dns_settings: false`，`preserveDns()` 保留的订阅 DNS 实际生效；`mode: rule`；`tun.enable: false`、`tun.stack: gvisor` 为订阅原值，扩展脚本未改写。
+- 上游版本核对（同日）：Clash Verge Rev 最新正式版为 `v2.5.10`（2026-11-03）；Shadowrocket 最新版为 `2.2.93`（2026-10-29），未改变本项目依赖的规则语义、策略组、模块格式或 `include` 行为，因此本轮不修改配置，内部版本保持 `v2.7.24`。
+- 未纳入本次复测：Shadowrocket `2.2.93` 的通配 MITM 路径（`*.googlevideo.com` / `youtubei.googleapis.com`）仍建议在实际播放场景中观察，本次结论不覆盖该项。
 
 ## 2026-10-10 实机验证结论
 
 - Clash Verge Rev `v2.5.8` 正式版已完成客户端版本验证；该实机结果对应 `v2.7.22` 及此前配置。
-- `v2.7.23` 的新路由和 fail-closed 改动已通过静态回归与 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归；在实机复测完成前不得把 `v2.7.23` 标记为实机验证通过。
+- `v2.7.23` 的新路由和 fail-closed 改动已通过静态回归与 Mihomo `v1.19.32` 加载验证，但尚未完成新的设备端回归；在实机复测完成前不得把 `v2.7.23` 标记为实机验证通过。（该验证欠账已于 2026-11-08 随 Clash Verge Rev `v2.5.10` 回归关闭，见上方结论。）
 - `v2.5.7` 保留为此前已验证历史客户端基线。
 
 ## 2026-10-06 实机验证结论

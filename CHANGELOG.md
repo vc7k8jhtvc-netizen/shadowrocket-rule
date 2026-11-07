@@ -9,7 +9,8 @@
 - `README` 说明 `Custom.list` 含个人用途的成人站点域名，不构成推荐；同步验证状态：v2.7.24 仅通过静态回归与 Mihomo 加载验证，设备端回归待完成。
 - 维护约定更新：修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段；该项为文档约定，不新增 CI 强制。
 - 上游版本核对（仅文档）：Clash Verge Rev 最新正式版为 `v2.5.10`（2026-11-03），其中 `v2.5.9` 将内置 Mihomo 内核升至 `v1.19.33`，与 CI 基线一致；Shadowrocket 最新版为 `2.2.93`（2026-10-29），改动集中在 macOS 菜单栏、tunnel 路由选项优先级、iCloud 同步与全局通配 MITM 匹配崩溃修复。两端均未变更本项目依赖的规则与配置语义，`Shadowrocket_Routing.conf`、`Clash_Verge_Rev_Script.js`、`Custom.list` 无需修改，内部版本保持 `v2.7.24`。
-- README 与维护约定补充升级核对项：`v2.5.9` 起应用层「DNS 覆写」需与脚本 `preserveDns()` 保留的订阅 DNS 保持一致；`GEOIP,CN,DIRECT` 依赖 `v2.5.10` 的服务模式 GEO 库回写修复；Windows 覆盖安装前需完全退出客户端。客户端验证基线仍为 `v2.5.8`，`v2.7.23` / `v2.7.24` 设备端回归仍未完成。
+- README 与维护约定补充升级核对项：`v2.5.9` 起应用层「DNS 覆写」需与脚本 `preserveDns()` 保留的订阅 DNS 保持一致；`GEOIP,CN,DIRECT` 依赖 `v2.5.10` 的服务模式 GEO 库回写修复；Windows 覆盖安装前需完全退出客户端。客户端验证基线仍为 `v2.5.8`，`v2.7.23` / `v2.7.24` 设备端回归当时仍未完成。
+- 状态更新：`v2.7.24` 设备端回归已在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`，与 CI 基线一致）上完成并通过，覆盖 `v2.7.23` / `v2.7.24` 累计改动；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。此前“设备端回归待完成”的状态至此关闭，客户端验证基线由 `v2.5.8` 刷新为 `v2.5.10`。本轮仅更新文档，内部版本保持 `v2.7.24`。
 
 ## 2026-10-10
 
