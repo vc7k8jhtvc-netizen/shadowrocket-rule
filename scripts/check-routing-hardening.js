@@ -54,6 +54,39 @@ for (const rule of [
   assert(routing.includes(rule), 'Shadowrocket missing personal AI relay rule: ' + rule);
 }
 
+// Canva-owned domains are a dedicated application group, not shared SaaS. Keep the
+// exact AI rule list and ordering stable across both clients.
+const canvaDomainSuffixes = [
+  "canva.com",
+  "canva.cn",
+  "canva.ai",
+  "canva.app",
+  "canva.dev",
+  "canva.me",
+  "canva.site",
+  "canva.link",
+  "canva.run",
+  "canva-apps.com",
+  "canva-apps.cn",
+  "canva-hosted-embed.com",
+  "canva-code.cn",
+  "canvacode.com",
+  "my.canvasite.cn",
+  "canvastatus.com"
+];
+const expectedCanvaRules = canvaDomainSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},🤖 AI`);
+const routingRules = routing.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
+  const actual = rules.filter(rule => /^DOMAIN-SUFFIX,(?:canva|my\.canvasite\.)/i.test(rule));
+  assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact AI list');
+  const first = rules.indexOf(expectedCanvaRules[0]);
+  const last = rules.indexOf(expectedCanvaRules[expectedCanvaRules.length - 1]);
+  assert(first > rules.indexOf('DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI'), name + ' Canva rules must follow Claude');
+  const apple = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /(?:\/Apple\/Apple\.list|,Apple,🍎 Apple)/.test(rule));
+  assert(apple > last, name + ' Canva rules must precede Apple and China/fallback');
+  assert(JSON.stringify(rules.slice(first, last + 1)) === JSON.stringify(expectedCanvaRules), name + ' Canva rules must remain contiguous');
+}
+
 function expectReject(input, diagnostic) {
   const before = JSON.stringify(input);
   let error;
@@ -95,4 +128,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks Canva AI routing, and avoids shared-SaaS AI capture');

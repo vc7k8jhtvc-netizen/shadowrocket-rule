@@ -232,6 +232,9 @@ function main(config) {
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
     'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
+    // Canva-owned domains only; custom domains and shared CDNs are not inferred.
+    'DOMAIN-SUFFIX,canva.com,🤖 AI','DOMAIN-SUFFIX,canva.cn,🤖 AI','DOMAIN-SUFFIX,canva.ai,🤖 AI','DOMAIN-SUFFIX,canva.app,🤖 AI','DOMAIN-SUFFIX,canva.dev,🤖 AI','DOMAIN-SUFFIX,canva.me,🤖 AI','DOMAIN-SUFFIX,canva.site,🤖 AI','DOMAIN-SUFFIX,canva.link,🤖 AI','DOMAIN-SUFFIX,canva.run,🤖 AI',
+    'DOMAIN-SUFFIX,canva-apps.com,🤖 AI','DOMAIN-SUFFIX,canva-apps.cn,🤖 AI','DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI','DOMAIN-SUFFIX,canva-code.cn,🤖 AI','DOMAIN-SUFFIX,canvacode.com,🤖 AI','DOMAIN-SUFFIX,my.canvasite.cn,🤖 AI','DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
     'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',

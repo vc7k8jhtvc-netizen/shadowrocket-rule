@@ -1,5 +1,10 @@
 # 变更记录
 
+## 2026-11-19
+
+- 内部版本升至 `v2.7.25`：为 Shadowrocket / Clash 的现有 🤖 AI 分组新增 Canva 自有域名分流，覆盖 `canva.com`、`canva.cn`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-apps.cn`、`canva-hosted-embed.com`、`canva-code.cn`、`canvacode.com`、`my.canvasite.cn` 与 `canvastatus.com`。规则位于 Claude 后、Apple 前，不新增策略组、Provider、MITM、DNS，也不引入共享 CDN。
+- `check-routing-hardening.js` 新增 Canva 域名清单、顺序与双端一致性断言；负例回归覆盖单端删除及错误出口，避免规则被静默删除或漂移。本轮当前仅完成静态规则与双端一致性回归，设备端连接日志核验待完成。
+
 ## 2026-11-08
 
 - 内部版本升至 `v2.7.24`：将个人 AI 中转 `a6api.vip` / `a6api.com` 正式纳入双端“🤖 AI”，作为 OpenAI 自有域名之外的显式个人例外；新增 `check-routing-hardening.js` 断言与双端漂移负例，避免规则被静默删除或单端改动。

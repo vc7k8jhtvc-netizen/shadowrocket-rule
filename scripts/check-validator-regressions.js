@@ -58,6 +58,7 @@ function runSuite(eol) {
     check('check-dual-client.js',[],0);
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],0);
     check('check-claude-routing.js',[],0);
+    check('check-routing-hardening.js',[],0);
     check('check-youtube-module.js',[],0);
     check('check-version.js',[],0);
 
@@ -143,6 +144,14 @@ function runSuite(eol) {
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n',''));
     check('check-routing-hardening.js',[],1,'personal AI relay rule');
     write('Shadowrocket_Routing.conf',routing);
+
+    // Canva rules are a dedicated AI application group and must not disappear or drift.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,canvastatus.com,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'DOMAIN-SUFFIX,canva.com,🤖 AI'","'DOMAIN-SUFFIX,canva.com,DIRECT'"));
+    check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules');
+    write('Clash_Verge_Rev_Script.js',clash);
 
     write('Custom.list',custom+'DOMAIN-SUFFIX,wikipedia.org\n');
     check('check-shadowrocket-routing.js',[],1,'duplicate Custom.list entry');

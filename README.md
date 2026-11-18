@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.24`。本版本将个人 AI 中转 `a6api.vip` / `a6api.com` 正式纳入“🤖 AI”，补齐双端断言与文档；修复负例回归在 CRLF 检出下失效的问题，新增 `.gitattributes` 固定 LF；CI 校验基线升级至 Mihomo `v1.19.33`。OpenAI 显式规则仍只覆盖自有或实例专属主机，v2.7.23 的收窄结论不变。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.25`。本版本将 Canva 自有国际版、中国版、开发者站、发布站点与应用运行域名同步纳入双端“🤖 AI”，并新增专项回归断言；Canva 自有域以外的共享 CDN 不纳入。个人 AI 中转、LF 固定与 Mihomo `v1.19.33` 基线保持不变。**
 
 ## Shadowrocket
 
@@ -32,7 +32,7 @@ Shadowrocket 客户端：上游最新版为 `2.2.93`（2026-10-29）。该版本
 | 策略组 / 服务 | 默认出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
-| 🤖 AI（ChatGPT / Gemini / Grok / Claude） | 🇸🇬 新加坡 |
+| 🤖 AI（ChatGPT / Gemini / Grok / Claude / Canva） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft、DeepSeek | DIRECT |
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义 | 🚀 默认代理 |
 | 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
@@ -40,6 +40,8 @@ Shadowrocket 客户端：上游最新版为 `2.2.93`（2026-10-29）。该版本
 ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。`a6api.vip` / `a6api.com` 是本人使用的第三方 AI 中转，不属于 OpenAI 官方域名，作为显式声明的个人例外固定进入“🤖 AI”，并由 `check-routing-hardening.js` 锁定；除这两条外不得扩大 AI 手工规则。
 
 Claude 新增四条专属后缀分流：`claude.ai`（Web / 登录 / 下载）、`claude.com`（平台与文档）、`anthropic.com`（API 与自有服务，包含 `api.anthropic.com`）、`claudeusercontent.com`（Artifacts / 内容预览），均指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
+
+Canva 使用固定 AI 分组的专属域名包括 `canva.com`、`canva.cn`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-apps.cn`、`canva-hosted-embed.com`、`canva-code.cn`、`canvacode.com`、`my.canvasite.cn` 与 `canvastatus.com`。这些域名覆盖官网、编辑器、开发者文档、应用运行环境、Canva 发布的免费站点及状态页；全部通过 `DOMAIN-SUFFIX` 指向“🤖 AI”，不引入 Cloudflare 等共享 CDN。用户自行绑定到 Canva 的自定义域名不属于 Canva 自有后缀，无法仅按域名自动识别。
 
 地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
 
@@ -94,6 +96,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | deepseek.com、bytedance.com | DIRECT |
 | chatgpt.com、gemini.google.com、grok.com | 🤖 AI |
 | claude.ai、claude.com、api.anthropic.com、*.claudeusercontent.com | 🤖 AI |
+| canva.com、canva.cn、canva.ai、canva.app、canva.dev、*.canva.site | 🤖 AI |
 | wikipedia.org、jable.tv、missav.ws | 🧩 自定义 |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
@@ -101,6 +104,8 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | steampowered.com、其他未匹配域名 | 🐟 漏网之鱼 |
 
 2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验。**v2.7.24 已于 2026-11-08 在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`）上按上述样本完成设备端回归，结果正常；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。** 该次回归同时关闭了 v2.7.23 遗留的验证欠账。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
+
+Canva 规则为 v2.7.25 新增，当前仅完成静态规则、双端一致性及本地校验回归；尚未以客户端连接日志完成设备端核验。
 
 ## 维护
 
