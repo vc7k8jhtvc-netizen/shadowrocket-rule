@@ -40,12 +40,13 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`。
 - DeepSeek 官方 `deepseek.com` 固定 DIRECT。
-- “🧩 自定义”默认“🚀 默认代理”，候选为默认代理、美国、日本、新加坡；`Custom.list` 位于 Google 后、中国规则前。
+- “🧩 自定义”默认“🚀 默认代理”，候选为默认代理、香港、台湾、新加坡、日本、美国与“👆 手动选择”；`Custom.list` 位于 Google 后、中国规则前。
 - “🐟 漏网之鱼”默认“🚀 默认代理”，保留 DIRECT 与“👆 手动选择”。
 - 分流顺序：LAN → DeepSeek → AI → Apple/Microsoft/GitHub/Telegram 等专项 → 社交媒体/YouTube/Google → Custom → China/China_Domain/GEOIP → 漏网之鱼。
 - Shadowrocket 不使用 FINAL；末尾固定为 DOMAIN-WILDCARD、IPv4 和 IPv6 三条显式终结规则；Clash 最终使用 MATCH。
 - 代理分组显示顺序：总控 → 业务（含自定义）→ 漏网之鱼 → 地区节点池，不得出现“🛑 广告拦截”。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
+- 所有业务组及“🐟 漏网之鱼”均须包含香港、台湾、新加坡、日本、美国五个地区选项与“👆 手动选择”；新增地区组时同步两端、候选断言和文档，首个默认出口不得改变。
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；LAN 使用 no-resolve，中国域名 Provider 使用 Clash `China_Domain.txt`，GEOIP,CN 不使用 no-resolve。
 - Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
 - Clash 必须拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。

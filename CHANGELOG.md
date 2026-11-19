@@ -2,6 +2,7 @@
 
 ## 2026-11-19
 
+- 内部版本升至 `v2.7.29`：统一 Shadowrocket / Clash 业务组的地区候选，`🤖 AI`、`🍎 Apple`、`🔎 Google`、`💻 GitHub`、`🪟 Microsoft`、`📱 社交媒体`、`▶️ YouTube`、`✈️ Telegram`、`🧩 自定义` 与 `🐟 漏网之鱼` 现在都可直接选择香港、台湾、新加坡、日本、美国和“👆 手动选择”。各组首个默认出口、规则顺序与分流行为保持不变；新增双端候选完整性断言。
 - 内部版本升至 `v2.7.28`：仅整理 `Shadowrocket_Routing.conf` 的注释层级与措辞，统一分区标题、压缩重复说明并移除运行配置中的历史备注和冗长验证清单。代理组顺序、候选节点、规则顺序、默认出口及分流行为均保持不变；同步更新注释相关回归锚点与 README。
 - 内部版本升至 `v2.7.27`：将 Supabase 的 `supabase.com` / `supabase.co` / `supabase.in` 与 Hugging Face 的 `huggingface.co` / `hf.co` / `hf.space` 从 `Custom.list` 的“🧩 自定义”转移至 Shadowrocket / Clash 双端“🤖 AI”；同时将 JapaneseASMR、ASMR.one 在 `Custom.list` 内归入成人网站分类。扩展 hardening 断言与负例，确保六个迁移后缀位于 Custom 之前且不得重新进入 `Custom.list`；不新增策略组、Provider、MITM 或 DNS。
 - 内部版本升至 `v2.7.26`：将 Exa、Tavily 的网站、API、控制台、文档与 MCP 入口从 `Custom.list` 的“🧩 自定义”转移至 Shadowrocket / Clash 双端“🤖 AI”，对应 `exa.ai`、`tavily.com` 两个自有后缀。新增 hardening 断言与负例，确保规则位于 Custom 之前，且两个域名不得重新进入 `Custom.list`；不新增策略组、Provider、MITM、DNS 或共享第三方域名。

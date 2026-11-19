@@ -43,7 +43,13 @@ assert(!groups.has('🛑 广告拦截'), 'legacy Advertising group must be absen
 const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
 
-assert(JSON.stringify(groups.get('🧩 自定义').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇺🇸 美国','🇯🇵 日本','🇸🇬 新加坡']), 'custom group options changed unexpectedly');
+assert(JSON.stringify(groups.get('🧩 自定义').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']), 'custom group options changed unexpectedly');
+const fullChoiceGroups = ['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
+for (const name of fullChoiceGroups) {
+  for (const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']) {
+    assert(groups.get(name).includes(choice), name + ' missing shared routing choice: ' + choice);
+  }
+}
 assert(groups.get('🐟 漏网之鱼').includes('DIRECT'), 'fallback group must include DIRECT');
 assert(groups.get('🐟 漏网之鱼').includes('👆 手动选择'), 'fallback group must include manual selection');
 

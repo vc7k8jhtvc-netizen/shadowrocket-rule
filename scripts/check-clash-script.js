@@ -20,7 +20,13 @@ const direct=context.main(JSON.parse(JSON.stringify(directInput)));
 assert(JSON.stringify(direct['proxy-groups'].map(item=>item.name))===JSON.stringify(expectedOrder),'proxy group display order');
 assert(!group(direct,'🛑 广告拦截'),'legacy Advertising group must be absent');
 assert(group(direct,'🤖 AI').proxies[0]==='🇸🇬 新加坡','AI default');
-assert(JSON.stringify(group(direct,'🧩 自定义').proxies)===JSON.stringify(['🚀 默认代理','🇺🇸 美国','🇯🇵 日本','🇸🇬 新加坡']),'Custom group options');
+assert(JSON.stringify(group(direct,'🧩 自定义').proxies)===JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']),'Custom group options');
+const fullChoiceGroups=['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
+for(const name of fullChoiceGroups){
+  for(const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']){
+    assert(group(direct,name).proxies.includes(choice),name+' missing shared routing choice: '+choice);
+  }
+}
 assert(group(direct,'🐟 漏网之鱼').proxies[0]==='🚀 默认代理','fallback default');
 assert(group(direct,'🐟 漏网之鱼').proxies.includes('DIRECT'),'fallback DIRECT');
 assert(group(direct,'🐟 漏网之鱼').proxies.includes('👆 手动选择'),'fallback manual selection');

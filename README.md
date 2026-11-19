@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.28`。本版本仅整理 `Shadowrocket_Routing.conf` 的注释层级与措辞：统一 `[Proxy Group]`、`[Rule]` 的分区标题，压缩重复说明并移除运行配置中的历史备注；代理组、规则、默认出口与分流行为均未改变。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.29`。本版本统一业务组的地区选项：`🤖 AI`、`🍎 Apple`、`🔎 Google`、`💻 GitHub`、`🪟 Microsoft`、`📱 社交媒体`、`▶️ YouTube`、`✈️ Telegram`、`🧩 自定义` 与 `🐟 漏网之鱼` 均可直接选择香港、台湾、新加坡、日本、美国和“👆 手动选择”；各组首个默认出口与分流规则保持不变。**
 
 ## Shadowrocket
 
@@ -45,7 +45,7 @@ Canva 使用固定 AI 分组的专属域名包括 `canva.com`、`canva.cn`、`ca
 
 Exa 与 Tavily 的网站、API、控制台、文档及 MCP 入口统一使用 `exa.ai`、`tavily.com` 两个自有后缀，并已从 `Custom.list` 移除后显式指向“🤖 AI”。Supabase 的 `supabase.com`、`supabase.co`、`supabase.in`，以及 Hugging Face 的 `huggingface.co`、`hf.co`、`hf.space`，也按当前个人偏好从 `Custom.list` 移入“🤖 AI”。规则不引入第三方共享域名，也不新增 Provider、MITM 或 DNS。
 
-地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
+地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；所有业务组都可直接选择这五个地区及“👆 手动选择”，从而访问订阅中的其他地区。若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
 
 ### 显式终结与 Custom.list
 
