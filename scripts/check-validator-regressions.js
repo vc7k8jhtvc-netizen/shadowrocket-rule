@@ -120,7 +120,7 @@ function runSuite(eol) {
     // Reintroduction of either Advertising source or the old group must fail.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'[Rule]\n','[Rule]\nRULE-SET,https://example.invalid/Advertising.list,DIRECT\n'));
     check('check-shadowrocket-routing.js',[],1,'legacy Advertising routing rule must be absent');
-    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# 功能分组\n','# 功能分组\n🛑 广告拦截 = select,REJECT,DIRECT,select=0\n'));
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'[Proxy Group]\n','[Proxy Group]\n🛑 广告拦截 = select,REJECT,DIRECT,select=0\n'));
     check('check-shadowrocket-routing.js',[],1,'proxy group display order');
     write('Shadowrocket_Routing.conf',routing);
 

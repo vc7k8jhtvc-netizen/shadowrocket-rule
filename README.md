@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.27`。本版本将 Supabase 与 Hugging Face 从 `Custom.list` 的“🧩 自定义”移至双端“🤖 AI”，并把 JapaneseASMR、ASMR.one 在 `Custom.list` 内归入成人网站分类；Exa/Tavily 的 AI 分流、Canva、个人 AI 中转、LF 固定与 Mihomo `v1.19.33` 基线保持不变。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.28`。本版本仅整理 `Shadowrocket_Routing.conf` 的注释层级与措辞：统一 `[Proxy Group]`、`[Rule]` 的分区标题，压缩重复说明并移除运行配置中的历史备注；代理组、规则、默认出口与分流行为均未改变。**
 
 ## Shadowrocket
 
