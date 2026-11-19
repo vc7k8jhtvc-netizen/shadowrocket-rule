@@ -2,46 +2,25 @@
 # 供 Shadowrocket 与 Clash Verge Rev 共用
 # 恢复自原 Global.list，仅更名，不改变原规则内容
 # 由用户自行维护
+# Exa、Tavily、Supabase、Hugging Face 已固定双端“🤖 AI”，不得重新加入本清单。
 
 
 # ===== 知识资料 =====
 DOMAIN-SUFFIX,wikipedia.org
 DOMAIN-SUFFIX,wikimedia.org
 
-# Exa：网站、API、控制台、MCP 与信任中心
-# 覆盖 exa.ai、api.exa.ai、dashboard.exa.ai、mcp.exa.ai、trust.exa.ai
-DOMAIN-SUFFIX,exa.ai
-
 # Jina：网站、Reader、Search、Embedding / Reranker API
 # 覆盖 jina.ai、r.jina.ai、s.jina.ai、api.jina.ai
 DOMAIN-SUFFIX,jina.ai
 
-# Tavily：网站、API、控制台、文档、MCP、社区、博客、帮助与信任中心
-# 覆盖 tavily.com、api.tavily.com、app.tavily.com、docs.tavily.com、mcp.tavily.com
-# 以及 community、blog、help、trust 等 tavily.com 子域名
-DOMAIN-SUFFIX,tavily.com
-
 
 # ===== 开发工具 =====
-# Supabase：官网 / 控制台、项目 API / Auth / Storage / Realtime 等服务
-# supabase.in 也为 Supabase 客户端识别的服务域；自定义域名需单独明确配置
-# 来源：https://supabase.com/docs/guides/platform/custom-domains
-# 来源：https://supabase.com/docs/guides/observability/client-side-tracing
-DOMAIN-SUFFIX,supabase.com
-DOMAIN-SUFFIX,supabase.co
-DOMAIN-SUFFIX,supabase.in
-
 DOMAIN-SUFFIX,docker.io
 DOMAIN-SUFFIX,docker.com
 # Docker 官方镜像与认证依赖；共享平台使用精确主机
 # 来源：https://docs.docker.com/desktop/setup/allow-list/
 DOMAIN-SUFFIX,dhi.io
 DOMAIN,cdn.auth0.com
-DOMAIN-SUFFIX,huggingface.co
-DOMAIN-SUFFIX,hf.co
-# Spaces 应用使用独立域名；模型 CDN 已被 hf.co 覆盖
-# 来源：https://huggingface.co/docs/hub/spaces-embed
-DOMAIN-SUFFIX,hf.space
 DOMAIN-SUFFIX,stackoverflow.com
 # Stack Exchange 静态资源及图片
 # 来源：https://meta.stackexchange.com/questions/395024
@@ -92,7 +71,7 @@ DOMAIN-SUFFIX,atlassian-dev.net
 DOMAIN-SUFFIX,atlassian-3p.com
 
 
-# ===== 个人 / 未分类 =====
+# ===== 成人网站 =====
 # JapaneseASMR 播放域名
 DOMAIN-SUFFIX,japaneseasmr.com
 DOMAIN-SUFFIX,weeabo0.xyz
@@ -105,7 +84,6 @@ DOMAIN-SUFFIX,asmr-100.com
 DOMAIN-SUFFIX,asmr-200.com
 DOMAIN-SUFFIX,asmr-300.com
 
-# ===== 成人网站 =====
 # 主流成人站点；后缀规则同时覆盖 www、m 等常见子域名
 DOMAIN-SUFFIX,pornhub.com
 # Pornhub 静态资源与媒体 CDN

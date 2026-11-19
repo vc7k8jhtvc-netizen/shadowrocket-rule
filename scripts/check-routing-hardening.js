@@ -10,6 +10,8 @@ const routingPath = path.join(root, 'Shadowrocket_Routing.conf');
 const westdataCheck = path.join(root, 'scripts', 'check-westdata-local.js');
 const clashSource = fs.readFileSync(clashPath, 'utf8');
 const routing = fs.readFileSync(routingPath, 'utf8');
+const customListPath = path.join(root, 'Custom.list');
+const customList = fs.readFileSync(customListPath, 'utf8');
 const context = { console: { log() {}, warn() {}, error() {} } };
 vm.createContext(context);
 vm.runInContext(clashSource, context, { filename: clashPath });
@@ -54,6 +56,42 @@ for (const rule of [
   assert(routing.includes(rule), 'Shadowrocket missing personal AI relay rule: ' + rule);
 }
 
+// Exa and Tavily are AI search services. They must route explicitly to AI and
+// must not be re-added to Custom.list, where the Custom rule would override ownership.
+const aiSearchRules = [
+  'DOMAIN-SUFFIX,exa.ai,🤖 AI',
+  'DOMAIN-SUFFIX,tavily.com,🤖 AI'
+];
+for (const rule of aiSearchRules) {
+  assert(valid.rules.includes(rule), 'Clash missing Exa/Tavily AI search rule: ' + rule);
+  assert(routing.includes(rule), 'Shadowrocket missing Exa/Tavily AI search rule: ' + rule);
+}
+
+// Supabase and Hugging Face are explicit AI-group choices. Their former Custom
+// entries must stay removed so ownership cannot silently drift back.
+const aiPlatformRules = [
+  'DOMAIN-SUFFIX,supabase.com,🤖 AI',
+  'DOMAIN-SUFFIX,supabase.co,🤖 AI',
+  'DOMAIN-SUFFIX,supabase.in,🤖 AI',
+  'DOMAIN-SUFFIX,huggingface.co,🤖 AI',
+  'DOMAIN-SUFFIX,hf.co,🤖 AI',
+  'DOMAIN-SUFFIX,hf.space,🤖 AI'
+];
+for (const rule of aiPlatformRules) {
+  assert(valid.rules.includes(rule), 'Clash missing Supabase/HuggingFace AI platform rule: ' + rule);
+  assert(routing.includes(rule), 'Shadowrocket missing Supabase/HuggingFace AI platform rule: ' + rule);
+}
+const migratedAiRules = [...aiSearchRules, ...aiPlatformRules];
+const customEntries = customList.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+for (const domain of ['exa.ai', 'tavily.com']) {
+  const entry = 'DOMAIN-SUFFIX,' + domain;
+  assert(!customEntries.includes(entry), 'Exa/Tavily must not remain in Custom.list: ' + entry);
+}
+for (const domain of ['supabase.com', 'supabase.co', 'supabase.in', 'huggingface.co', 'hf.co', 'hf.space']) {
+  const entry = 'DOMAIN-SUFFIX,' + domain;
+  assert(!customEntries.includes(entry), 'Supabase/HuggingFace must not remain in Custom.list: ' + entry);
+}
+
 // Canva-owned domains are a dedicated application group, not shared SaaS. Keep the
 // exact AI rule list and ordering stable across both clients.
 const canvaDomainSuffixes = [
@@ -77,6 +115,12 @@ const canvaDomainSuffixes = [
 const expectedCanvaRules = canvaDomainSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},🤖 AI`);
 const routingRules = routing.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
+  const customIndex = rules.findIndex(rule => rule.startsWith('RULE-SET,') && rule.endsWith(',🧩 自定义'));
+  assert(customIndex !== -1, name + ' Custom routing rule missing');
+  for (const rule of migratedAiRules) {
+    const index = rules.indexOf(rule);
+    assert(index !== -1 && index < customIndex, name + ' AI-migrated rule must precede Custom: ' + rule);
+  }
   const actual = rules.filter(rule => /^DOMAIN-SUFFIX,(?:canva|my\.canvasite\.)/i.test(rule));
   assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact AI list');
   const first = rules.indexOf(expectedCanvaRules[0]);
@@ -128,4 +172,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift, locks Canva AI routing, and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks Canva plus migrated AI routing, and avoids shared-SaaS AI capture');

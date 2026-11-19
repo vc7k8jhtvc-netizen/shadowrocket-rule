@@ -2,6 +2,8 @@
 
 ## 2026-11-19
 
+- 内部版本升至 `v2.7.27`：将 Supabase 的 `supabase.com` / `supabase.co` / `supabase.in` 与 Hugging Face 的 `huggingface.co` / `hf.co` / `hf.space` 从 `Custom.list` 的“🧩 自定义”转移至 Shadowrocket / Clash 双端“🤖 AI”；同时将 JapaneseASMR、ASMR.one 在 `Custom.list` 内归入成人网站分类。扩展 hardening 断言与负例，确保六个迁移后缀位于 Custom 之前且不得重新进入 `Custom.list`；不新增策略组、Provider、MITM 或 DNS。
+- 内部版本升至 `v2.7.26`：将 Exa、Tavily 的网站、API、控制台、文档与 MCP 入口从 `Custom.list` 的“🧩 自定义”转移至 Shadowrocket / Clash 双端“🤖 AI”，对应 `exa.ai`、`tavily.com` 两个自有后缀。新增 hardening 断言与负例，确保规则位于 Custom 之前，且两个域名不得重新进入 `Custom.list`；不新增策略组、Provider、MITM、DNS 或共享第三方域名。
 - 内部版本升至 `v2.7.25`：为 Shadowrocket / Clash 的现有 🤖 AI 分组新增 Canva 自有域名分流，覆盖 `canva.com`、`canva.cn`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-apps.cn`、`canva-hosted-embed.com`、`canva-code.cn`、`canvacode.com`、`my.canvasite.cn` 与 `canvastatus.com`。规则位于 Claude 后、Apple 前，不新增策略组、Provider、MITM、DNS，也不引入共享 CDN。
 - `check-routing-hardening.js` 新增 Canva 域名清单、顺序与双端一致性断言；负例回归覆盖单端删除及错误出口，避免规则被静默删除或漂移。本轮当前仅完成静态规则与双端一致性回归，设备端连接日志核验待完成。
 

@@ -229,6 +229,11 @@ function main(config) {
     'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI',
     // Personal AI relay, not OpenAI-owned; kept in sync with Shadowrocket and asserted by hardening checks.
     'DOMAIN-SUFFIX,a6api.vip,🤖 AI','DOMAIN-SUFFIX,a6api.com,🤖 AI',
+    // Exa / Tavily are AI search services; kept out of Custom.list and routed to AI.
+    'DOMAIN-SUFFIX,exa.ai,🤖 AI','DOMAIN-SUFFIX,tavily.com,🤖 AI',
+    // Supabase and Hugging Face follow AI by user preference; retain explicit ownership outside Custom.list.
+    'DOMAIN-SUFFIX,supabase.com,🤖 AI','DOMAIN-SUFFIX,supabase.co,🤖 AI','DOMAIN-SUFFIX,supabase.in,🤖 AI',
+    'DOMAIN-SUFFIX,huggingface.co,🤖 AI','DOMAIN-SUFFIX,hf.co,🤖 AI','DOMAIN-SUFFIX,hf.space,🤖 AI',
     'DOMAIN,gemini.google.com,🤖 AI','DOMAIN-SUFFIX,ai.google,🤖 AI','DOMAIN,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
     'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',

@@ -8,7 +8,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置；私人文件不得提交仓库。
 - `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单。
-- `Custom.list`：两端共用的个人显式自定义域名规则，由原 `Global.list` 恢复并更名。
+- `Custom.list`：两端共用的个人显式自定义域名规则，由原 `Global.list` 恢复并更名；已提升为专项 AI 分组的 Exa、Tavily、Supabase、Hugging Face 不再收录，JapaneseASMR 与 ASMR.one 归入成人网站分类。
 - `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围；脚本直接跟随 `Maasea/sgmodule` 的 `master` 分支。
 - Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers。
 
@@ -28,6 +28,8 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
 | 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，只改双端 AI 手工规则；必须同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | Canva 等专项 AI 自有域名 | 只改双端 AI 手工规则；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
+| Exa / Tavily 等 AI 搜索服务 | 在双端显式归入 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
+| Supabase / Hugging Face | 按用户偏好固定双端 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
 | 国内明确应直连服务 | 若中国规则未覆盖且实机落入漏网之鱼，增加最小必要官方域名直连例外 |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |
@@ -48,6 +50,8 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
 - Clash 必须拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
 - OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机不得被全局强制归入 AI；仅 OpenAI 自有或实例专属主机使用手工 AI 规则。个人 AI 中转 `a6api.vip` / `a6api.com` 是显式声明的例外，由 hardening 断言锁定，不得再扩大范围。
+- Exa、Tavily 固定使用双端 `DOMAIN-SUFFIX,exa.ai,🤖 AI` 与 `DOMAIN-SUFFIX,tavily.com,🤖 AI`，且不得重新出现在 `Custom.list`；顺序必须位于 Custom 规则之前。
+- Supabase 的 `supabase.com` / `supabase.co` / `supabase.in` 与 Hugging Face 的 `huggingface.co` / `hf.co` / `hf.space` 固定使用双端 `🤖 AI`，不得重新出现在 `Custom.list`；顺序必须位于 Custom 规则之前。
 - Canva 自有域名 `canva.com`、`canva.cn`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-apps.cn`、`canva-hosted-embed.com`、`canva-code.cn`、`canvacode.com`、`my.canvasite.cn`、`canvastatus.com` 必须保持双端“🤖 AI”且顺序位于 Claude 后、Apple 前；不得扩展至共享 CDN，用户绑定的自定义域名无法仅按后缀自动识别。
 - YouTube 专属 UDP 拒绝规则仅匹配 googlevideo.com / youtubei.googleapis.com，MITM 主机仅为 `*.googlevideo.com`、`youtubei.googleapis.com`。
 - YouTube `youtube.response.js` / `youtube.request.js` 必须直接引用 `Maasea/sgmodule/master`，不得重新锁定 commit SHA；这样上游更新可自动生效，无需人工同步版本。
@@ -64,7 +68,7 @@ bash scripts/check-config.sh
 WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 ```
 
-检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok/Canva 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
+检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok/Canva/Exa/Tavily/Supabase/Hugging Face 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
 本地门禁同时覆盖语法与换行：`node --check` 遍历根目录主脚本与 `scripts/` 下全部 JS 文件（含仅由 CI 执行的 `check-mihomo-runtime.js`），以文件遍历代替逐项列举，避免新增校验器被遗漏；`bash -n` 覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。`check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制，本地门禁只做语法检查、不执行运行时回归，因此本地全绿不等于 CI 运行时回归通过。
 

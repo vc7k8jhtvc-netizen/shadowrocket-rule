@@ -145,6 +145,23 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'personal AI relay rule');
     write('Shadowrocket_Routing.conf',routing);
 
+    // Exa / Tavily are AI search services; deleting the explicit rule or returning
+    // either domain to Custom.list must fail the hardening check.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,exa.ai,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'Exa/Tavily AI search rule');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Custom.list',mutate('Custom.list',custom,'# ===== 开发工具 =====\n','DOMAIN-SUFFIX,exa.ai\n\n# ===== 开发工具 =====\n'));
+    check('check-routing-hardening.js',[],1,'Exa/Tavily must not remain in Custom.list');
+    write('Custom.list',custom);
+
+    // Supabase / Hugging Face are explicit AI choices and must also stay outside Custom.list.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,huggingface.co,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'Supabase/HuggingFace AI platform rule');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Custom.list',mutate('Custom.list',custom,'# ===== 开发工具 =====\n','DOMAIN-SUFFIX,supabase.in\n\n# ===== 开发工具 =====\n'));
+    check('check-routing-hardening.js',[],1,'Supabase/HuggingFace must not remain in Custom.list');
+    write('Custom.list',custom);
+
     // Canva rules are a dedicated AI application group and must not disappear or drift.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,canvastatus.com,🤖 AI\n',''));
     check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules');
