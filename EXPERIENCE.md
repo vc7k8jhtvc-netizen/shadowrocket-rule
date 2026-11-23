@@ -28,6 +28,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
 | 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，只改双端 AI 手工规则；必须同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | Canva 等专项 AI 自有域名 | 只改双端 AI 手工规则；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
+| Gemini / Google AI 专属域名 | 只改双端 AI 手工规则；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex 与 Code Assist 的专属入口，保留 `www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
 | Exa / Tavily 等 AI 搜索服务 | 在双端显式归入 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | Supabase / Hugging Face | 按用户偏好固定双端 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
@@ -43,6 +44,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - “🧩 自定义”默认“🚀 默认代理”，候选为默认代理、香港、台湾、新加坡、日本、美国与“👆 手动选择”；`Custom.list` 位于 Google 后、中国规则前。
 - “🐟 漏网之鱼”默认“🚀 默认代理”，保留 DIRECT 与“👆 手动选择”。
 - 分流顺序：LAN → DeepSeek → AI → Apple/Microsoft/GitHub/Telegram 等专项 → 社交媒体/YouTube/Google → Custom → China/China_Domain/GEOIP → 漏网之鱼。
+- Gemini / Google AI 专属入口固定“🤖 AI”并位于 Google 规则集之前；共享 Google 主机不得仅为 Gemini 被全局接管。
 - Shadowrocket 不使用 FINAL；末尾固定为 DOMAIN-WILDCARD、IPv4 和 IPv6 三条显式终结规则；Clash 最终使用 MATCH。
 - 代理分组显示顺序：总控 → 业务（含自定义）→ 漏网之鱼 → 地区节点池，不得出现“🛑 广告拦截”。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。

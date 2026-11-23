@@ -131,6 +131,17 @@ function runSuite(eol) {
     check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
     write('Shadowrocket_Routing.conf',routing);
 
+    // Gemini / Google AI rules must remain complete, scoped and consistent across clients.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,aistudio.google.com,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'missing Gemini/Google AI rule');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'DOMAIN-SUFFIX,generativelanguage.googleapis.com,🤖 AI',","'DOMAIN-SUFFIX,generativelanguage.googleapis.com,DIRECT',"));
+    check('check-routing-hardening.js',[],1,'missing Gemini/Google AI rule');
+    write('Clash_Verge_Rev_Script.js',clash);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# Gemini / Google AI\n','# Gemini / Google AI\nDOMAIN-SUFFIX,www.googleapis.com,🤖 AI\n'));
+    check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
+    write('Shadowrocket_Routing.conf',routing);
+
     // Personal AI relay rules are explicit exceptions and must not silently disappear.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n',''));
     check('check-dual-client.js',[],1,'AI manual rules drift between clients');

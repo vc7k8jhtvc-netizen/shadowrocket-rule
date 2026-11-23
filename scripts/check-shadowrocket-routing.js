@@ -103,7 +103,7 @@ assert(JSON.stringify(rules.slice(-3)) === JSON.stringify(terminalRules), 'expli
 const requiredOrder = [
   'DOMAIN-SUFFIX,deepseek.com,DIRECT',
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
-  'DOMAIN,gemini.google.com,🤖 AI',
+  'DOMAIN-SUFFIX,gemini.google,🤖 AI',
   'DOMAIN-SUFFIX,grok.com,🤖 AI',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',

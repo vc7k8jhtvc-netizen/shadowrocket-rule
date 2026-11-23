@@ -1,5 +1,9 @@
 # 变更记录
 
+## 2026-11-24
+
+- 内部版本升至 `v2.7.30`：将 Gemini Web / API、Google AI Studio、Gemini Notebook（原 NotebookLM）、DeepMind、Vertex AI 的 Gemini 接口与 Gemini Code Assist 的 45 个专属域名后缀及 Vertex 区域 `-aiplatform.googleapis.com` 关键字规则统一加入 Shadowrocket / Clash 双端“🤖 AI”。`www.googleapis.com`、`apis.google.com`、`www.google.com`、YouTube、广告与分析等共享 Google 主机继续沿用原业务分组，避免全局接管其他 Google 服务；新增 hardening 域名清单、顺序、正负匹配与双端一致性断言。
+
 ## 2026-11-19
 
 - 内部版本升至 `v2.7.29`：统一 Shadowrocket / Clash 业务组的地区候选，`🤖 AI`、`🍎 Apple`、`🔎 Google`、`💻 GitHub`、`🪟 Microsoft`、`📱 社交媒体`、`▶️ YouTube`、`✈️ Telegram`、`🧩 自定义` 与 `🐟 漏网之鱼` 现在都可直接选择香港、台湾、新加坡、日本、美国和“👆 手动选择”。各组首个默认出口、规则顺序与分流行为保持不变；新增双端候选完整性断言。

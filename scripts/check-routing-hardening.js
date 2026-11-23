@@ -92,6 +92,106 @@ for (const domain of ['supabase.com', 'supabase.co', 'supabase.in', 'huggingface
   assert(!customEntries.includes(entry), 'Supabase/HuggingFace must not remain in Custom.list: ' + entry);
 }
 
+// Gemini and Google AI dedicated endpoints must stay explicitly routed to AI.
+// Shared Google hosts retain their normal Google/YouTube policies so unrelated services are not captured.
+const geminiDomainSuffixes = [
+  'gemini.google',
+  'gemini.google.com',
+  'aistudio.google.com',
+  'notebook.google',
+  'notebook.google.com',
+  'notebooklm.google',
+  'notebooklm.google.com',
+  'notebook.cloud.google',
+  'notebook.cloud.google.com',
+  'notebooklm.cloud.google',
+  'notebooklm.cloud.google.com',
+  'ai.google',
+  'ai.google.com',
+  'ai.google.dev',
+  'generativeai.google',
+  'makersuite.google.com',
+  'bard.google.com',
+  'gemini.gstatic.com',
+  'deepmind.com',
+  'deepmind.google',
+  'deepmind.google.com',
+  'generativelanguage.googleapis.com',
+  'generativelanguage.mtls.googleapis.com',
+  'geller-pa.googleapis.com',
+  'proactivebackend-pa.googleapis.com',
+  'robinfrontend-pa.googleapis.com',
+  'aisandbox-pa.googleapis.com',
+  'opa-pa.googleapis.com',
+  'alkalicore-pa.clients6.google.com',
+  'alkalimakersuite-pa.clients6.google.com',
+  'webchannel-alkalimakersuite-pa.clients6.google.com',
+  'appsgenaiserver-pa.clients6.google.com',
+  'opa-pa.clients6.google.com',
+  'aiplatform.googleapis.com',
+  'aiplatform.mtls.googleapis.com',
+  'aiplatform.eu.rep.googleapis.com',
+  'aiplatform.us.rep.googleapis.com',
+  'cloudaicompanion.googleapis.com',
+  'cloudaicompanion.mtls.googleapis.com',
+  'cloudcode-pa.googleapis.com',
+  'daily-cloudcode-pa.googleapis.com',
+  'daily-cloudcode-pa.sandbox.googleapis.com',
+  'jules.google',
+  'jules.google.com',
+  'jules.googleapis.com',
+];
+const expectedGeminiRules = [
+  ...geminiDomainSuffixes.map(domain => 'DOMAIN-SUFFIX,' + domain + ',🤖 AI'),
+  'DOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI'
+];
+const sharedGeminiDependencyHosts = [
+  'apis.google.com',
+  'www.googleapis.com',
+  'www.google.com',
+  'play.google.com',
+  'lh3.googleusercontent.com',
+  'ssl.gstatic.com',
+  'www.gstatic.com',
+  'fonts.googleapis.com',
+  'i.ytimg.com',
+  'www.youtube.com',
+  'www.googletagmanager.com',
+  'www.google-analytics.com',
+  'googleads.g.doubleclick.net'
+];
+const routingRules = routing.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+const routeManualRule = (rules, host) => {
+  for (const rule of rules) {
+    if (!rule.endsWith(',🤖 AI')) continue;
+    const [type, domain, policy] = rule.split(',');
+    if (type === 'DOMAIN' && host === domain) return policy;
+    if (type === 'DOMAIN-SUFFIX' && (host === domain || host.endsWith('.' + domain))) return policy;
+    if (type === 'DOMAIN-KEYWORD' && host.includes(domain)) return policy;
+  }
+  return null;
+};
+const geminiPositiveHosts = ['gemini.google.com', 'aistudio.google.com', 'notebook.google.com', 'notebook.cloud.google.com', 'notebooklm.google.com', 'notebooklm.cloud.google.com', 'ai.google.dev', 'generativelanguage.googleapis.com', 'alkali.generativelanguage.googleapis.com', 'geller-pa.googleapis.com', 'appsgenaiserver-pa.clients6.google.com', 'us-central1-aiplatform.googleapis.com', 'cloudaicompanion.googleapis.com', 'jules.google.com'];
+const geminiNegativeHosts = ['example.com', 'google.com', 'www.googleapis.com', 'apis.google.com', 'www.youtube.com', 'gemini.google.evil.example'];
+for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
+  for (const rule of expectedGeminiRules) assert(rules.includes(rule), name + ' missing Gemini/Google AI rule: ' + rule);
+  const first = rules.indexOf(expectedGeminiRules[0]);
+  const last = rules.indexOf(expectedGeminiRules[expectedGeminiRules.length - 1]);
+  assert(first > rules.indexOf('DOMAIN-SUFFIX,hf.space,🤖 AI'), name + ' Gemini rules must follow Hugging Face');
+  assert(last < rules.indexOf('DOMAIN-SUFFIX,x.ai,🤖 AI'), name + ' Gemini rules must precede Grok');
+  assert(JSON.stringify(rules.slice(first, last + 1)) === JSON.stringify(expectedGeminiRules), name + ' Gemini dedicated-domain rules must match exact AI list');
+  for (const host of sharedGeminiDependencyHosts) {
+    for (const type of ['DOMAIN', 'DOMAIN-SUFFIX']) {
+      assert(!rules.includes(type + ',' + host + ',🤖 AI'), name + ' shared Google host must not be globally routed to AI: ' + host);
+    }
+  }
+  for (const host of geminiPositiveHosts) {
+    assert(routeManualRule(rules, host) === '🤖 AI', name + ' Gemini host not routed through AI: ' + host);
+  }
+  for (const host of geminiNegativeHosts) {
+    assert(routeManualRule(rules, host) !== '🤖 AI', name + ' unintended Gemini AI match: ' + host);
+  }
+}
 // Canva-owned domains are a dedicated application group, not shared SaaS. Keep the
 // exact AI rule list and ordering stable across both clients.
 const canvaDomainSuffixes = [
@@ -113,7 +213,6 @@ const canvaDomainSuffixes = [
   "canvastatus.com"
 ];
 const expectedCanvaRules = canvaDomainSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},🤖 AI`);
-const routingRules = routing.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
   const customIndex = rules.findIndex(rule => rule.startsWith('RULE-SET,') && rule.endsWith(',🧩 自定义'));
   assert(customIndex !== -1, name + ' Custom routing rule missing');
@@ -172,4 +271,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift, locks Canva plus migrated AI routing, and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks Gemini/Canva plus migrated AI routing, and avoids shared-SaaS AI capture');

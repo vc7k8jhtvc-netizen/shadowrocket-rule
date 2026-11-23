@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.29`。本版本统一业务组的地区选项：`🤖 AI`、`🍎 Apple`、`🔎 Google`、`💻 GitHub`、`🪟 Microsoft`、`📱 社交媒体`、`▶️ YouTube`、`✈️ Telegram`、`🧩 自定义` 与 `🐟 漏网之鱼` 均可直接选择香港、台湾、新加坡、日本、美国和“👆 手动选择”；各组首个默认出口与分流规则保持不变。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.30`。本版本将 Gemini Web / API、Google AI Studio、Gemini Notebook（原 NotebookLM）、DeepMind、Vertex AI 的 Gemini 接口与 Gemini Code Assist 的专属域名统一扩展至双端“🤖 AI”；共享 Google、YouTube、广告与分析主机继续沿用原有业务分组。**
 
 ## Shadowrocket
 
@@ -39,6 +39,8 @@ Shadowrocket 客户端：上游最新版为 `2.2.93`（2026-10-29）。该版本
 
 ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。`a6api.vip` / `a6api.com` 是本人使用的第三方 AI 中转，不属于 OpenAI 官方域名，作为显式声明的个人例外固定进入“🤖 AI”，并由 `check-routing-hardening.js` 锁定；个人中转范围除这两条外不得扩大，其他服务按各自专项规则处理。
 
+Gemini 使用 45 条专属后缀规则及 1 条 Vertex 区域端点关键字规则，覆盖 `gemini.google` / `gemini.google.com`、`aistudio.google.com`、`ai.google.dev`、`generativeai.google`、`makersuite.google.com`、`bard.google.com`、Gemini Notebook 的 `notebook.google` / `notebooklm.google` 与 `*.cloud.google` 对应 `.com` 入口、`deepmind.com` / `deepmind.google` / `deepmind.google.com`、`generativelanguage.googleapis.com` 及其 mTLS、`geller-pa` / `proactivebackend-pa` / `robinfrontend-pa` / `aisandbox-pa`、AI Studio 的 `clients6`、`aiplatform.googleapis.com` / `*-aiplatform.googleapis.com`、Gemini Code Assist 的 `cloudaicompanion.googleapis.com` / `cloudcode-pa.googleapis.com` 以及 Jules 的 `.google` / `.google.com` 入口，均指向“🤖 AI”。`www.googleapis.com`、`apis.google.com`、`www.google.com`、`googleusercontent.com`、`gstatic.com`、YouTube、广告与分析等共享主机不因 Gemini 被全局接管，继续按原业务规则处理。参考：[Gemini 应用防火墙主机](https://knowledge.workspace.google.com/admin/generative-ai/gemini-app/gemini-app-firewall-settings)、[Google Workspace 生成式 AI URL](https://knowledge.workspace.google.com/admin/getting-started/set-up-a-google-workspace-host-name-allowlist)、[Gemini Code Assist 网络要求](https://docs.cloud.google.com/gemini/docs/codeassist/set-up-gemini)。
+
 Claude 新增四条专属后缀分流：`claude.ai`（Web / 登录 / 下载）、`claude.com`（平台与文档）、`anthropic.com`（API 与自有服务，包含 `api.anthropic.com`）、`claudeusercontent.com`（Artifacts / 内容预览），均指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
 
 Canva 使用固定 AI 分组的专属域名包括 `canva.com`、`canva.cn`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-apps.cn`、`canva-hosted-embed.com`、`canva-code.cn`、`canvacode.com`、`my.canvasite.cn` 与 `canvastatus.com`。这些域名覆盖官网、编辑器、开发者文档、应用运行环境、Canva 发布的免费站点及状态页；全部通过 `DOMAIN-SUFFIX` 指向“🤖 AI”，不引入 Cloudflare 等共享 CDN。用户自行绑定到 Canva 的自定义域名不属于 Canva 自有后缀，无法仅按域名自动识别。
@@ -69,7 +71,7 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 
 Clash Verge Rev 的运行模式由应用设置控制；请在客户端设置中选择“规则”。扩展脚本不强制改写 `mode`。
 
-Clash 扩展脚本与小火箭同步业务组、Claude 规则、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
+Clash 扩展脚本与小火箭同步业务组、Claude / Gemini 规则、Custom 及中国直连语义。中国域名 provider 使用上游 Clash 专用 `China_Domain.txt`，`GEOIP,CN,DIRECT` 不带 `no-resolve`；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
 
 订阅节点的 `dialer-proxy`、Provider 下载策略及 DNS 的 `rule-set:` 引用所需依赖会单独保留；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组与规则集仍被移除。v2.7.23 起，重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
 
@@ -96,7 +98,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | 样本 | 预期 |
 |---|---|
 | deepseek.com、bytedance.com | DIRECT |
-| chatgpt.com、gemini.google.com、grok.com | 🤖 AI |
+| chatgpt.com、gemini.google.com、aistudio.google.com、notebooklm.google.com、generativelanguage.googleapis.com、grok.com | 🤖 AI |
 | claude.ai、claude.com、api.anthropic.com、*.claudeusercontent.com | 🤖 AI |
 | canva.com、canva.cn、canva.ai、canva.app、canva.dev、*.canva.site | 🤖 AI |
 | exa.ai、api.exa.ai、tavily.com、api.tavily.com | 🤖 AI |
@@ -109,7 +111,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 
 2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验。**v2.7.24 已于 2026-11-08 在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`）上按上述样本完成设备端回归，结果正常；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。** 该次回归同时关闭了 v2.7.23 遗留的验证欠账。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
-Canva 规则为 v2.7.25 新增，当前仅完成静态规则、双端一致性及本地校验回归；尚未以客户端连接日志完成设备端核验。Exa、Tavily 规则为 v2.7.26 新增，同样仅完成静态规则、双端一致性及本地校验回归。Supabase、Hugging Face 规则为 v2.7.27 新增，当前同样仅完成静态规则、双端一致性及本地校验回归。
+Canva 规则为 v2.7.25 新增，当前仅完成静态规则、双端一致性及本地校验回归；尚未以客户端连接日志完成设备端核验。Exa、Tavily 规则为 v2.7.26 新增，同样仅完成静态规则、双端一致性及本地校验回归。Supabase、Hugging Face 规则为 v2.7.27 新增，当前同样仅完成静态规则、双端一致性及本地校验回归。Gemini / Google AI 扩展规则为 v2.7.30 新增，当前完成静态规则、双端一致性及本地校验回归，设备端连接日志核验仍待完成。
 
 ## 维护
 
