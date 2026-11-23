@@ -30,7 +30,9 @@ const sharedAiRules = [
   'DOMAIN,js.stripe.com,🤖 AI',
   'DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI',
   'DOMAIN,setup.workos.com,🤖 AI',
-  'DOMAIN,workos.imgix.net,🤖 AI'
+  'DOMAIN,workos.imgix.net,🤖 AI',
+  // Statsig's shared SDK/config CDN serves many non-AI apps.
+  'DOMAIN-SUFFIX,featureassets.org,🤖 AI'
 ];
 const valid = context.main({ proxies: [node('Hong Kong | HK-01')] });
 for (const rule of sharedAiRules) {
@@ -188,7 +190,7 @@ const geminiDomainSuffixes = [
 ];
 const expectedGeminiRules = [
   ...geminiDomainSuffixes.map(domain => 'DOMAIN-SUFFIX,' + domain + ',🤖 AI'),
-  'DOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI'
+  'DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI'
 ];
 const sharedGeminiDependencyHosts = [
   'apis.google.com',
@@ -215,6 +217,10 @@ const routeManualRule = (rules, host) => {
     if (type === 'DOMAIN' && host === domain) return policy;
     if (type === 'DOMAIN-SUFFIX' && (host === domain || host.endsWith('.' + domain))) return policy;
     if (type === 'DOMAIN-KEYWORD' && host.includes(domain)) return policy;
+    if (type === 'DOMAIN-WILDCARD') {
+      const pattern = domain.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      if (new RegExp('^' + pattern + '$').test(host)) return policy;
+    }
   }
   return null;
 };
@@ -250,9 +256,10 @@ const geminiPositiveHosts = [
   'gemma.ai',
   'jules.google.com'
 ];
-const geminiNegativeHosts = ['example.com', 'google.com', 'www.googleapis.com', 'apis.google.com', 'www.youtube.com', 'gemini.google.evil.example'];
+const geminiNegativeHosts = ['example.com', 'google.com', 'www.googleapis.com', 'apis.google.com', 'www.youtube.com', 'gemini.google.evil.example', 'x-aiplatform.googleapis.com.attacker.example', 'aiplatform.googleapis.com.evil.example'];
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
   for (const rule of expectedGeminiRules) assert(rules.includes(rule), name + ' missing Gemini/Google AI rule: ' + rule);
+  assert(!rules.some(rule => rule.startsWith('DOMAIN-KEYWORD,') && rule.endsWith(',🤖 AI')), name + ' AI rules must not use unanchored DOMAIN-KEYWORD');
   const first = rules.indexOf(expectedGeminiRules[0]);
   const last = rules.indexOf(expectedGeminiRules[expectedGeminiRules.length - 1]);
   assert(first > rules.indexOf('DOMAIN-SUFFIX,hf.space,🤖 AI'), name + ' Gemini rules must follow Hugging Face');
@@ -270,11 +277,17 @@ for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRul
     assert(routeManualRule(rules, host) !== '🤖 AI', name + ' unintended Gemini AI match: ' + host);
   }
 }
-// Canva-owned domains are a dedicated application group, not shared SaaS. Keep the
-// exact AI rule list and ordering stable across both clients.
-const canvaDomainSuffixes = [
-  "canva.com",
+// Canva-owned domains are a dedicated application group, not shared SaaS. Canva China
+// (可画) is a mainland service and stays DIRECT; the rest use AI. Keep the exact list
+// and ordering stable across both clients.
+const canvaDirectSuffixes = [
   "canva.cn",
+  "canva-apps.cn",
+  "canva-code.cn",
+  "my.canvasite.cn"
+];
+const canvaAiSuffixes = [
+  "canva.com",
   "canva.ai",
   "canva.app",
   "canva.dev",
@@ -283,23 +296,23 @@ const canvaDomainSuffixes = [
   "canva.link",
   "canva.run",
   "canva-apps.com",
-  "canva-apps.cn",
   "canva-hosted-embed.com",
-  "canva-code.cn",
   "canvacode.com",
-  "my.canvasite.cn",
   "canvastatus.com"
 ];
-const expectedCanvaRules = canvaDomainSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},🤖 AI`);
+const expectedCanvaRules = [
+  ...canvaDirectSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},DIRECT`),
+  ...canvaAiSuffixes.map(domain => `DOMAIN-SUFFIX,${domain},🤖 AI`)
+];
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
-  const customIndex = rules.findIndex(rule => rule.startsWith('RULE-SET,') && rule.endsWith(',🧩 自定义'));
+  const customIndex = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /,🧩 自定义(?:,no-resolve)?$/.test(rule));
   assert(customIndex !== -1, name + ' Custom routing rule missing');
   for (const rule of migratedAiRules) {
     const index = rules.indexOf(rule);
     assert(index !== -1 && index < customIndex, name + ' AI-migrated rule must precede Custom: ' + rule);
   }
   const actual = rules.filter(rule => /^DOMAIN-SUFFIX,(?:canva|my\.canvasite\.)/i.test(rule));
-  assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact AI list');
+  assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact DIRECT/AI list');
   const first = rules.indexOf(expectedCanvaRules[0]);
   const last = rules.indexOf(expectedCanvaRules[expectedCanvaRules.length - 1]);
   assert(first > rules.indexOf('DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI'), name + ' Canva rules must follow Claude');
@@ -333,6 +346,32 @@ expectReject({
   'proxy-groups': [{ name: 'Transport', type: 'select', proxies: ['MissingPolicy'] }]
 }, '不存在的策略');
 
+expectReject({
+  proxies: [{ ...node('Hong Kong | Base'), 'dialer-proxy': 'G' }],
+  'proxy-groups': [{ name: 'G', type: 'select', proxies: 'Hong Kong | Base' }]
+}, 'proxies 格式无效');
+expectReject({ proxies: [node('Hong Kong | Base')], listeners: [{ name: 'l', type: 'socks', port: 7891, rule: 'sub' }] }, 'sub-rules');
+expectReject({ proxies: [node('Hong Kong | Base')], tunnels: [{ network: ['tcp'], address: '127.0.0.1:1', target: 'a.invalid:80', proxy: 'MissingPolicy' }] }, '不存在的策略');
+
+// Mihomo reserves the DNS "#RULES" tag; it must pass through untouched.
+const respectRules = context.main({ proxies: [node('Hong Kong | Base')], dns: { nameserver: ['https://1.1.1.1/dns-query#RULES'] } });
+assert(respectRules.dns.nameserver[0] === 'https://1.1.1.1/dns-query#RULES', 'DNS #RULES tag must be preserved verbatim');
+
+// Listener / tunnel exits are retained like dialer-proxy, and orphaned sub-rules are dropped.
+const attached = context.main({
+  proxies: [node('Hong Kong | Base')],
+  'proxy-groups': [{ name: 'Sub', type: 'select', proxies: ['Hong Kong | Base'] }],
+  listeners: [{ name: 'l', type: 'socks', port: 7891, proxy: 'Sub' }],
+  tunnels: [{ network: ['tcp'], address: '127.0.0.1:1', target: 'a.invalid:80', proxy: 'Sub' }, 'tcp,127.0.0.1:2,a.invalid:80,Sub'],
+  'sub-rules': { s1: ['MATCH,Sub'] }
+});
+const attachedGroups = new Set(attached['proxy-groups'].map(group => group.name));
+const listenerExit = attached.listeners[0].proxy;
+assert(listenerExit.startsWith('__subscription_group_') && attachedGroups.has(listenerExit), 'listener proxy must map to a retained group');
+assert(attached.tunnels[0].proxy === listenerExit, 'tunnel proxy must map to the retained group');
+assert(attached.tunnels[1] === 'tcp,127.0.0.1:2,a.invalid:80,' + listenerExit, 'compact tunnel proxy must map to the retained group');
+assert(!('sub-rules' in attached), 'orphaned sub-rules must be removed');
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'westdata-hardening-'));
 try {
   const conf = path.join(temp, 'WestData.conf');
@@ -349,4 +388,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift, locks Gemini/Google AI/Canva plus migrated AI routing, and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks Gemini/Google AI/Canva plus migrated AI routing, retains listener/tunnel/DNS RULES dependencies, and avoids shared-SaaS AI capture');

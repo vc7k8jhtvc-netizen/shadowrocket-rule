@@ -80,7 +80,7 @@ for(const rule of ['DOMAIN-SUFFIX,deepseek.com,DIRECT','DOMAIN-SUFFIX,bytedance.
 }
 
 const shadowCustom='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
-const clashCustom='RULE-SET,Custom,🧩 自定义';
+const clashCustom='RULE-SET,Custom,🧩 自定义,no-resolve';
 assert(shadowRules.includes(shadowCustom),'Shadowrocket Custom rule missing');
 assert(clash.rules.includes(clashCustom),'Clash Custom rule missing');
 assert(!shadowrocket.includes('/Global.list'),'Shadowrocket old Global.list reference must be absent');
@@ -90,6 +90,10 @@ const bmShadow='https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/m
 const expectedShadowNonAi=[
   `RULE-SET,${bmShadow}/Lan/Lan.list,DIRECT`,
   'DOMAIN-SUFFIX,deepseek.com,DIRECT',
+  'DOMAIN-SUFFIX,canva.cn,DIRECT',
+  'DOMAIN-SUFFIX,canva-apps.cn,DIRECT',
+  'DOMAIN-SUFFIX,canva-code.cn,DIRECT',
+  'DOMAIN-SUFFIX,my.canvasite.cn,DIRECT',
   `RULE-SET,${bmShadow}/Apple/Apple.list,🍎 Apple`,
   `DOMAIN-SET,${bmShadow}/Apple/Apple_Domain.list,🍎 Apple`,
   `RULE-SET,${bmShadow}/Microsoft/Microsoft.list,🪟 Microsoft`,
@@ -113,6 +117,10 @@ const expectedShadowNonAi=[
 const expectedClashNonAi=[
   'RULE-SET,Lan,DIRECT,no-resolve',
   'DOMAIN-SUFFIX,deepseek.com,DIRECT',
+  'DOMAIN-SUFFIX,canva.cn,DIRECT',
+  'DOMAIN-SUFFIX,canva-apps.cn,DIRECT',
+  'DOMAIN-SUFFIX,canva-code.cn,DIRECT',
+  'DOMAIN-SUFFIX,my.canvasite.cn,DIRECT',
   'RULE-SET,Apple,🍎 Apple,no-resolve',
   'RULE-SET,Apple_Domain,🍎 Apple',
   'RULE-SET,Microsoft,🪟 Microsoft,no-resolve',

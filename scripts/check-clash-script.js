@@ -44,11 +44,11 @@ assert(direct['rule-providers'].Custom.url.endsWith('/Custom.list'),'Custom prov
 assert(direct['rule-providers'].Custom.path==='./rule_providers/Custom.list','Custom provider path');
 assert(!('Global' in direct['rule-providers']),'old Global provider must be absent');
 assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Global,')),'old Global rule must be absent');
-assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义'),'Custom routing rule missing');
+assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义,no-resolve'),'Custom routing rule missing');
 assert(direct.rules[direct.rules.length-1]==='MATCH,🐟 漏网之鱼','MATCH must route to fallback');
 
 const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google,no-resolve');
-const customIndex=direct.rules.indexOf('RULE-SET,Custom,🧩 自定义');
+const customIndex=direct.rules.indexOf('RULE-SET,Custom,🧩 自定义,no-resolve');
 const chinaIndex=direct.rules.indexOf('RULE-SET,China,DIRECT,no-resolve');
 assert(googleIndex>0&&googleIndex<customIndex&&customIndex<chinaIndex,'Google/Custom/China order');
 

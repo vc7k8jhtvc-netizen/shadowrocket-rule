@@ -174,7 +174,10 @@ function main(config) {
       const original = originalGroups.get(name);
       const retained = { ...original, name: privateName('__subscription_group_', policyNames) };
       retainedGroups.set(name, retained);
-      if (original.proxies) retained.proxies = original.proxies.map(preservePolicy);
+      if (original.proxies !== undefined) {
+        if (!Array.isArray(original.proxies)) throw new Error('订阅依赖策略组 proxies 格式无效。');
+        retained.proxies = original.proxies.map(preservePolicy);
+      }
       if (original.use) {
         if (!Array.isArray(original.use) || original.use.some(provider => !providerNameSet.has(provider))) {
           throw new Error('订阅依赖策略组引用了不存在的 proxy-provider。');
@@ -234,6 +237,8 @@ function main(config) {
     const rawProxy = parts[proxyIndex];
     let decodedProxy = rawProxy;
     try { decodedProxy = decodeURIComponent(rawProxy); } catch {}
+    // Mihomo reserves "RULES" (tunnel.DnsRespectRules): the DNS query follows routing rules.
+    if (decodedProxy === 'RULES') return server;
     const retainedProxy = preservePolicy(decodedProxy);
     const nextParts = [...parts];
     nextParts[proxyIndex] = rawProxy.includes('%') ? encodeURIComponent(retainedProxy) : retainedProxy;
@@ -287,12 +292,40 @@ function main(config) {
     Object.entries(config['proxy-providers']).map(([name, provider]) => [name, preserveDownload(provider)])
   );
   const dns = preserveDns(config.dns);
+  // Listeners and tunnels pin an exit policy; keep those dependencies like dialer-proxy.
+  // Listener `rule` targets sub-rules, which cannot survive the full rule replacement below.
+  const listeners = config.listeners === undefined ? undefined : (() => {
+    if (!Array.isArray(config.listeners)) throw new Error('订阅 listeners 格式无效，已停止生成配置。');
+    return config.listeners.map(listener => {
+      if (!listener || typeof listener !== 'object') throw new Error('订阅 listeners 格式无效，已停止生成配置。');
+      if (listener.rule !== undefined) throw new Error('订阅 listeners 引用了 sub-rules，脚本重建规则后无法保留，已停止生成配置。');
+      return listener.proxy === undefined ? listener : { ...listener, proxy: preservePolicy(listener.proxy) };
+    });
+  })();
+  const tunnels = config.tunnels === undefined ? undefined : (() => {
+    if (!Array.isArray(config.tunnels)) throw new Error('订阅 tunnels 格式无效，已停止生成配置。');
+    return config.tunnels.map(tunnel => {
+      if (typeof tunnel === 'string') {
+        // Compact form: network,address,target[,proxy]
+        const parts = tunnel.split(',');
+        if (parts.length !== 4) return tunnel;
+        parts[3] = preservePolicy(parts[3].trim());
+        return parts.join(',');
+      }
+      if (!tunnel || typeof tunnel !== 'object') throw new Error('订阅 tunnels 格式无效，已停止生成配置。');
+      return tunnel.proxy === undefined ? tunnel : { ...tunnel, proxy: preservePolicy(tunnel.proxy) };
+    });
+  })();
   // Commit together after dependency checks, so rejected inputs are not half-rewritten.
   config['proxy-groups'] = [...proxyGroups, ...retainedGroups.values()];
   config['rule-providers'] = ruleProviders;
   if (proxies) config.proxies = proxies;
   if (proxyProviders) config['proxy-providers'] = proxyProviders;
   if (dns !== undefined) config.dns = dns;
+  if (listeners) config.listeners = listeners;
+  if (tunnels) config.tunnels = tunnels;
+  // Sub-rules are only reachable from the subscription's own rules, which are replaced below.
+  delete config['sub-rules'];
   config.profile = Object.assign({}, config.profile || {}, { 'store-selected': true, 'store-fake-ip': true });
 
   config.rules = [
@@ -401,16 +434,19 @@ function main(config) {
     'DOMAIN-SUFFIX,opa-pa.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,opa-pa.clients6.google.com,🤖 AI',
     // Regional Vertex AI hosts use a location prefix joined by a hyphen, which a DNS suffix cannot cover.
-    'DOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI',
-    'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI','DOMAIN-SUFFIX,featureassets.org,🤖 AI',
+    // The wildcard is anchored to googleapis.com, unlike a keyword that also matches look-alike hosts.
+    'DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI',
+    'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI',
     'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
-    // Canva-owned domains only; custom domains and shared CDNs are not inferred.
-    'DOMAIN-SUFFIX,canva.com,🤖 AI','DOMAIN-SUFFIX,canva.cn,🤖 AI','DOMAIN-SUFFIX,canva.ai,🤖 AI','DOMAIN-SUFFIX,canva.app,🤖 AI','DOMAIN-SUFFIX,canva.dev,🤖 AI','DOMAIN-SUFFIX,canva.me,🤖 AI','DOMAIN-SUFFIX,canva.site,🤖 AI','DOMAIN-SUFFIX,canva.link,🤖 AI','DOMAIN-SUFFIX,canva.run,🤖 AI',
-    'DOMAIN-SUFFIX,canva-apps.com,🤖 AI','DOMAIN-SUFFIX,canva-apps.cn,🤖 AI','DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI','DOMAIN-SUFFIX,canva-code.cn,🤖 AI','DOMAIN-SUFFIX,canvacode.com,🤖 AI','DOMAIN-SUFFIX,my.canvasite.cn,🤖 AI','DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
+    // Canva China (可画) is a mainland service and stays DIRECT; other Canva-owned domains use AI.
+    // Custom domains and shared CDNs are not inferred.
+    'DOMAIN-SUFFIX,canva.cn,DIRECT','DOMAIN-SUFFIX,canva-apps.cn,DIRECT','DOMAIN-SUFFIX,canva-code.cn,DIRECT','DOMAIN-SUFFIX,my.canvasite.cn,DIRECT',
+    'DOMAIN-SUFFIX,canva.com,🤖 AI','DOMAIN-SUFFIX,canva.ai,🤖 AI','DOMAIN-SUFFIX,canva.app,🤖 AI','DOMAIN-SUFFIX,canva.dev,🤖 AI','DOMAIN-SUFFIX,canva.me,🤖 AI','DOMAIN-SUFFIX,canva.site,🤖 AI','DOMAIN-SUFFIX,canva.link,🤖 AI','DOMAIN-SUFFIX,canva.run,🤖 AI',
+    'DOMAIN-SUFFIX,canva-apps.com,🤖 AI','DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI','DOMAIN-SUFFIX,canvacode.com,🤖 AI','DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
     'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve','RULE-SET,GitHub,💻 GitHub,no-resolve','RULE-SET,Telegram,✈️ Telegram,no-resolve',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',
-    'RULE-SET,Custom,🧩 自定义',
+    'RULE-SET,Custom,🧩 自定义,no-resolve',
     'RULE-SET,China,DIRECT,no-resolve','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
   ];
 

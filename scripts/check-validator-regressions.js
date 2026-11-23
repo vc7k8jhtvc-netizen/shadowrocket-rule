@@ -144,6 +144,24 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
     write('Shadowrocket_Routing.conf',routing);
 
+    // v2.7.33: regional Vertex AI must stay anchored, shared Statsig CDN and mainland Canva stay out of AI.
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI\n','DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI\nDOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI\n'));
+    check('check-routing-hardening.js',[],1,'unanchored DOMAIN-KEYWORD');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,grokipedia.com,🤖 AI\n','DOMAIN-SUFFIX,grokipedia.com,🤖 AI\nDOMAIN-SUFFIX,featureassets.org,🤖 AI\n'));
+    check('check-routing-hardening.js',[],1,'must not globally force shared SaaS through AI');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,canva.cn,DIRECT','DOMAIN-SUFFIX,canva.cn,🤖 AI'));
+    check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules must match exact DIRECT/AI list');
+    write('Shadowrocket_Routing.conf',routing);
+
+    // v2.7.33: Clash dependency retention for DNS #RULES, listeners/tunnels and sub-rules.
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    if (decodedProxy === 'RULES') return server;\n",''));
+    check('check-routing-hardening.js',[],1,'不存在的策略');
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"  if (tunnels) config.tunnels = tunnels;\n",''));
+    check('check-routing-hardening.js',[],1,'tunnel proxy must map to the retained group');
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"  delete config['sub-rules'];\n",''));
+    check('check-routing-hardening.js',[],1,'orphaned sub-rules must be removed');
+    write('Clash_Verge_Rev_Script.js',clash);
+
     // Personal AI relay rules are explicit exceptions and must not silently disappear.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n',''));
     check('check-dual-client.js',[],1,'AI manual rules drift between clients');
@@ -214,7 +232,7 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'GEOIP,CN,DIRECT',","'GEOIP,CN,DIRECT,no-resolve',"));
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Clash GEOIP rule must not use no-resolve');
     write('Clash_Verge_Rev_Script.js',clash);
-    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'RULE-SET,Custom,🧩 自定义',\n",''));
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'RULE-SET,Custom,🧩 自定义,no-resolve',\n",''));
     check('check-dual-client.js',[],1,'Clash Custom rule missing');
     write('Clash_Verge_Rev_Script.js',clash);
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    China: classicalProvider('China'),","    Advertising: classicalProvider('Advertising'),\n    China: classicalProvider('China'),"));

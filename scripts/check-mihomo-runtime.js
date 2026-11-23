@@ -45,13 +45,16 @@ async function freePort() {
       'proxy-providers': { Fixture: { type: 'inline', payload: [{ ...fixtureNode, name: 'Singapore | Provider', 'dialer-proxy': 'Transport' }], override: { 'dialer-proxy': 'Transport' } } },
       dns: {
         enable: true,
-        nameserver: ['1.1.1.1', 'https://dns.google/dns-query#DnsExit&h3=true'],
+        nameserver: ['1.1.1.1', 'https://dns.google/dns-query#DnsExit&h3=true', 'https://dns.google/dns-query#RULES'],
         'nameserver-policy': {
           'rule-set:China,SubscriptionDomain': ['1.1.1.1', 'https://dns.google/dns-query#Transport'],
           'example.com,rule-set:SubscriptionDomain': 'https://dns.google/dns-query#DnsExit'
         },
         'fake-ip-filter': ['rule-set:SubscriptionDomain']
       },
+      // Mihomo resolves tunnel exits and sub-rules at load time; the script must keep them loadable.
+      tunnels: [{ network: ['tcp'], address: '127.0.0.1:1', target: 'audit.invalid:80', proxy: 'Transport' }],
+      'sub-rules': { Orphan: ['MATCH,DnsExit'] },
       'rule-providers': {
         China: { type: 'inline', behavior: 'domain', payload: ['+.fixture.invalid'] },
         SubscriptionDomain: { type: 'inline', behavior: 'domain', payload: ['+.subscription.invalid'] }
@@ -72,21 +75,21 @@ async function freePort() {
       const checked = spawnSync(binary, ['-t', '-d', dir, '-f', fixturePath], { encoding: 'utf8', timeout: 10000 });
       assert(checked.status === 0, 'Mihomo subscription dependency validation failed (' + label + '):\n' + checked.stdout + checked.stderr);
     }
-    console.log('PASS: Mihomo loads preserved dialer/provider groups and DNS rule-set dependencies');
+    console.log('PASS: Mihomo loads preserved dialer/provider/tunnel groups, DNS RULES tag and DNS rule-set dependencies');
     const apiPort = await freePort();
     const proxyPort = await freePort();
     const output = ctx.main({ 'proxy-providers': { Test: { type: 'inline', payload: [
       { name: 'unmatched-test-node', type: 'ss', server: '127.0.0.1', port: 1, cipher: 'aes-128-gcm', password: 'test-only' }
     ] } } });
     // Keep every generated rule before GEOIP,CN and inject IP-CIDR into every Blackmatrix classical provider
-    // so any missing no-resolve on LAN/Apple/Microsoft/GitHub/Telegram/Twitter/Instagram/TikTok/YouTube/Google/China triggers DNS.
+    // so any missing no-resolve on LAN/Apple/Microsoft/GitHub/Telegram/Twitter/Instagram/TikTok/YouTube/Google/Custom/China triggers DNS.
     for (const [name, provider] of Object.entries(output['rule-providers'])) {
       output['rule-providers'][name] = {
         type: 'inline',
         behavior: provider.behavior,
         payload: provider.behavior === 'domain'
           ? ['+.audit.invalid']
-          : (name === 'Custom' ? ['DOMAIN-SUFFIX,audit.invalid'] : ['IP-CIDR,10.0.0.0/8'])
+          : ['IP-CIDR,10.0.0.0/8']
       };
     }
     output.rules = [...output.rules.filter(rule => !rule.startsWith('GEOIP,') && !rule.startsWith('MATCH,')), 'MATCH,REJECT'];

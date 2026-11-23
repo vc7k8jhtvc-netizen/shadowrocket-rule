@@ -2,6 +2,11 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.33`：修复全量审计发现的兼容性、输入校验与规则精度问题：
+  - **DNS `#RULES` 保留标签**：`Clash_Verge_Rev_Script.js` 的 `preserveDnsServer()` 原样放行 Mihomo 保留标签 `#RULES`（`tunnel.DnsRespectRules`），避免包含该标签的合法订阅被误判为缺失策略并拒绝生成。
+  - **附属结构依赖与校验**：保留订阅 `listeners[].proxy` 与 `tunnels`（对象与紧凑字符串格式）所引用的策略组；移除随 `rules` 重建而孤立的 `sub-rules`（若 `listeners[].rule` 引用 `sub-rules` 则 fail-closed 拒绝）；补齐保留策略组 `proxies` 非数组时的统一中文错误拦截，消除未处理 `TypeError`。
+  - **规则精确化与共享依赖收敛**：双端移除 Statsig 共享 CDN `featureassets.org`（恢复正常分流并加入 hardening 共享 SaaS 禁止列表）；Canva 可画中国大陆域名（`canva.cn`、`canva-apps.cn`、`canva-code.cn`、`my.canvasite.cn`）由“🤖 AI”改为 `DIRECT`；Vertex 区域主机由 `DOMAIN-KEYWORD,-aiplatform.googleapis.com` 收窄为 `DOMAIN-WILDCARD,*-aiplatform.googleapis.com`，消除仿冒子域误匹配；Clash `RULE-SET,Custom,🧩 自定义` 补齐 `,no-resolve`，与其余 `GEOIP` 前古典规则集及 README 表述保持一致。
+  - **回归覆盖**：`check-routing-hardening.js`、`check-mihomo-runtime.js`、`check-dual-client.js` 与 `check-validator-regressions.js` 同步补充上述正负例断言；规则集下载继续沿用“🚀 默认代理”、YouTube 模块继续跟随 Maasea `master` 分支。
 - 内部版本升至 `v2.7.32`：修复全量审计发现的五项问题（H1 / H2 / M1 / M2 / M3）：
   - **H1**：Clash `Apple_Domain` 与 `China_Domain` 改用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`behavior: domain` + `format: yaml`，使用 `+.` 语法），修复此前 `.domain` 前缀导致全部 Apple / 中国根域名在 Mihomo 中漏匹配的问题；`check-external-dependencies.sh` 同步校验 Clash 域名规则集必须使用 `+.` 且拒绝裸 `.` 条目。
   - **H2**：Clash 全部 `GEOIP,CN,DIRECT` 之前的古典规则集（`Lan`、`Apple`、`Microsoft`、`GitHub`、`Telegram`、`Twitter`、`Instagram`、`TikTok`、`YouTube`、`Google`、`China`）统一附加 `,no-resolve`，消除非 AI 域名在 `RULE-SET,Apple` 处提前触发 DNS 解析的问题，与 Shadowrocket 上游规则语义对齐；`check-mihomo-runtime.js` 扩展 DNS 静默测试至全部 `GEOIP` 前规则。
