@@ -51,6 +51,7 @@ function runSuite(eol) {
     let routing=read('Shadowrocket_Routing.conf');
     const aiRules=read('rules/ai-rules.json');
     const custom=read('Custom.list');
+    const adult=read('Adult.list');
     const readme=read('README.md');
     let changelog=read('CHANGELOG.md');
     let clash=read('Clash_Verge_Rev_Script.js');
@@ -227,6 +228,21 @@ function runSuite(eol) {
     write('Custom.list',custom+'INVALID,example.com\n');
     check('check-shadowrocket-routing.js',[],1,'unsupported Custom.list rule syntax');
     write('Custom.list',custom);
+
+    write('Adult.list',adult+'DOMAIN-SUFFIX,jable.tv\n');
+    check('check-shadowrocket-routing.js',[],1,'duplicate Adult.list entry');
+    write('Adult.list',adult+'INVALID,example.com\n');
+    check('check-shadowrocket-routing.js',[],1,'unsupported Adult.list rule syntax');
+    write('Adult.list',adult+'DOMAIN-SUFFIX,wikipedia.org\n');
+    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Adult.list');
+    write('Adult.list',adult);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW\n',''));
+    check('check-shadowrocket-routing.js',[],1,'Adult.list routing rule missing');
+    check('check-dual-client.js',[],1,'Shadowrocket Adult rule missing');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'RULE-SET,Adult,🔞 NSFW,no-resolve',\n",''));
+    check('check-dual-client.js',[],1,'Clash Adult rule missing');
+    write('Clash_Verge_Rev_Script.js',clash);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'🐟 漏网之鱼 = select,🚀 默认代理,DIRECT,','🐟 漏网之鱼 = select,🚀 默认代理,'));
     check('check-shadowrocket-routing.js',[],1,'fallback group must include DIRECT');

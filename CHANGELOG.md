@@ -2,6 +2,11 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.35`：精简 `Custom.list` 并为成人网站新设双端“🔞 NSFW”分组：
+  - 从 `Custom.list` 移除效率工具分类（Notion / Dropbox / Slack / Atlassian 共 25 条，改由正常兜底规则处理）；`hero-sms.com` 与 `greasyfork.org` 保留在 `Custom.list` 的“其他”分类下。
+  - 将原 `Custom.list` 中的 48 条成人网站规则（JapaneseASMR、ASMR.one、Pornhub、XVideos、XNXX、xHamster、RedTube、YouPorn、Tube8、SpankBang、Eporner、TNAFlix、Jable、MissAV、Hanime1）拆出至独立共享清单 `Adult.list`。
+  - Shadowrocket 与 Clash 双端新增“🔞 NSFW”策略组（默认“🚀 默认代理”，可选五个地区与“👆 手动选择”，位于“🧩 自定义”后、“🐟 漏网之鱼”前），并接入 `Adult.list` 规则集（Clash 端附加 `,no-resolve`），顺序位于 `Custom` 后、`China` 前。
+  - 同步更新双端一致性校验、规则语法/去重/跨清单防重校验、负例回归及文档。
 - 内部版本升至 `v2.7.34`：落地审计项 L7（构建期单一数据源，不新增远端 Provider）：
   - 新增 `rules/ai-rules.json` 作为双端手工 AI 分流规则（8 个分组、136 条规则）的单一数据源，新增 `scripts/sync-ai-rules.js` 支持写回生成（`node scripts/sync-ai-rules.js`）与同步检查（`--check`），并严格校验规则语法、去重与标记完整性。
   - `Shadowrocket_Routing.conf` 与 `Clash_Verge_Rev_Script.js` 在 AI 规则区块加入同步起止标记，由同步脚本自动维护，双端实际生效规则、顺序与客户端行为与 `v2.7.33` 完全一致。

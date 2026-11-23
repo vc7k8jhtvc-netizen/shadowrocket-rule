@@ -8,7 +8,7 @@ vm.createContext(context);vm.runInContext(source,context,{filename:scriptPath});
 if(typeof context.main!=='function')throw new Error('main(config) is missing');
 const assert=(c,m)=>{if(!c)throw new Error(m);};
 const group=(config,name)=>config['proxy-groups'].find(item=>item.name===name);
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 
 const directInput={dns:{enable:false,marker:'subscription-dns'},hosts:{'subscription.example':'192.0.2.1'},ipv6:true,proxies:[
 {name:'Hong Kong | HK-01',type:'ss',server:'127.0.0.1',port:8388,cipher:'aes-128-gcm',password:'test-only'},
@@ -21,7 +21,8 @@ assert(JSON.stringify(direct['proxy-groups'].map(item=>item.name))===JSON.string
 assert(!group(direct,'🛑 广告拦截'),'legacy Advertising group must be absent');
 assert(group(direct,'🤖 AI').proxies[0]==='🇸🇬 新加坡','AI default');
 assert(JSON.stringify(group(direct,'🧩 自定义').proxies)===JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']),'Custom group options');
-const fullChoiceGroups=['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
+assert(JSON.stringify(group(direct,'🔞 NSFW').proxies)===JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']),'NSFW group options');
+const fullChoiceGroups=['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
 for(const name of fullChoiceGroups){
   for(const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']){
     assert(group(direct,name).proxies.includes(choice),name+' missing shared routing choice: '+choice);
@@ -42,15 +43,22 @@ assert(direct['rule-providers'].Custom.behavior==='classical','Custom provider b
 assert(direct['rule-providers'].Custom.format==='text','Custom provider format');
 assert(direct['rule-providers'].Custom.url.endsWith('/Custom.list'),'Custom provider source');
 assert(direct['rule-providers'].Custom.path==='./rule_providers/Custom.list','Custom provider path');
+assert(direct['rule-providers'].Adult,'Adult provider missing');
+assert(direct['rule-providers'].Adult.behavior==='classical','Adult provider behavior');
+assert(direct['rule-providers'].Adult.format==='text','Adult provider format');
+assert(direct['rule-providers'].Adult.url.endsWith('/Adult.list'),'Adult provider source');
+assert(direct['rule-providers'].Adult.path==='./rule_providers/Adult.list','Adult provider path');
 assert(!('Global' in direct['rule-providers']),'old Global provider must be absent');
 assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Global,')),'old Global rule must be absent');
 assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义,no-resolve'),'Custom routing rule missing');
+assert(direct.rules.includes('RULE-SET,Adult,🔞 NSFW,no-resolve'),'Adult routing rule missing');
 assert(direct.rules[direct.rules.length-1]==='MATCH,🐟 漏网之鱼','MATCH must route to fallback');
 
 const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google,no-resolve');
 const customIndex=direct.rules.indexOf('RULE-SET,Custom,🧩 自定义,no-resolve');
+const adultIndex=direct.rules.indexOf('RULE-SET,Adult,🔞 NSFW,no-resolve');
 const chinaIndex=direct.rules.indexOf('RULE-SET,China,DIRECT,no-resolve');
-assert(googleIndex>0&&googleIndex<customIndex&&customIndex<chinaIndex,'Google/Custom/China order');
+assert(googleIndex>0&&googleIndex<customIndex&&customIndex<adultIndex&&adultIndex<chinaIndex,'Google/Custom/Adult/China order');
 
 assert(group(direct,'🇺🇸 美国').proxies.includes('United States | US-01'),'US node matching');
 assert(!group(direct,'👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'),'all-node filter');
@@ -72,6 +80,8 @@ const classicalNoResolveRules=[
   'RULE-SET,TikTok,📱 社交媒体,no-resolve',
   'RULE-SET,YouTube,▶️ YouTube,no-resolve',
   'RULE-SET,Google,🔎 Google,no-resolve',
+  'RULE-SET,Custom,🧩 自定义,no-resolve',
+  'RULE-SET,Adult,🔞 NSFW,no-resolve',
   'RULE-SET,China,DIRECT,no-resolve'
 ];
 for(const rule of classicalNoResolveRules){

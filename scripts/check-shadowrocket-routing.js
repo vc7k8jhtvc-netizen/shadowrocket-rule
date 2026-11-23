@@ -36,15 +36,16 @@ for (const line of groupLines) {
   groups.set(name, parts.slice(1));
 }
 
-const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...groups.keys()]) === JSON.stringify(expectedGroups), 'proxy group display order changed unexpectedly');
 assert(!groups.has('🛑 广告拦截'), 'legacy Advertising group must be absent');
 
-const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
+const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🔞 NSFW':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
 
 assert(JSON.stringify(groups.get('🧩 自定义').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']), 'custom group options changed unexpectedly');
-const fullChoiceGroups = ['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
+assert(JSON.stringify(groups.get('🔞 NSFW').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']), 'NSFW group options changed unexpectedly');
+const fullChoiceGroups = ['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
 for (const name of fullChoiceGroups) {
   for (const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']) {
     assert(groups.get(name).includes(choice), name + ' missing shared routing choice: ' + choice);
@@ -86,7 +87,9 @@ for (const rule of rules) {
 }
 
 const customMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
+const adultMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW';
 assert(rules.includes(customMarker), 'Custom.list routing rule missing');
+assert(rules.includes(adultMarker), 'Adult.list routing rule missing');
 assert(!routing.includes('/Global.list'), 'routing must not use old Global.list');
 assert(!groups.has('🌍 Global'), 'old Global policy group must not return');
 
@@ -95,6 +98,14 @@ assert(customRules.length > 0, 'Custom.list must not be empty');
 assert(new Set(customRules).size === customRules.length, 'duplicate Custom.list entry detected');
 for (const rule of customRules) assert(/^DOMAIN(?:-SUFFIX)?,[^,\s]+$/.test(rule), 'unsupported Custom.list rule syntax: ' + rule);
 assert(!customRules.some(rule => /^DOMAIN-SUFFIX,npmjs\.(com|org)$/.test(rule)), 'npm must remain owned by GitHub rules');
+
+const adultRulesText = fs.readFileSync(path.join(root, 'Adult.list'), 'utf8');
+const adultRules = activeLines(adultRulesText);
+assert(adultRules.length > 0, 'Adult.list must not be empty');
+assert(new Set(adultRules).size === adultRules.length, 'duplicate Adult.list entry detected');
+for (const rule of adultRules) assert(/^DOMAIN(?:-SUFFIX)?,[^,\s]+$/.test(rule), 'unsupported Adult.list rule syntax: ' + rule);
+const customRuleSet = new Set(customRules);
+for (const rule of adultRules) assert(!customRuleSet.has(rule), 'overlapping rule between Custom.list and Adult.list: ' + rule);
 
 const terminalRules = ['DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
 assert(!rules.some(rule => rule.startsWith('FINAL,')), 'Shadowrocket FINAL must not be used');
@@ -119,6 +130,7 @@ const requiredOrder = [
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',
   customMarker,
+  adultMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list,DIRECT',
   'GEOIP,CN,DIRECT',
@@ -133,4 +145,4 @@ for (const marker of requiredOrder) {
 }
 
 assert(!routing.includes('🐟 FINAL'), 'obsolete FINAL policy group must be absent');
-console.log('PASS: Shadowrocket routing, no Advertising, and Custom.list checks');
+console.log('PASS: Shadowrocket routing, no Advertising, Custom.list, and Adult.list checks');

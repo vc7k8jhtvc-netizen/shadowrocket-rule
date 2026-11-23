@@ -90,6 +90,7 @@ function main(config) {
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '🧩 自定义', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
+    { name: '🔞 NSFW', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '🐟 漏网之鱼', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
     regionalGroup('🏝️ 台湾', regionPatterns.tw, regionMatches.tw),
@@ -132,6 +133,11 @@ function main(config) {
       type: 'http', behavior: 'classical', format: 'text',
       url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list',
       path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理'
+    },
+    Adult: {
+      type: 'http', behavior: 'classical', format: 'text',
+      url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list',
+      path: './rule_providers/Adult.list', interval: 86400, proxy: '🚀 默认代理'
     },
     China: classicalProvider('China'),
     China_Domain: domainProvider('China')
@@ -484,6 +490,7 @@ function main(config) {
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',
     'RULE-SET,Custom,🧩 自定义,no-resolve',
+    'RULE-SET,Adult,🔞 NSFW,no-resolve',
     'RULE-SET,China,DIRECT,no-resolve','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
   ];
 

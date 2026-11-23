@@ -1,0 +1,77 @@
+# 成人网站（NSFW）分流规则
+# 供 Shadowrocket 与 Clash Verge Rev 的“🔞 NSFW”分组共用
+# 从 Custom.list 拆出，由用户自行维护
+
+
+# JapaneseASMR 播放域名
+DOMAIN-SUFFIX,japaneseasmr.com
+DOMAIN-SUFFIX,weeabo0.xyz
+DOMAIN-SUFFIX,weeab0o.xyz
+
+# ASMR.one 及其官方镜像；后缀规则同时覆盖各 api 子域
+# 来源：https://asmr-100.com/ 及其页面加载记录
+DOMAIN-SUFFIX,asmr.one
+DOMAIN-SUFFIX,asmr-100.com
+DOMAIN-SUFFIX,asmr-200.com
+DOMAIN-SUFFIX,asmr-300.com
+
+# 主流成人站点；后缀规则同时覆盖 www、m 等常见子域名
+DOMAIN-SUFFIX,pornhub.com
+# Pornhub 静态资源与媒体 CDN
+DOMAIN-SUFFIX,phncdn.com
+DOMAIN-SUFFIX,phprcdn.com
+
+DOMAIN-SUFFIX,xvideos.com
+DOMAIN-SUFFIX,xvideos-cdn.com
+
+DOMAIN-SUFFIX,xnxx.com
+DOMAIN-SUFFIX,xnxx-cdn.com
+
+DOMAIN-SUFFIX,xhamster.com
+# xHamster 静态资源与连接检测 CDN
+DOMAIN-SUFFIX,xhcdn.com
+DOMAIN-SUFFIX,xhpingcdn.com
+
+DOMAIN-SUFFIX,redtube.com
+DOMAIN-SUFFIX,rdtcdn.com
+
+DOMAIN-SUFFIX,youporn.com
+DOMAIN-SUFFIX,ypncdn.com
+
+DOMAIN-SUFFIX,tube8.com
+
+DOMAIN-SUFFIX,spankbang.com
+DOMAIN-SUFFIX,sb-cd.com
+
+DOMAIN-SUFFIX,eporner.com
+DOMAIN-SUFFIX,tnaflix.com
+
+DOMAIN-SUFFIX,jable.tv
+DOMAIN-SUFFIX,cdnlab.live
+DOMAIN-SUFFIX,mushroomtrack.com
+DOMAIN-SUFFIX,fs1.app
+
+# MissAV 当前/备用入口及媒体资源域名
+# 2026-05-07 美国加州北区联邦法院文件列出以下相关域名
+# surrit.com 已确认用于 MissAV 的 HLS 视频流
+DOMAIN-SUFFIX,missav.ws
+DOMAIN-SUFFIX,missav.ai
+DOMAIN-SUFFIX,missav123.com
+DOMAIN-SUFFIX,missav.live
+DOMAIN-SUFFIX,missav.app
+DOMAIN-SUFFIX,missav.life
+DOMAIN-SUFFIX,missav09.cc
+DOMAIN-SUFFIX,avmiss.buzz
+DOMAIN-SUFFIX,missav99.cc
+DOMAIN-SUFFIX,surrit.com
+DOMAIN-SUFFIX,fourhoi.com
+DOMAIN-SUFFIX,missav888.com
+DOMAIN-SUFFIX,missav01.com
+DOMAIN-SUFFIX,nineyu.com
+
+# Hanime1 主入口、备用入口及视频资源
+# 来源：https://hanime1.com/
+DOMAIN-SUFFIX,hanime1.me
+DOMAIN-SUFFIX,hanime1.com
+DOMAIN-SUFFIX,hembed.com
+DOMAIN-SUFFIX,hanimeone.me

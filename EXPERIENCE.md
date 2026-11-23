@@ -9,7 +9,8 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置；私人文件不得提交仓库。
 - `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单；AI 规则区块由 `rules/ai-rules.json` 同步生成。
 - `rules/ai-rules.json`：双端手工 AI 分流规则（OpenAI / 个人中转 / Exa / Tavily / Supabase / Hugging Face / Gemini / Grok / Claude / Canva）的单一数据源；通过 `node scripts/sync-ai-rules.js` 回写双端标记区块，由 `check-config.sh` 强制校验同步一致性。
-- `Custom.list`：两端共用的个人显式自定义域名规则，由原 `Global.list` 恢复并更名；已提升为专项 AI 分组的 Exa、Tavily、Supabase、Hugging Face 不再收录，JapaneseASMR 与 ASMR.one 归入成人网站分类。
+- `Custom.list`：两端共用的个人显式自定义域名规则（知识资料、开发工具及其他），由原 `Global.list` 恢复并更名；已提升为专项 AI 分组的 Exa、Tavily、Supabase、Hugging Face 不再收录，成人网站已拆至 `Adult.list`。
+- `Adult.list`：两端“🔞 NSFW”分组共用的成人网站显式分流规则；不得与 `Custom.list` 重复收录。
 - `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围；脚本直接跟随 `Maasea/sgmodule` 的 `master` 分支。
 - Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers；AI 规则区块由 `rules/ai-rules.json` 同步生成。
 
@@ -27,6 +28,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 修改内容 | 维护要求 |
 |---|---|
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
+| 成人网站域名（NSFW） | 只修改 `Adult.list`；指向双端“🔞 NSFW”分组，不得与 `Custom.list` 重复 |
 | 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | Canva 等专项 AI 自有域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
 | Gemini / Google AI 专属域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
@@ -42,12 +44,12 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - Routing 的 `[General]` 只能保留 `include = WestData.conf`。
 - DeepSeek 官方 `deepseek.com` 固定 DIRECT。
-- “🧩 自定义”默认“🚀 默认代理”，候选为默认代理、香港、台湾、新加坡、日本、美国与“👆 手动选择”；`Custom.list` 位于 Google 后、中国规则前。
+- “🧩 自定义”与“🔞 NSFW”均默认“🚀 默认代理”，候选为默认代理、香港、台湾、新加坡、日本、美国与“👆 手动选择”；`Custom.list` 与 `Adult.list` 依次位于 Google 后、中国规则前，且两份清单不得有重复规则。
 - “🐟 漏网之鱼”默认“🚀 默认代理”，保留 DIRECT 与“👆 手动选择”。
-- 分流顺序：LAN → DeepSeek → AI → Apple/Microsoft/GitHub/Telegram 等专项 → 社交媒体/YouTube/Google → Custom → China/China_Domain/GEOIP → 漏网之鱼。
+- 分流顺序：LAN → DeepSeek → AI → Apple/Microsoft/GitHub/Telegram 等专项 → 社交媒体/YouTube/Google → Custom → Adult（NSFW）→ China/China_Domain/GEOIP → 漏网之鱼。
 - Gemini / Google AI 专属入口固定“🤖 AI”并位于 Google 规则集之前；共享 Google 主机不得仅为 Gemini 被全局接管。
 - Shadowrocket 不使用 FINAL；末尾固定为 DOMAIN-WILDCARD、IPv4 和 IPv6 三条显式终结规则；Clash 最终使用 MATCH。
-- 代理分组显示顺序：总控 → 业务（含自定义）→ 漏网之鱼 → 地区节点池，不得出现“🛑 广告拦截”。
+- 代理分组显示顺序：总控 → 业务（含自定义与 NSFW）→ 漏网之鱼 → 地区节点池，不得出现“🛑 广告拦截”。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
 - 所有业务组及“🐟 漏网之鱼”均须包含香港、台湾、新加坡、日本、美国五个地区选项与“👆 手动选择”；新增地区组时同步两端、候选断言和文档，首个默认出口不得改变。
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；Apple / 中国域名 Provider 统一使用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`+.` 语法，避免根域名漏匹配）；`GEOIP,CN,DIRECT` 之前的所有古典规则集统一使用 `no-resolve` 避免提前 DNS 解析，`GEOIP,CN,DIRECT` 本身不使用 `no-resolve`。

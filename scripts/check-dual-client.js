@@ -32,13 +32,13 @@ const clash=context.main({proxies:[
 ]});
 const clashGroups=new Map(clash['proxy-groups'].map(g=>[g.name,g]));
 
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...shadowGroups.keys()])===JSON.stringify(expectedOrder),'Shadowrocket display order drift');
 assert(JSON.stringify([...clashGroups.keys()])===JSON.stringify(expectedOrder),'Clash display order drift');
 assert(!shadowGroups.has('🛑 广告拦截')&&!clashGroups.has('🛑 广告拦截'),'legacy Advertising group must be absent in both clients');
 assert(!clash['rule-providers'].Advertising&&!clash['rule-providers'].Advertising_Domain,'Clash Advertising providers must be absent');
 
-const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🐟 漏网之鱼'];
+const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
 for(const name of parityGroups){
   assert(shadowGroups.has(name),'Shadowrocket missing parity group: '+name);
   assert(clashGroups.has(name),'Clash missing parity group: '+name);
@@ -48,6 +48,9 @@ for(const name of parityGroups){
 assert(clash['rule-providers'].Custom,'Clash Custom rule-provider missing');
 assert(clash['rule-providers'].Custom.url.endsWith('/Custom.list'),'Clash Custom provider URL drift');
 assert(clash['rule-providers'].Custom.path==='./rule_providers/Custom.list','Clash Custom provider path drift');
+assert(clash['rule-providers'].Adult,'Clash Adult rule-provider missing');
+assert(clash['rule-providers'].Adult.url.endsWith('/Adult.list'),'Clash Adult provider URL drift');
+assert(clash['rule-providers'].Adult.path==='./rule_providers/Adult.list','Clash Adult provider path drift');
 assert(!clash['rule-providers'].Global,'old Clash Global rule-provider must be absent');
 assert(clash['rule-providers'].Apple_Domain.format==='yaml','Clash Apple domain provider format drift');
 assert(clash['rule-providers'].Apple_Domain.url.endsWith('/Clash/Apple/Apple_Domain.yaml'),'Clash Apple domain provider source drift');
@@ -81,8 +84,12 @@ for(const rule of ['DOMAIN-SUFFIX,deepseek.com,DIRECT','DOMAIN-SUFFIX,bytedance.
 
 const shadowCustom='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
 const clashCustom='RULE-SET,Custom,🧩 自定义,no-resolve';
+const shadowAdult='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW';
+const clashAdult='RULE-SET,Adult,🔞 NSFW,no-resolve';
 assert(shadowRules.includes(shadowCustom),'Shadowrocket Custom rule missing');
 assert(clash.rules.includes(clashCustom),'Clash Custom rule missing');
+assert(shadowRules.includes(shadowAdult),'Shadowrocket Adult rule missing');
+assert(clash.rules.includes(clashAdult),'Clash Adult rule missing');
 assert(!shadowrocket.includes('/Global.list'),'Shadowrocket old Global.list reference must be absent');
 assert(!clashSource.includes('/Global.list'),'Clash old Global.list reference must be absent');
 
@@ -107,6 +114,7 @@ const expectedShadowNonAi=[
   `RULE-SET,${bmShadow}/YouTube/YouTube.list,▶️ YouTube`,
   `RULE-SET,${bmShadow}/Google/Google.list,🔎 Google`,
   shadowCustom,
+  shadowAdult,
   `RULE-SET,${bmShadow}/China/China.list,DIRECT`,
   `DOMAIN-SET,${bmShadow}/China/China_Domain.list,DIRECT`,
   'GEOIP,CN,DIRECT',
@@ -134,6 +142,7 @@ const expectedClashNonAi=[
   'RULE-SET,YouTube,▶️ YouTube,no-resolve',
   'RULE-SET,Google,🔎 Google,no-resolve',
   clashCustom,
+  clashAdult,
   'RULE-SET,China,DIRECT,no-resolve',
   'RULE-SET,China_Domain,DIRECT',
   'GEOIP,CN,DIRECT',

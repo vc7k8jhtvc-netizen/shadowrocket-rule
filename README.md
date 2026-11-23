@@ -1,20 +1,21 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.34`。本版本将双端手工 AI 分流规则收口至单一数据源 `rules/ai-rules.json`，通过 `scripts/sync-ai-rules.js` 自动同步生成 `Shadowrocket_Routing.conf` 与 `Clash_Verge_Rev_Script.js` 的对应区块，并在本地与 CI 门禁中强制校验同步一致性；双端运行规则与分流行为与 `v2.7.33` 完全一致。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.35`。本版本从 `Custom.list` 移除效率工具（Notion / Dropbox / Slack / Atlassian，改为按正常兜底分流），并将成人网站拆出至独立的 `Adult.list`，在双端新增“🔞 NSFW”业务分组（默认走“🚀 默认代理”，位于“🧩 自定义”后、“🐟 漏网之鱼”前）。**
 
 ## Shadowrocket
 
 1. 保留原始 `WestData.conf`；仅在订阅上游实际内容发生变化时更新，确认内容无变化时无需因文件时间戳较旧而刷新。
 2. [下载 Shadowrocket_Routing.conf](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf) 并设为当前配置。
 3. 确认 `[General]` 中的 `include = WestData.conf` 有效；若本地文件名不同，在配置详情的“通用 → 包含配置”中手动选择原订阅。
-4. 核对“🚀 默认代理”、业务组、“🧩 自定义”、地区节点池及“🐟 漏网之鱼”。
+4. 核对“🚀 默认代理”、业务组、“🧩 自定义”、“🔞 NSFW”、地区节点池及“🐟 漏网之鱼”。
 
 | 来源 | 职责 |
 |---|---|
 | WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础能力；不要将私人订阅提交仓库 |
 | Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组**（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
 | rules/ai-rules.json | 双端手工 AI 分流规则单一数据源；修改后运行 `node scripts/sync-ai-rules.js` 同步 |
-| Custom.list | 两端共用的个人显式分流规则；Exa、Tavily、Supabase、Hugging Face 已移至 AI，不在此清单 |
+| Custom.list | 两端共用的个人显式分流规则（知识资料、开发工具及其他）；Exa、Tavily、Supabase、Hugging Face 已移至 AI，成人网站已拆至 `Adult.list` |
+| Adult.list | 两端“🔞 NSFW”分组共用的成人网站显式分流规则 |
 | YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机；脚本直接跟随 Maasea `master`，不再固定 commit SHA |
 | Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
 
@@ -35,7 +36,7 @@ Shadowrocket 客户端：上游最新版为 `2.2.93`（2026-10-29）。该版本
 | 🚀 默认代理 | 🇭🇰 香港 |
 | 🤖 AI（ChatGPT / Gemini / Grok / Claude / Canva / Exa / Tavily / Supabase / Hugging Face） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft、DeepSeek、Canva 可画（中国大陆） | DIRECT |
-| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义 | 🚀 默认代理 |
+| 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义、🔞 NSFW | 🚀 默认代理 |
 | 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
 
 ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“🤖 AI”。OpenAI 官方网络文档列出的 WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog 等共享依赖仍可能被 ChatGPT 使用，但本项目不再将这些共享主机全局绑定到 AI 出口；它们继续按后续业务/中国/兜底规则处理，避免影响其他应用。`a6api.vip` / `a6api.com` 是本人使用的第三方 AI 中转，不属于 OpenAI 官方域名，作为显式声明的个人例外固定进入“🤖 AI”，并由 `check-routing-hardening.js` 锁定；个人中转范围除这两条外不得扩大，其他服务按各自专项规则处理。
@@ -50,9 +51,9 @@ Exa 与 Tavily 的网站、API、控制台、文档及 MCP 入口统一使用 `e
 
 地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；所有业务组都可直接选择这五个地区及“👆 手动选择”，从而访问订阅中的其他地区。若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
 
-### 显式终结与 Custom.list
+### 显式终结、Custom.list 与 Adult.list
 
-`Custom.list` 恢复自原 Global.list，仍放在 Google 之后、中国规则之前；“🧩 自定义”默认使用“🚀 默认代理”。末尾固定：
+`Custom.list` 恢复自原 Global.list，位于 Google 之后、`Adult.list` 之前；“🧩 自定义”与“🔞 NSFW”均默认使用“🚀 默认代理”。末尾固定：
 
 ```ini
 DOMAIN-WILDCARD,*,🐟 漏网之鱼
@@ -62,9 +63,10 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 
 不再使用特殊 `FINAL`；Clash 的对应终结规则为 `MATCH,🐟 漏网之鱼`。DeepSeek `deepseek.com` 固定直连，Grok/xAI 与新增 Claude/Anthropic 专属域名归入 AI，字节跳动 `bytedance.com` / `bytedance.net` 固定直连。
 
-[查看 Custom.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list)
+- [查看 Custom.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list)
+- [查看 Adult.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list)
 
-`Custom.list` 为个人用途的完整显式分流清单，其中包含成人站点域名，仅代表个人使用偏好，不构成推荐或背书；仓库公开可读，如对外分享请自行评估可见性。Exa、Tavily、Supabase、Hugging Face 已提升为双端 AI 手工规则，不应重新加入该清单；JapaneseASMR 与 ASMR.one 已在清单内部归入成人网站分类。
+`Custom.list` 收录个人显式自定义域名（知识资料、开发工具及其他）；Exa、Tavily、Supabase、Hugging Face 已提升为双端 AI 手工规则，不应重新加入该清单。`Adult.list` 为个人用途的成人网站显式分流清单（指向“🔞 NSFW”），仅代表个人使用偏好，不构成推荐或背书；仓库公开可读，如对外分享请自行评估可见性，且不得与 `Custom.list` 重复收录。
 
 ## Clash Verge Rev
 
@@ -104,7 +106,8 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | canva.com、canva.ai、canva.app、canva.dev、*.canva.site | 🤖 AI |
 | exa.ai、api.exa.ai、tavily.com、api.tavily.com | 🤖 AI |
 | supabase.com、supabase.co、supabase.in、huggingface.co、hf.co、hf.space | 🤖 AI |
-| wikipedia.org、jable.tv、missav.ws | 🧩 自定义 |
+| wikipedia.org、greasyfork.org | 🧩 自定义 |
+| jable.tv、missav.ws、asmr.one | 🔞 NSFW |
 | youtube.com | ▶️ YouTube |
 | github.com | 💻 GitHub |
 | bilibili.com | DIRECT（依赖上游中国规则） |
