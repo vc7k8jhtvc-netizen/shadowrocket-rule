@@ -28,7 +28,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
 | 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，只改双端 AI 手工规则；必须同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | Canva 等专项 AI 自有域名 | 只改双端 AI 手工规则；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
-| Gemini / Google AI 专属域名 | 只改双端 AI 手工规则；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex 与 Code Assist 的专属入口，保留 `www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
+| Gemini / Google AI 专属域名 | 只改双端 AI 手工规则；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
 | Exa / Tavily 等 AI 搜索服务 | 在双端显式归入 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | Supabase / Hugging Face | 按用户偏好固定双端 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |

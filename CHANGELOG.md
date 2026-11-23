@@ -2,6 +2,7 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.31`：补齐 Google Antigravity（`antigravity.google` / `antigravity.google.com`、`antigravity.googleapis.com`、`antigravity-pa.googleapis.com`、`antigravity-unleash.goog`）以及 Google Labs / Flow / Opal / Stitch / AI Test Kitchen、Gemma、Gemini Web 后端、Workspace Gemini、Gemini Enterprise 等专属入口，全部双端归入“🤖 AI”。共享认证与通用 API 主机（如 `accounts.google.com`、`www.googleapis.com`、`apis.google.com`、`firebaseinstallations.googleapis.com`、`play.google.com`）继续保持原分流，避免影响其他 Google 服务；hardening 同步扩展正负匹配断言。
 - 内部版本升至 `v2.7.30`：将 Gemini Web / API、Google AI Studio、Gemini Notebook（原 NotebookLM）、DeepMind、Vertex AI 的 Gemini 接口与 Gemini Code Assist 的 45 个专属域名后缀及 Vertex 区域 `-aiplatform.googleapis.com` 关键字规则统一加入 Shadowrocket / Clash 双端“🤖 AI”。`www.googleapis.com`、`apis.google.com`、`www.google.com`、YouTube、广告与分析等共享 Google 主机继续沿用原业务分组，避免全局接管其他 Google 服务；新增 hardening 域名清单、顺序、正负匹配与双端一致性断言。
 
 ## 2026-11-19
