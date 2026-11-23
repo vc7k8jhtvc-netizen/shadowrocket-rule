@@ -95,7 +95,7 @@ function runSuite(eol) {
       'Mihomo subscription dependency validation failed'
     ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
     const gate=read('scripts/check-config.sh');
-    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]'])
+    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','bash "$external_test"'])
       assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
 
     let youtubeModule=read('YouTube.Enhance.Shadowrocket.sgmodule');
@@ -111,6 +111,8 @@ function runSuite(eol) {
     }
     write('YouTube.Enhance.Shadowrocket.sgmodule',mutate('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule,'"blockShorts":true','"blockShorts":false'));
     check('check-youtube-module.js',[],1,'Shorts blocking must be enabled');
+    write('YouTube.Enhance.Shadowrocket.sgmodule',mutate('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule,'/Maasea/sgmodule/master/','/Maasea/sgmodule/0123456789abcdef0123456789abcdef01234567/'));
+    check('check-youtube-module.js',[],1,'unexpected upstream script');
     write('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义\n',''));
@@ -201,8 +203,14 @@ function runSuite(eol) {
     check('check-version.js',[],1,'version mismatch');
     write('CHANGELOG.md',changelog);
 
-    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"url: `${blackmatrix}/Clash/China/China_Domain.txt`","url: `${blackmatrix}/Shadowrocket/China/China_Domain.list`"));
-    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'China domain rule-provider source');
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,'url: `${blackmatrix}/Clash/${name}/${name}_Domain.yaml`','url: `${blackmatrix}/Clash/${name}/${name}_Domain.txt`'));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Apple domain rule-provider source');
+    check('check-dual-client.js',[],1,'Clash Apple domain provider source drift');
+    write('Clash_Verge_Rev_Script.js',clash);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'RULE-SET,Apple,🍎 Apple,no-resolve',","'RULE-SET,Apple,🍎 Apple',"));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Clash classical RULE-SET must use no-resolve');
+    check('check-dual-client.js',[],1,'Clash non-AI rule sequence drift');
+    write('Clash_Verge_Rev_Script.js',clash);
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'GEOIP,CN,DIRECT',","'GEOIP,CN,DIRECT,no-resolve',"));
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Clash GEOIP rule must not use no-resolve');
     write('Clash_Verge_Rev_Script.js',clash);
@@ -215,6 +223,15 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'DOMAIN-SUFFIX,anthropic.com,🤖 AI',",''));
     check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
     write('Clash_Verge_Rev_Script.js',clash);
+
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体\n',''));
+    check('check-shadowrocket-routing.js',[],1,'missing required rule');
+    check('check-dual-client.js',[],1,'Shadowrocket non-AI rule sequence drift');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,bytedance.com,DIRECT\n','').replace('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体\n','RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体\nDOMAIN-SUFFIX,bytedance.com,DIRECT\n'));
+    check('check-shadowrocket-routing.js',[],1,'rule order regression');
+    check('check-dual-client.js',[],1,'Shadowrocket non-AI rule sequence drift');
+    write('Shadowrocket_Routing.conf',routing);
 
     const pool='👆 手动选择 = select,';
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,pool,pool+'missing-policy,'));

@@ -44,7 +44,7 @@ const config=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 for(const provider of Object.values(config['rule-providers']||{})){
   if(typeof provider.url!=='string')continue;
   if(!provider.url.startsWith('https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/'))continue;
-  process.stdout.write((provider.behavior||'unknown')+'\t'+provider.url+'\n');
+  process.stdout.write((provider.behavior||'unknown')+':'+(provider.format||'yaml')+'\t'+provider.url+'\n');
 }
 NODE
 )
@@ -88,18 +88,39 @@ download() {
       fi
       node --check "$file" >/dev/null
       ;;
-    clash:classical)
+    clash:classical:yaml)
       grep -qE '^[[:space:]]*payload:' "$file" || {
         echo "FAIL: Clash classical provider lost YAML payload structure: $url" >&2
         exit 1
       }
-      ;;
-    clash:domain)
-      active="$(grep -Ev '^[[:space:]]*(#|$)' "$file" | head -n 1 || true)"
-      [[ -n "$active" ]] || {
-        echo "FAIL: Clash domain provider has no active entries: $url" >&2
+      grep -qE '^[[:space:]]*-[[:space:]]+[^[:space:]]' "$file" || {
+        echo "FAIL: Clash classical provider has no active YAML payload entries: $url" >&2
         exit 1
       }
+      ;;
+    clash:domain:yaml)
+      grep -qE '^[[:space:]]*payload:' "$file" || {
+        echo "FAIL: Clash domain provider lost YAML payload structure: $url" >&2
+        exit 1
+      }
+      grep -qE "^[[:space:]]*-[[:space:]]*['\"]?\+\." "$file" || {
+        echo "FAIL: Clash domain YAML provider missing '+.' apex+subdomain suffix entries: $url" >&2
+        exit 1
+      }
+      if grep -qE "^[[:space:]]*-[[:space:]]*['\"]?\." "$file"; then
+        echo "FAIL: Clash domain YAML provider uses leading '.' entries that miss apex domains in Mihomo: $url" >&2
+        exit 1
+      fi
+      ;;
+    clash:domain:text)
+      grep -qE '^\+\.' "$file" || {
+        echo "FAIL: Clash domain text provider missing '+.' apex+subdomain suffix entries: $url" >&2
+        exit 1
+      }
+      if grep -qE '^\.' "$file"; then
+        echo "FAIL: Clash domain text provider uses leading '.' entries that miss apex domains in Mihomo: $url" >&2
+        exit 1
+      fi
       ;;
     shadowrocket)
       active="$(grep -Ev '^[[:space:]]*(#|$)' "$file" | head -n 1 || true)"
@@ -121,9 +142,9 @@ download() {
 for url in "${youtube_urls[@]}"; do download youtube "$url"; done
 for url in "${shadowrocket_urls[@]}"; do download shadowrocket "$url"; done
 for spec in "${clash_specs[@]}"; do
-  behavior="${spec%%$'\t'*}"
+  kind_suffix="${spec%%$'\t'*}"
   url="${spec#*$'\t'}"
-  download "clash:$behavior" "$url"
+  download "clash:$kind_suffix" "$url"
 done
 
 echo "PASS: Maasea and Blackmatrix live dependencies are reachable and structurally valid"

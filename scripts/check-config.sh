@@ -52,6 +52,7 @@ node "$claude_check"
 node "$youtube_check"
 node "$hardening_check"
 node "$validator_check"
+bash "$external_test"
 if [[ -n "${WESTDATA_CONFIG:-}" ]]; then
   [[ -f "$WESTDATA_CONFIG" ]] || fail "WESTDATA_CONFIG file not found: $WESTDATA_CONFIG"
   node "$westdata_check" "$WESTDATA_CONFIG"

@@ -49,8 +49,12 @@ assert(clash['rule-providers'].Custom,'Clash Custom rule-provider missing');
 assert(clash['rule-providers'].Custom.url.endsWith('/Custom.list'),'Clash Custom provider URL drift');
 assert(clash['rule-providers'].Custom.path==='./rule_providers/Custom.list','Clash Custom provider path drift');
 assert(!clash['rule-providers'].Global,'old Clash Global rule-provider must be absent');
-assert(clash['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'Clash China domain provider source drift');
-assert(clash['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','Clash China domain provider path drift');
+assert(clash['rule-providers'].Apple_Domain.format==='yaml','Clash Apple domain provider format drift');
+assert(clash['rule-providers'].Apple_Domain.url.endsWith('/Clash/Apple/Apple_Domain.yaml'),'Clash Apple domain provider source drift');
+assert(clash['rule-providers'].Apple_Domain.path==='./rule_providers/Apple_Domain.yaml','Clash Apple domain provider path drift');
+assert(clash['rule-providers'].China_Domain.format==='yaml','Clash China domain provider format drift');
+assert(clash['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.yaml'),'Clash China domain provider source drift');
+assert(clash['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.yaml','Clash China domain provider path drift');
 
 const nodeGroups=['👆 手动选择','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 const provider=context.main({'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}});
@@ -82,16 +86,53 @@ assert(clash.rules.includes(clashCustom),'Clash Custom rule missing');
 assert(!shadowrocket.includes('/Global.list'),'Shadowrocket old Global.list reference must be absent');
 assert(!clashSource.includes('/Global.list'),'Clash old Global.list reference must be absent');
 
-const canonicalShadow=['/Apple/Apple.list','Google/Google.list',shadowCustom,'/China/China.list','China_Domain.list','GEOIP,CN,DIRECT','DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
-const canonicalClash=['RULE-SET,Apple,','RULE-SET,Google,',clashCustom,'RULE-SET,China,','RULE-SET,China_Domain,','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'];
-function assertOrdered(rules,markers,label){
-  let previous=-1;
-  for(const marker of markers){
-    const index=rules.findIndex((rule,i)=>i>previous&&rule.includes(marker));
-    assert(index!==-1,label+' missing order marker: '+marker);
-    previous=index;
-  }
-}
-assertOrdered(shadowRules,canonicalShadow,'Shadowrocket');
-assertOrdered(clash.rules,canonicalClash,'Clash');
+const bmShadow='https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket';
+const expectedShadowNonAi=[
+  `RULE-SET,${bmShadow}/Lan/Lan.list,DIRECT`,
+  'DOMAIN-SUFFIX,deepseek.com,DIRECT',
+  `RULE-SET,${bmShadow}/Apple/Apple.list,🍎 Apple`,
+  `DOMAIN-SET,${bmShadow}/Apple/Apple_Domain.list,🍎 Apple`,
+  `RULE-SET,${bmShadow}/Microsoft/Microsoft.list,🪟 Microsoft`,
+  `RULE-SET,${bmShadow}/GitHub/GitHub.list,💻 GitHub`,
+  `RULE-SET,${bmShadow}/Telegram/Telegram.list,✈️ Telegram`,
+  'DOMAIN-SUFFIX,bytedance.com,DIRECT',
+  'DOMAIN-SUFFIX,bytedance.net,DIRECT',
+  `RULE-SET,${bmShadow}/Twitter/Twitter.list,📱 社交媒体`,
+  `RULE-SET,${bmShadow}/Instagram/Instagram.list,📱 社交媒体`,
+  `RULE-SET,${bmShadow}/TikTok/TikTok.list,📱 社交媒体`,
+  `RULE-SET,${bmShadow}/YouTube/YouTube.list,▶️ YouTube`,
+  `RULE-SET,${bmShadow}/Google/Google.list,🔎 Google`,
+  shadowCustom,
+  `RULE-SET,${bmShadow}/China/China.list,DIRECT`,
+  `DOMAIN-SET,${bmShadow}/China/China_Domain.list,DIRECT`,
+  'GEOIP,CN,DIRECT',
+  'DOMAIN-WILDCARD,*,🐟 漏网之鱼',
+  'IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve',
+  'IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'
+];
+const expectedClashNonAi=[
+  'RULE-SET,Lan,DIRECT,no-resolve',
+  'DOMAIN-SUFFIX,deepseek.com,DIRECT',
+  'RULE-SET,Apple,🍎 Apple,no-resolve',
+  'RULE-SET,Apple_Domain,🍎 Apple',
+  'RULE-SET,Microsoft,🪟 Microsoft,no-resolve',
+  'RULE-SET,GitHub,💻 GitHub,no-resolve',
+  'RULE-SET,Telegram,✈️ Telegram,no-resolve',
+  'DOMAIN-SUFFIX,bytedance.com,DIRECT',
+  'DOMAIN-SUFFIX,bytedance.net,DIRECT',
+  'RULE-SET,Twitter,📱 社交媒体,no-resolve',
+  'RULE-SET,Instagram,📱 社交媒体,no-resolve',
+  'RULE-SET,TikTok,📱 社交媒体,no-resolve',
+  'RULE-SET,YouTube,▶️ YouTube,no-resolve',
+  'RULE-SET,Google,🔎 Google,no-resolve',
+  clashCustom,
+  'RULE-SET,China,DIRECT,no-resolve',
+  'RULE-SET,China_Domain,DIRECT',
+  'GEOIP,CN,DIRECT',
+  'MATCH,🐟 漏网之鱼'
+];
+const shadowNonAi=shadowRules.filter(r=>!r.endsWith(',🤖 AI'));
+const clashNonAi=clash.rules.filter(r=>!r.endsWith(',🤖 AI'));
+assert(JSON.stringify(shadowNonAi)===JSON.stringify(expectedShadowNonAi),'Shadowrocket non-AI rule sequence drift');
+assert(JSON.stringify(clashNonAi)===JSON.stringify(expectedClashNonAi),'Clash non-AI rule sequence drift');
 console.log('PASS: Shadowrocket and Clash Custom/parity checks (no Advertising)');

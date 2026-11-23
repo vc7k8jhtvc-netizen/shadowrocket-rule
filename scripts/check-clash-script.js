@@ -47,21 +47,42 @@ assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Global,')),'old Global
 assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义'),'Custom routing rule missing');
 assert(direct.rules[direct.rules.length-1]==='MATCH,🐟 漏网之鱼','MATCH must route to fallback');
 
-const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google');
+const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google,no-resolve');
 const customIndex=direct.rules.indexOf('RULE-SET,Custom,🧩 自定义');
-const chinaIndex=direct.rules.indexOf('RULE-SET,China,DIRECT');
-assert(googleIndex<customIndex&&customIndex<chinaIndex,'Google/Custom/China order');
+const chinaIndex=direct.rules.indexOf('RULE-SET,China,DIRECT,no-resolve');
+assert(googleIndex>0&&googleIndex<customIndex&&customIndex<chinaIndex,'Google/Custom/China order');
 
 assert(group(direct,'🇺🇸 美国').proxies.includes('United States | US-01'),'US node matching');
 assert(!group(direct,'👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'),'all-node filter');
-assert(JSON.stringify(group(direct,'🏝️ 台湾').proxies)===JSON.stringify(['👆 手动选择']),'empty region fallback');
+assert(JSON.stringify(group(direct,'🏝️ 台湾').proxies)===JSON.stringify(['REJECT']),'empty region must fail closed to REJECT');
+assert(JSON.stringify(group(direct,'🇸🇬 新加坡').proxies)===JSON.stringify(['REJECT']),'empty Singapore region must fail closed to REJECT');
 assert(logs.some(item=>item.message.includes('开始生成')),'start log');
 assert(logs.some(item=>item.message.includes('完成：')),'completion log');
 assert(logs.some(item=>item.level==='warn'&&item.message.includes('台湾')),'fallback warning');
 assert(!logs.some(item=>item.message.includes('HK-01')),'console must not expose node names');
 assert(direct.rules[0]==='RULE-SET,Lan,DIRECT,no-resolve','LAN must not resolve domains before service rules');
+const classicalNoResolveRules=[
+  'RULE-SET,Lan,DIRECT,no-resolve',
+  'RULE-SET,Apple,🍎 Apple,no-resolve',
+  'RULE-SET,Microsoft,🪟 Microsoft,no-resolve',
+  'RULE-SET,GitHub,💻 GitHub,no-resolve',
+  'RULE-SET,Telegram,✈️ Telegram,no-resolve',
+  'RULE-SET,Twitter,📱 社交媒体,no-resolve',
+  'RULE-SET,Instagram,📱 社交媒体,no-resolve',
+  'RULE-SET,TikTok,📱 社交媒体,no-resolve',
+  'RULE-SET,YouTube,▶️ YouTube,no-resolve',
+  'RULE-SET,Google,🔎 Google,no-resolve',
+  'RULE-SET,China,DIRECT,no-resolve'
+];
+for(const rule of classicalNoResolveRules){
+  assert(direct.rules.includes(rule),'Clash classical RULE-SET must use no-resolve: '+rule);
+}
 assert(direct['rule-providers'].Apple_Domain.behavior==='domain','Apple domain provider');
+assert(direct['rule-providers'].Apple_Domain.format==='yaml','Apple domain provider format');
+assert(direct['rule-providers'].Apple_Domain.url.endsWith('/Clash/Apple/Apple_Domain.yaml'),'Apple domain rule-provider source');
+assert(direct['rule-providers'].Apple_Domain.path==='./rule_providers/Apple_Domain.yaml','Apple domain rule-provider path');
 assert(direct['rule-providers'].China_Domain.behavior==='domain','China domain provider');
+assert(direct['rule-providers'].China_Domain.format==='yaml','China domain provider format');
 assert(!group(direct,'🐟 FINAL'),'obsolete FINAL policy group must be absent');
 
 const ruleSetNames=new Set(Object.keys(direct['rule-providers']));
@@ -70,13 +91,13 @@ for(const rule of direct.rules){
   const name=rule.split(',')[1];
   assert(ruleSetNames.has(name),`missing rule provider: ${name}`);
 }
-const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple');
+const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve');
 const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
 const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
 assert(appleIndex>0&&appleIndex<googleIndex,'AI/Apple/Google order');
 assert(chinaIndex<chinaDomainIndex&&chinaDomainIndex<fallbackIndex,'China/China_Domain/fallback order');
-assert(direct['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.txt'),'China domain rule-provider source');
-assert(direct['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.txt','China domain rule-provider path');
+assert(direct['rule-providers'].China_Domain.url.endsWith('/Clash/China/China_Domain.yaml'),'China domain rule-provider source');
+assert(direct['rule-providers'].China_Domain.path==='./rule_providers/China_Domain.yaml','China domain rule-provider path');
 assert(!direct.rules.includes('GEOIP,CN,DIRECT,no-resolve'),'Clash GEOIP rule must not use no-resolve');
 assert(direct.rules.includes('GEOIP,CN,DIRECT'),'GEOIP CN direct rule');
 
@@ -109,13 +130,25 @@ const dependencyInput={
   'proxy-groups':[
     {name:'🚀 默认代理',type:'select',proxies:['Transport']},
     {name:'Transport',type:'select',proxies:['DIRECT']},
+    {name:'DnsExit',type:'select',proxies:['DIRECT']},
     {name:'Unused',type:'select',proxies:['REJECT']}
   ],
   'proxy-providers':{WestData:{type:'inline',payload:[{...directInput.proxies[1],'dialer-proxy':'Transport'}],proxy:'Transport',override:{'dialer-proxy':'Transport'}}},
-  dns:{enable:true,nameserver:['1.1.1.1'],'nameserver-policy':{'rule-set:China,SubscriptionDomain':['1.1.1.1']},'fake-ip-filter':['rule-set:SubscriptionDomain']},
+  dns:{
+    enable:true,
+    nameserver:['1.1.1.1','https://dns.google/dns-query#DnsExit&h3=true','https://1.1.1.1/dns-query#h3=true'],
+    fallback:['tls://8.8.8.8#🚀 默认代理'],
+    'nameserver-policy':{
+      'rule-set:China,SubscriptionDomain':['1.1.1.1','https://dns.google/dns-query#Transport'],
+      'example.com,rule-set:MixedDomain':'https://dns.google/dns-query#DnsExit',
+      'geosite:cn,netflix':['223.5.5.5']
+    },
+    'fake-ip-filter':['rule-set:SubscriptionDomain']
+  },
   'rule-providers':{
-    China:{type:'inline',behavior:'domain',payload:['+.fixture.invalid']},
+    China:{type:'inline',behavior:'domain',payload:['+.fixture.invalid'],path:'./rule_providers/China.yaml'},
     SubscriptionDomain:{type:'inline',behavior:'domain',payload:['+.subscription.invalid'],proxy:'Transport'},
+    MixedDomain:{type:'inline',behavior:'domain',payload:['+.mixed.invalid']},
     Unused:{type:'inline',behavior:'domain',payload:['+.unused.invalid']}
   }
 };
@@ -128,18 +161,33 @@ assert(!group(dependencies,'Unused'),'unreferenced subscription groups must be d
 assert(dependencies['proxy-providers'].WestData.proxy===transportGroup.name,'provider download policy dependency');
 assert(dependencies['proxy-providers'].WestData.override['dialer-proxy']===transportGroup.name,'provider override dialer dependency');
 assert(dependencies['proxy-providers'].WestData.payload[0]['dialer-proxy']===transportGroup.name,'inline provider node dialer dependency');
-const dnsKey=Object.keys(dependencies.dns['nameserver-policy'])[0];
+const dnsExitServer=dependencies.dns.nameserver[1];
+const dnsExitMatch=dnsExitServer.match(/^https:\/\/dns\.google\/dns-query#([^&]+)&h3=true$/);
+assert(dnsExitMatch&&group(dependencies,dnsExitMatch[1]),'DNS server #proxy group dependency must be preserved');
+assert(dependencies.dns.nameserver[2]==='https://1.1.1.1/dns-query#h3=true','DNS server params without proxy must remain untouched');
+assert(dependencies.dns.fallback[0]==='tls://8.8.8.8#'+dialerGroup.name,'DNS fallback colliding #proxy group must map to retained group');
+const policyEntries=Object.entries(dependencies.dns['nameserver-policy']);
+const dnsKey=policyEntries[0][0];
 const dnsSets=dnsKey.slice('rule-set:'.length).split(',');
 assert(dnsSets.length===2&&dnsSets[0]!=='China','colliding DNS rule-provider must be retained separately');
+assert(dependencies['rule-providers'][dnsSets[0]].path!=='./rule_providers/China.yaml','colliding retained rule-provider path must be isolated');
 assert(JSON.stringify(dependencies['rule-providers'][dnsSets[0]].payload)==='["+.fixture.invalid"]','DNS rule-provider payload must be preserved');
 assert(dependencies['rule-providers'][dnsSets[1]].proxy===transportGroup.name,'DNS rule-provider download dependency');
+assert(policyEntries[0][1][1]==='https://dns.google/dns-query#'+transportGroup.name,'nameserver-policy server #proxy dependency');
+const mixedParts=policyEntries[1][0].split(',');
+assert(mixedParts[0]==='example.com'&&mixedParts[1].startsWith('rule-set:__subscription_rule_'),'mixed nameserver-policy rule-set key must be preserved');
+assert(policyEntries[1][1]==='https://dns.google/dns-query#'+dnsExitMatch[1],'string nameserver-policy server #proxy dependency');
+assert(policyEntries[2][0]==='geosite:cn,netflix','geosite nameserver-policy key must remain unchanged');
 assert(dependencies.dns['fake-ip-filter'][0]==='rule-set:'+dnsSets[1],'fake-ip-filter must reference retained DNS rule-provider');
 assert(!dependencies['rule-providers'].Unused,'unreferenced subscription rule-providers must be discarded');
 assert(group(dependencies,'🚀 默认代理').proxies[0]==='🇭🇰 香港','dependency preservation must keep routing default');
 assert(dependencies['rule-providers'].China.url.endsWith('/Clash/China/China.yaml'),'dependency preservation must keep routing provider');
 for(const invalid of [
   {...dependencyInput,'proxy-groups':[{name:'🚀 默认代理',type:'select',proxies:['🚀 默认代理']}]},
-  {...dependencyInput,'rule-providers':{}}
+  {...dependencyInput,'rule-providers':{}},
+  {...dependencyInput,dns:{enable:true,nameserver:['https://dns.google/dns-query#MissingPolicy']}},
+  {...dependencyInput,'proxy-groups':[null]},
+  {proxies:[{...directInput.proxies[0]},null]}
 ]){
   const input=JSON.parse(JSON.stringify(invalid)),before=JSON.stringify(input);
   let failed=false;try{context.main(input);}catch(error){failed=/订阅/.test(error.message);}

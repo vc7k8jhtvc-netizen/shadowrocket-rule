@@ -101,11 +101,22 @@ assert(!rules.some(rule => rule.startsWith('FINAL,')), 'Shadowrocket FINAL must 
 assert(JSON.stringify(rules.slice(-3)) === JSON.stringify(terminalRules), 'explicit terminal rules must be the final three Shadowrocket rules');
 
 const requiredOrder = [
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Lan/Lan.list,DIRECT',
   'DOMAIN-SUFFIX,deepseek.com,DIRECT',
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
   'DOMAIN-SUFFIX,gemini.google,🤖 AI',
   'DOMAIN-SUFFIX,grok.com,🤖 AI',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
+  'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple_Domain.list,🍎 Apple',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Microsoft/Microsoft.list,🪟 Microsoft',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GitHub/GitHub.list,💻 GitHub',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list,✈️ Telegram',
+  'DOMAIN-SUFFIX,bytedance.com,DIRECT',
+  'DOMAIN-SUFFIX,bytedance.net,DIRECT',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Twitter/Twitter.list,📱 社交媒体',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Instagram/Instagram.list,📱 社交媒体',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',
   customMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT',

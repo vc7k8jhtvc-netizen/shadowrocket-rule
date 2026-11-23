@@ -2,6 +2,12 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.32`：修复全量审计发现的五项问题（H1 / H2 / M1 / M2 / M3）：
+  - **H1**：Clash `Apple_Domain` 与 `China_Domain` 改用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`behavior: domain` + `format: yaml`，使用 `+.` 语法），修复此前 `.domain` 前缀导致全部 Apple / 中国根域名在 Mihomo 中漏匹配的问题；`check-external-dependencies.sh` 同步校验 Clash 域名规则集必须使用 `+.` 且拒绝裸 `.` 条目。
+  - **H2**：Clash 全部 `GEOIP,CN,DIRECT` 之前的古典规则集（`Lan`、`Apple`、`Microsoft`、`GitHub`、`Telegram`、`Twitter`、`Instagram`、`TikTok`、`YouTube`、`Google`、`China`）统一附加 `,no-resolve`，消除非 AI 域名在 `RULE-SET,Apple` 处提前触发 DNS 解析的问题，与 Shadowrocket 上游规则语义对齐；`check-mihomo-runtime.js` 扩展 DNS 静默测试至全部 `GEOIP` 前规则。
+  - **M1**：加固 `Clash_Verge_Rev_Script.js` 依赖保留与输入校验——支持保留 DNS 服务器 URL 中的 `#策略组` 标签及 `nameserver-policy` 混合键（如 `example.com,rule-set:...`）、隔离冲突的保留规则集磁盘 `path`，并 fail-closed 拒绝无效 `proxies` / `proxy-groups` / `provider` 条目。
+  - **M2**：静态 `proxies` 订阅地区池为空时改为 `['REJECT']`（与 `proxy-providers` 模式一致），避免新加坡等地区暂时无节点时 `🤖 AI` 经“👆 手动选择”静默回退至香港节点。
+  - **M3**：`check-dual-client.js` 与 `check-shadowrocket-routing.js` 补齐全部 14 个外部规则集与 `bytedance` 直连位置的完整顺序校验；`check-config.sh` 接入离线 `check-external-dependencies.test.sh`；`check-external-dependencies.yml` 补充 `push: [main]` 触发离线回归并将在线巡检限定在 `schedule` / `workflow_dispatch`；`check-validator-regressions.js` 补齐 H1 / H2 / 非 AI 顺序与 YouTube SHA 固定负例。
 - 内部版本升至 `v2.7.31`：补齐 Google Antigravity（`antigravity.google` / `antigravity.google.com`、`antigravity.googleapis.com`、`antigravity-pa.googleapis.com`、`antigravity-unleash.goog`）以及 Google Labs / Flow / Opal / Stitch / AI Test Kitchen、Gemma、Gemini Web 后端、Workspace Gemini、Gemini Enterprise 等专属入口，全部双端归入“🤖 AI”。共享认证与通用 API 主机（如 `accounts.google.com`、`www.googleapis.com`、`apis.google.com`、`firebaseinstallations.googleapis.com`、`play.google.com`）继续保持原分流，避免影响其他 Google 服务；hardening 同步扩展正负匹配断言。
 - 内部版本升至 `v2.7.30`：将 Gemini Web / API、Google AI Studio、Gemini Notebook（原 NotebookLM）、DeepMind、Vertex AI 的 Gemini 接口与 Gemini Code Assist 的 45 个专属域名后缀及 Vertex 区域 `-aiplatform.googleapis.com` 关键字规则统一加入 Shadowrocket / Clash 双端“🤖 AI”。`www.googleapis.com`、`apis.google.com`、`www.google.com`、YouTube、广告与分析等共享 Google 主机继续沿用原业务分组，避免全局接管其他 Google 服务；新增 hardening 域名清单、顺序、正负匹配与双端一致性断言。
 

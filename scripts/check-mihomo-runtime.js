@@ -39,10 +39,19 @@ async function freePort() {
       proxies: [{ ...fixtureNode, 'dialer-proxy': '🚀 默认代理' }],
       'proxy-groups': [
         { name: '🚀 默认代理', type: 'select', proxies: ['Transport'] },
-        { name: 'Transport', type: 'select', proxies: ['DIRECT'] }
+        { name: 'Transport', type: 'select', proxies: ['DIRECT'] },
+        { name: 'DnsExit', type: 'select', proxies: ['DIRECT'] }
       ],
       'proxy-providers': { Fixture: { type: 'inline', payload: [{ ...fixtureNode, name: 'Singapore | Provider', 'dialer-proxy': 'Transport' }], override: { 'dialer-proxy': 'Transport' } } },
-      dns: { enable: true, nameserver: ['1.1.1.1'], 'nameserver-policy': { 'rule-set:China,SubscriptionDomain': ['1.1.1.1'] }, 'fake-ip-filter': ['rule-set:SubscriptionDomain'] },
+      dns: {
+        enable: true,
+        nameserver: ['1.1.1.1', 'https://dns.google/dns-query#DnsExit&h3=true'],
+        'nameserver-policy': {
+          'rule-set:China,SubscriptionDomain': ['1.1.1.1', 'https://dns.google/dns-query#Transport'],
+          'example.com,rule-set:SubscriptionDomain': 'https://dns.google/dns-query#DnsExit'
+        },
+        'fake-ip-filter': ['rule-set:SubscriptionDomain']
+      },
       'rule-providers': {
         China: { type: 'inline', behavior: 'domain', payload: ['+.fixture.invalid'] },
         SubscriptionDomain: { type: 'inline', behavior: 'domain', payload: ['+.subscription.invalid'] }
@@ -69,9 +78,18 @@ async function freePort() {
     const output = ctx.main({ 'proxy-providers': { Test: { type: 'inline', payload: [
       { name: 'unmatched-test-node', type: 'ss', server: '127.0.0.1', port: 1, cipher: 'aes-128-gcm', password: 'test-only' }
     ] } } });
-    // Keep the generated LAN rule and group configuration; eliminate remote downloads.
-    output['rule-providers'] = { Lan: { type: 'inline', behavior: 'classical', payload: ['IP-CIDR,10.0.0.0/8'] } };
-    output.rules = [output.rules[0], 'MATCH,REJECT'];
+    // Keep every generated rule before GEOIP,CN and inject IP-CIDR into every Blackmatrix classical provider
+    // so any missing no-resolve on LAN/Apple/Microsoft/GitHub/Telegram/Twitter/Instagram/TikTok/YouTube/Google/China triggers DNS.
+    for (const [name, provider] of Object.entries(output['rule-providers'])) {
+      output['rule-providers'][name] = {
+        type: 'inline',
+        behavior: provider.behavior,
+        payload: provider.behavior === 'domain'
+          ? ['+.audit.invalid']
+          : (name === 'Custom' ? ['DOMAIN-SUFFIX,audit.invalid'] : ['IP-CIDR,10.0.0.0/8'])
+      };
+    }
+    output.rules = [...output.rules.filter(rule => !rule.startsWith('GEOIP,') && !rule.startsWith('MATCH,')), 'MATCH,REJECT'];
     output.dns = { enable: true, 'enhanced-mode': 'redir-host', nameserver: ['udp://127.0.0.1:' + dns.address().port] };
     output['external-controller'] = '127.0.0.1:' + apiPort;
     output['mixed-port'] = proxyPort;
@@ -94,16 +112,21 @@ async function freePort() {
     for (const name of ['👆 手动选择', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国']) {
       assert(groups[name].now === 'REJECT' && JSON.stringify(groups[name].all) === '["REJECT"]', 'empty filtered group is not blocked: ' + name);
     }
-    // Domain-only HTTP proxy traffic must reach REJECT without querying the local DNS trap.
+    // Domain-only HTTP proxy traffic must traverse all pre-GEOIP rules and reach REJECT without querying DNS.
     await new Promise((resolve, reject) => {
       const socket = net.connect(proxyPort, '127.0.0.1', () => socket.write('GET http://audit.example.invalid/ HTTP/1.1\r\nHost: audit.example.invalid\r\nConnection: close\r\n\r\n'));
-      socket.setTimeout(2000, () => { socket.destroy(); reject(new Error('domain request stalled before REJECT')); });
+      socket.setTimeout(2000, () => {
+        socket.destroy();
+        reject(new Error(queries > 0
+          ? 'LAN unexpectedly triggered DNS before domain routing (pre-GEOIP RULE-SET resolved DNS)'
+          : 'domain request stalled before REJECT'));
+      });
       socket.on('data', () => {});
       socket.on('error', reject);
       socket.on('close', resolve);
     });
-    assert(queries === 0, 'LAN unexpectedly triggered DNS before domain routing');
-    console.log('PASS: Mihomo rejects empty provider groups and LAN performs no early DNS lookup');
+    assert(queries === 0, 'LAN unexpectedly triggered DNS before domain routing (pre-GEOIP RULE-SET resolved DNS)');
+    console.log('PASS: Mihomo rejects empty provider groups and pre-GEOIP rules perform no early DNS lookup');
   } catch (error) {
     console.error(logs);
     throw error;

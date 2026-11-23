@@ -28,8 +28,17 @@ case "$url" in
   */Clash/Lan/Lan.yaml)
     if [[ "${MALFORM_CLASSICAL:-}" == 1 ]]; then
       printf '# malformed but non-empty\nDOMAIN-SUFFIX,example.com\n' > "$out"
+    elif [[ "${EMPTY_CLASSICAL:-}" == 1 ]]; then
+      printf '# empty payload\npayload:\n' > "$out"
     else
       printf '# fixture\npayload:\n  - DOMAIN-SUFFIX,example.com\n' > "$out"
+    fi
+    ;;
+  *_Domain.yaml)
+    if [[ "${MALFORM_DOMAIN_DOT:-}" == 1 ]]; then
+      printf "# fixture\npayload:\n  - '.example.com'\n" > "$out"
+    else
+      printf "# fixture\npayload:\n  - '+.example.com'\n" > "$out"
     fi
     ;;
   *.yaml)
@@ -72,6 +81,16 @@ fi
 
 if MALFORM_CLASSICAL=1 PATH="$tmpdir/bin:$PATH" bash "$checker" "$tmpdir/module.sgmodule" >/dev/null 2>&1; then
   echo 'FAIL: checker accepted malformed Clash classical provider content' >&2
+  exit 1
+fi
+
+if EMPTY_CLASSICAL=1 PATH="$tmpdir/bin:$PATH" bash "$checker" "$tmpdir/module.sgmodule" >/dev/null 2>&1; then
+  echo 'FAIL: checker accepted empty Clash classical YAML payload' >&2
+  exit 1
+fi
+
+if MALFORM_DOMAIN_DOT=1 PATH="$tmpdir/bin:$PATH" bash "$checker" "$tmpdir/module.sgmodule" >/dev/null 2>&1; then
+  echo 'FAIL: checker accepted leading-dot Clash domain provider entries' >&2
   exit 1
 fi
 

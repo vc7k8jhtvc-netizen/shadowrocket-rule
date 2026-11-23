@@ -15,7 +15,10 @@ function main(config) {
 
   writeLog('log', '开始生成 Clash Verge Rev 配置');
 
-  const allProxies = (config.proxies || []).map(p => p && p.name).filter(Boolean);
+  if (config.proxies !== undefined && (!Array.isArray(config.proxies) || config.proxies.some(p => !p || typeof p !== 'object' || typeof p.name !== 'string' || !p.name))) {
+    throw new Error('订阅 proxies 格式无效，已停止生成配置。');
+  }
+  const allProxies = (config.proxies || []).map(p => p.name);
   const providerNames = Object.keys(config['proxy-providers'] || {});
   const providerNameSet = new Set(providerNames);
   writeLog('log', `节点来源：proxies=${allProxies.length}，proxy-providers=${providerNames.length}`);
@@ -56,8 +59,8 @@ function main(config) {
       group.filter = regex.source;
     }
     if (matchedNodes.length === 0 && providerNames.length === 0) {
-      group.proxies = ['👆 手动选择'];
-      writeLog('warn', `${name}未匹配到节点，使用“👆 手动选择”兜底`);
+      group.proxies = ['REJECT'];
+      writeLog('warn', `${name}未匹配到节点，已按 REJECT 兜底以避免跨区静默回退`);
     }
     return group;
   };
@@ -107,11 +110,16 @@ function main(config) {
     url: `${blackmatrix}/Clash/${name}/${name}.yaml`,
     path: `./rule_providers/${name}.yaml`, interval: 86400, proxy: '🚀 默认代理'
   });
+  const domainProvider = (name) => ({
+    type: 'http', behavior: 'domain', format: 'yaml',
+    url: `${blackmatrix}/Clash/${name}/${name}_Domain.yaml`,
+    path: `./rule_providers/${name}_Domain.yaml`, interval: 86400, proxy: '🚀 默认代理'
+  });
 
   const ruleProviders = {
     Lan: classicalProvider('Lan'),
     Apple: classicalProvider('Apple'),
-    Apple_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Shadowrocket/Apple/Apple_Domain.list`, path: './rule_providers/Apple_Domain.list', interval: 86400, proxy: '🚀 默认代理' },
+    Apple_Domain: domainProvider('Apple'),
     Microsoft: classicalProvider('Microsoft'),
     GitHub: classicalProvider('GitHub'),
     Telegram: classicalProvider('Telegram'),
@@ -126,13 +134,16 @@ function main(config) {
       path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理'
     },
     China: classicalProvider('China'),
-    China_Domain: { type: 'http', behavior: 'domain', format: 'text', url: `${blackmatrix}/Clash/China/China_Domain.txt`, path: './rule_providers/China_Domain.txt', interval: 86400, proxy: '🚀 默认代理' }
+    China_Domain: domainProvider('China')
   };
 
   // Preserve only subscription dependencies used by nodes, provider downloads or DNS.
   // Private names avoid changing either dependency semantics or our routing groups.
   const originalGroupList = config['proxy-groups'] || [];
-  const originalGroupNames = originalGroupList.map(group => group && group.name).filter(Boolean);
+  if (!Array.isArray(originalGroupList) || originalGroupList.some(group => !group || typeof group !== 'object' || typeof group.name !== 'string' || !group.name)) {
+    throw new Error('订阅策略组格式无效，已停止生成配置。');
+  }
+  const originalGroupNames = originalGroupList.map(group => group.name);
   if (new Set(originalGroupNames).size !== originalGroupNames.length) {
     throw new Error('订阅策略组存在重复名称，已停止生成配置。');
   }
@@ -176,16 +187,19 @@ function main(config) {
     if (staticProxyNames.has(name) || builtinPolicies.has(name)) return name;
     throw new Error('订阅依赖引用了不存在的策略。');
   };
-  const preserveDialer = proxy => proxy && proxy['dialer-proxy']
+  const preserveDialer = proxy => proxy && typeof proxy === 'object' && proxy['dialer-proxy']
     ? { ...proxy, 'dialer-proxy': preservePolicy(proxy['dialer-proxy']) } : proxy;
   const preserveDownload = provider => {
+    if (!provider || typeof provider !== 'object') throw new Error('订阅依赖 Provider 格式无效。');
     const retained = { ...provider };
     if (provider.proxy) retained.proxy = preservePolicy(provider.proxy);
     if (provider.override) retained.override = preserveDialer(provider.override);
-    if (provider.payload) retained.payload = provider.payload.map(preserveDialer);
+    if (Array.isArray(provider.payload)) retained.payload = provider.payload.map(preserveDialer);
     return retained;
   };
   const ruleProviderNames = new Set([...Object.keys(ruleProviders), ...Object.keys(originalRuleProviders)]);
+  const normalizeRulePath = filePath => filePath.replace(/^\.\//, '');
+  const usedRulePaths = new Set(Object.values(ruleProviders).map(p => p.path).filter(Boolean).map(normalizeRulePath));
   const preserveDnsRule = name => {
     if (retainedRuleProviders.has(name)) return retainedRuleProviders.get(name);
     if (!Object.prototype.hasOwnProperty.call(originalRuleProviders, name)) {
@@ -193,19 +207,80 @@ function main(config) {
     }
     const retainedName = privateName('__subscription_rule_', ruleProviderNames);
     retainedRuleProviders.set(name, retainedName);
-    ruleProviders[retainedName] = preserveDownload(originalRuleProviders[name]);
+    const retainedProvider = preserveDownload(originalRuleProviders[name]);
+    if (typeof retainedProvider.path === 'string' && retainedProvider.path) {
+      const normalizedPath = normalizeRulePath(retainedProvider.path);
+      if (usedRulePaths.has(normalizedPath)) {
+        const extMatch = retainedProvider.path.match(/(\.[A-Za-z0-9]+)$/);
+        retainedProvider.path = `./rule_providers/${retainedName}${extMatch ? extMatch[1] : '.yaml'}`;
+      }
+      usedRulePaths.add(normalizeRulePath(retainedProvider.path));
+    }
+    ruleProviders[retainedName] = retainedProvider;
     return retainedName;
   };
-  const preserveDns = value => {
-    if (typeof value === 'string') {
-      if (!value.startsWith('rule-set:')) return value;
-      return 'rule-set:' + value.slice('rule-set:'.length).split(',').map(name => preserveDnsRule(name.trim())).join(',');
+  const preserveRuleSetList = raw => raw.split(',').map(name => preserveDnsRule(name.trim())).join(',');
+  const preserveDnsServer = server => {
+    if (typeof server !== 'string') return server;
+    const hashIndex = server.indexOf('#');
+    if (hashIndex === -1) return server;
+    const base = server.slice(0, hashIndex);
+    const parts = server.slice(hashIndex + 1).split('&');
+    let proxyIndex = -1;
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i] && !parts[i].includes('=')) proxyIndex = i;
     }
-    if (Array.isArray(value)) return value.map(preserveDns);
+    if (proxyIndex === -1) return server;
+    const rawProxy = parts[proxyIndex];
+    let decodedProxy = rawProxy;
+    try { decodedProxy = decodeURIComponent(rawProxy); } catch {}
+    const retainedProxy = preservePolicy(decodedProxy);
+    const nextParts = [...parts];
+    nextParts[proxyIndex] = rawProxy.includes('%') ? encodeURIComponent(retainedProxy) : retainedProxy;
+    return `${base}#${nextParts.join('&')}`;
+  };
+  const preserveDnsServers = value => Array.isArray(value) ? value.map(preserveDnsServer) : preserveDnsServer(value);
+  const preserveDnsPolicyKey = key => {
+    if (typeof key !== 'string') return key;
+    const lower = key.toLowerCase();
+    if (lower.startsWith('rule-set:')) {
+      return 'rule-set:' + preserveRuleSetList(key.slice('rule-set:'.length));
+    }
+    if (lower.startsWith('geosite:')) return key;
+    if (!key.includes(',')) return key;
+    return key.split(',').map(part => {
+      const trimmed = part.trim();
+      if (trimmed.toLowerCase().startsWith('rule-set:')) {
+        return 'rule-set:' + preserveDnsRule(trimmed.slice('rule-set:'.length).trim());
+      }
+      return part;
+    }).join(',');
+  };
+  const preserveDnsRuleRefs = value => {
+    if (typeof value === 'string') {
+      if (!value.toLowerCase().startsWith('rule-set:')) return value;
+      return 'rule-set:' + preserveRuleSetList(value.slice('rule-set:'.length));
+    }
+    if (Array.isArray(value)) return value.map(preserveDnsRuleRefs);
     if (value && typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, item]) => [preserveDns(key), preserveDns(item)]));
+      return Object.fromEntries(Object.entries(value).map(([k, item]) => [preserveDnsRuleRefs(k), preserveDnsRuleRefs(item)]));
     }
     return value;
+  };
+  const dnsServerListKeys = new Set(['nameserver', 'fallback', 'default-nameserver', 'proxy-server-nameserver', 'direct-nameserver']);
+  const dnsPolicyMapKeys = new Set(['nameserver-policy', 'proxy-server-nameserver-policy']);
+  const preserveDns = dnsConfig => {
+    if (!dnsConfig || typeof dnsConfig !== 'object' || Array.isArray(dnsConfig)) return dnsConfig;
+    return Object.fromEntries(Object.entries(dnsConfig).map(([key, value]) => {
+      if (dnsServerListKeys.has(key)) return [key, preserveDnsServers(value)];
+      if (dnsPolicyMapKeys.has(key) && value && typeof value === 'object' && !Array.isArray(value)) {
+        return [key, Object.fromEntries(Object.entries(value).map(([policyKey, servers]) => [
+          preserveDnsPolicyKey(policyKey),
+          preserveDnsServers(servers)
+        ]))];
+      }
+      return [key, preserveDnsRuleRefs(value)];
+    }));
   };
   const proxies = config.proxies && config.proxies.map(preserveDialer);
   const proxyProviders = config['proxy-providers'] && Object.fromEntries(
@@ -332,11 +407,11 @@ function main(config) {
     // Canva-owned domains only; custom domains and shared CDNs are not inferred.
     'DOMAIN-SUFFIX,canva.com,🤖 AI','DOMAIN-SUFFIX,canva.cn,🤖 AI','DOMAIN-SUFFIX,canva.ai,🤖 AI','DOMAIN-SUFFIX,canva.app,🤖 AI','DOMAIN-SUFFIX,canva.dev,🤖 AI','DOMAIN-SUFFIX,canva.me,🤖 AI','DOMAIN-SUFFIX,canva.site,🤖 AI','DOMAIN-SUFFIX,canva.link,🤖 AI','DOMAIN-SUFFIX,canva.run,🤖 AI',
     'DOMAIN-SUFFIX,canva-apps.com,🤖 AI','DOMAIN-SUFFIX,canva-apps.cn,🤖 AI','DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI','DOMAIN-SUFFIX,canva-code.cn,🤖 AI','DOMAIN-SUFFIX,canvacode.com,🤖 AI','DOMAIN-SUFFIX,my.canvasite.cn,🤖 AI','DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
-    'RULE-SET,Apple,🍎 Apple','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft','RULE-SET,GitHub,💻 GitHub','RULE-SET,Telegram,✈️ Telegram',
+    'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve','RULE-SET,GitHub,💻 GitHub,no-resolve','RULE-SET,Telegram,✈️ Telegram,no-resolve',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
-    'RULE-SET,Twitter,📱 社交媒体','RULE-SET,Instagram,📱 社交媒体','RULE-SET,TikTok,📱 社交媒体','RULE-SET,YouTube,▶️ YouTube','RULE-SET,Google,🔎 Google',
+    'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',
     'RULE-SET,Custom,🧩 自定义',
-    'RULE-SET,China,DIRECT','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
+    'RULE-SET,China,DIRECT,no-resolve','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
   ];
 
   writeLog('log', `完成：策略组=${config['proxy-groups'].length}，规则集=${Object.keys(config['rule-providers']).length}，规则=${config.rules.length}，DNS/hosts=继承订阅`);

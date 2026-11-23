@@ -1,6 +1,17 @@
 name: Check external dependencies
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-external-dependencies.yml'
+      - 'scripts/check-external-dependencies.sh'
+      - 'scripts/check-external-dependencies.test.sh'
+      - 'scripts/check-clash-script.js'
+      - 'scripts/check-youtube-module.js'
+      - 'Clash_Verge_Rev_Script.js'
+      - 'Shadowrocket_Routing.conf'
+      - 'YouTube.Enhance.Shadowrocket.sgmodule'
   pull_request:
     branches: [main]
     paths:
@@ -32,7 +43,7 @@ jobs:
         run: node scripts/check-youtube-module.js
 
   live-upstreams:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:

@@ -49,9 +49,10 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - 代理分组显示顺序：总控 → 业务（含自定义）→ 漏网之鱼 → 地区节点池，不得出现“🛑 广告拦截”。
 - 两端节点筛选使用相同、区分大小写的 WestData 命名规则。
 - 所有业务组及“🐟 漏网之鱼”均须包含香港、台湾、新加坡、日本、美国五个地区选项与“👆 手动选择”；新增地区组时同步两端、候选断言和文档，首个默认出口不得改变。
-- Clash 保留订阅 DNS/hosts/IPv6/节点入口；LAN 使用 no-resolve，中国域名 Provider 使用 Clash `China_Domain.txt`，GEOIP,CN 不使用 no-resolve。
-- Clash 额外保留节点 dialer-proxy、Provider 下载及 DNS rule-set 引用需要的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
-- Clash 必须拒绝重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
+- Clash 保留订阅 DNS/hosts/IPv6/节点入口；Apple / 中国域名 Provider 统一使用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`+.` 语法，避免根域名漏匹配）；`GEOIP,CN,DIRECT` 之前的所有古典规则集统一使用 `no-resolve` 避免提前 DNS 解析，`GEOIP,CN,DIRECT` 本身不使用 `no-resolve`。
+- Clash 空地区节点池无论来自静态 `proxies` 还是 `proxy-providers`，一律以 `REJECT` 失败关闭，不得静默回退至“👆 手动选择”导致跨区误路由。
+- Clash 额外保留节点 `dialer-proxy`、Provider 下载策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含混合 `nameserver-policy` 键）所需的订阅依赖；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称及非冲突缓存 `path` 并同步更新引用，避免覆盖业务配置。检查依赖失败时不得部分改写订阅。
+- Clash 必须拒绝无效节点/策略组对象、重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
 - OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机不得被全局强制归入 AI；仅 OpenAI 自有或实例专属主机使用手工 AI 规则。个人 AI 中转 `a6api.vip` / `a6api.com` 是显式声明的例外，由 hardening 断言锁定，不得再扩大范围。
 - Exa、Tavily 固定使用双端 `DOMAIN-SUFFIX,exa.ai,🤖 AI` 与 `DOMAIN-SUFFIX,tavily.com,🤖 AI`，且不得重新出现在 `Custom.list`；顺序必须位于 Custom 规则之前。
 - Supabase 的 `supabase.com` / `supabase.co` / `supabase.in` 与 Hugging Face 的 `huggingface.co` / `hf.co` / `hf.space` 固定使用双端 `🤖 AI`，不得重新出现在 `Custom.list`；顺序必须位于 Custom 规则之前。
@@ -71,17 +72,17 @@ bash scripts/check-config.sh
 WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 ```
 
-检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/Grok/Canva/Exa/Tavily/Supabase/Hugging Face 双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 中国域名与 GEOIP 语义。CI 另用 Mihomo 核心验证合成配置及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
+检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/OpenAI/Gemini/Grok/Claude/Canva/Exa/Tavily/Supabase/Hugging Face 及全部非 AI 规则序列双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 域名 Provider（`Apple_Domain.yaml` / `China_Domain.yaml`）、古典规则集 `no-resolve` 与 `GEOIP` 语义；以及离线外部依赖回归测试。CI 另用 Mihomo 核心验证合成配置、全链路 `GEOIP` 前无提前 DNS 查询及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
-本地门禁同时覆盖语法与换行：`node --check` 遍历根目录主脚本与 `scripts/` 下全部 JS 文件（含仅由 CI 执行的 `check-mihomo-runtime.js`），以文件遍历代替逐项列举，避免新增校验器被遗漏；`bash -n` 覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。`check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制，本地门禁只做语法检查、不执行运行时回归，因此本地全绿不等于 CI 运行时回归通过。
+本地门禁同时覆盖语法与换行：`node --check` 遍历根目录主脚本与 `scripts/` 下全部 JS 文件（含仅由 CI 执行的 `check-mihomo-runtime.js`），以文件遍历代替逐项列举，避免新增校验器被遗漏；`bash -n` 与离线单测覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。`check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制，本地门禁只做语法检查、不执行运行时回归，因此本地全绿不等于 CI 运行时回归通过。
 
 修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段并递增内部版本；该项为文档约定，不新增 CI 强制校验。
 
-回归还覆盖订阅依赖的名称冲突、传递引用、DNS 多规则集与 fake-ip-filter 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
+回归还覆盖订阅依赖的名称冲突、传递引用、DNS `#策略组` 标签、混合 `nameserver-policy` 键、缓存路径隔离与 `fake-ip-filter` 引用；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
 负例回归的 fixtures 由 `git ls-files` 动态生成，覆盖仓库全部跟踪文件，避免新增校验器被手写清单遗漏；LF 与 CRLF 两种换行下均对全部 JS 校验器执行 `node --check`；shell 门禁在 LF 轮直接执行 `bash -n`，CRLF 轮因 Linux bash 无法解析 CRLF 脚本（正是 `.gitattributes` 固定 `eol=lf` 的原因）改为对归一化 LF 副本执行 `bash -n`，并断言副本不含 `\r`。`check-routing-hardening.js` 有独立漂移负例；`check-mihomo-runtime.js`（依赖 CI 下载并校验的 Mihomo 二进制）与 `check-config.sh`（在本套件内执行会递归）不实际运行，改以源码级断言锁定关键运行时断言及 M4 的遍历式语法门禁，防止被静默削弱。该源码级断言不能替代 CI 的实际运行时回归。
 
-GitHub Actions 的 `Check external dependencies` 每日独立运行：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构。在线网络检查不作为普通 PR 的合并门槛；PR 只运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
+GitHub Actions 的 `Check external dependencies` 每日独立运行在线巡检：实际下载当前模块引用的 Maasea `master` YouTube 脚本，并检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构（含 Clash 域名规则集 `+.` 语法校验）；PR 与 `main` 推送仅运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 
 ## 2026-11-08 实机验证结论
 
