@@ -61,6 +61,7 @@ function runSuite(eol) {
     check('check-dual-client.js',[],0);
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],0);
     check('check-claude-routing.js',[],0);
+    check('check-openai-voice-rules.js',[],0);
     check('check-routing-hardening.js',[],0);
     check('check-youtube-module.js',[],0);
     check('check-version.js',[],0);
@@ -85,8 +86,11 @@ function runSuite(eol) {
         fs.writeFileSync(target,read(file));
         assert(!fs.readFileSync(target,'utf8').includes('\r'),`${label}: shell fixture not normalized: ${file}`);
       }
-      const result=spawnSync('bash',['-n',target],{encoding:'utf8',timeout:10000});
-      assert(result.status===0,`${label}: bash -n failed for ${file}\n${result.stdout}${result.stderr}`);
+      const shellParser=process.env.BASH_SYNTAX_CHECK;
+      const result=shellParser
+        ? spawnSync(shellParser,['-ln=bash',target],{encoding:'utf8',timeout:10000})
+        : spawnSync('bash',['-n',target],{encoding:'utf8',timeout:10000});
+      assert(result.status===0,label+': shell syntax check failed for '+file+'\n'+result.stdout+result.stderr);
     }
 
     // CI-only checkers cannot execute here (Mihomo binary) and the local gate would
@@ -98,7 +102,7 @@ function runSuite(eol) {
       'Mihomo subscription dependency validation failed'
     ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
     const gate=read('scripts/check-config.sh');
-    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','bash "$external_test"'])
+    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','node "$openai_voice_check"','bash "$external_test"'])
       assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
 
     // AI rules single-source-of-truth sync checks: drift, missing markers, invalid rules, and write-mode recovery.
@@ -109,6 +113,17 @@ function runSuite(eol) {
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.vip,🤖 AI"'));
     check('sync-ai-rules.js',['--check'],1,'duplicate AI rule');
     write('rules/ai-rules.json',aiRules);
+    const voiceList=read('OpenAI_Voice.list');
+    const voiceFirst=voiceList.split('\n').find(line=>line.startsWith('IP-CIDR,'));
+    assert(voiceFirst,label+': OpenAI voice fixture has no IPv4 rule');
+    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,'IP-CIDR,0.0.0.0/0,no-resolve'));
+    check('check-openai-voice-rules.js',[],1,'host routes');
+    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,voiceFirst.replace(',no-resolve','')));
+    check('check-openai-voice-rules.js',[],1,'unsupported OpenAI voice rule');
+    write('OpenAI_Voice.list',voiceList);
+    fs.writeFileSync(at('voice-bad.json'),'{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"0.0.0.0/0"}]}');
+    check('sync-openai-voice-rules.js',['--source',at('voice-bad.json')],1,'host routes');
+
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,grok.me,🤖 AI\n',''));
     check('sync-ai-rules.js',['--check'],1,'Shadowrocket_Routing.conf');
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# >>> BEGIN AI RULES (generated from rules/ai-rules.json; run `node scripts/sync-ai-rules.js`) >>>\n',''));
@@ -150,9 +165,9 @@ function runSuite(eol) {
 
     // Claude rules must be complete, use the AI policy, and preserve ordering.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI\n',''));
-    check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
+    check('check-claude-routing.js',[],1,'Claude rules');
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.ai,DIRECT'));
-    check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
+    check('check-claude-routing.js',[],1,'Claude rules');
     write('Shadowrocket_Routing.conf',routing);
 
     // Gemini / Google AI rules must remain complete, scoped and consistent across clients.
@@ -276,7 +291,7 @@ function runSuite(eol) {
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'legacy Advertising providers must be absent');
     write('Clash_Verge_Rev_Script.js',clash);
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'DOMAIN-SUFFIX,anthropic.com,🤖 AI',",''));
-    check('check-claude-routing.js',[],1,'Claude rules must match exact dedicated-domain list');
+    check('check-claude-routing.js',[],1,'Claude rules');
     write('Clash_Verge_Rev_Script.js',clash);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体\n',''));

@@ -66,7 +66,9 @@ async function freePort() {
     for (const [name, provider] of Object.entries(dependencyOutput['rule-providers'])) {
       if (provider.type === 'inline') continue;
       dependencyOutput['rule-providers'][name] = { type: 'inline', behavior: provider.behavior,
-        payload: provider.behavior === 'domain' ? ['+.audit.invalid'] : ['DOMAIN-SUFFIX,audit.invalid'] };
+        payload: name === 'OpenAI_Voice'
+          ? ['IP-CIDR,102.37.57.54/32,no-resolve']
+          : provider.behavior === 'domain' ? ['+.audit.invalid'] : ['DOMAIN-SUFFIX,audit.invalid'] };
     }
     dependencyOutput.rules = dependencyOutput.rules.filter(rule => !rule.startsWith('GEOIP,'));
     for (const [label, input] of [['before', dependencyInput], ['after', dependencyOutput]]) {

@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.36`：修复 AI 分流完整性检查发现的缺口：
+  - OpenAI / ChatGPT 补齐 `chat.com`、`chatgpt.site`、`crixet.com`、`openai.org`、`sora.com`、OpenAI 专属 CDN/Azure/WebPubSub 主机与 Sentry 主机；Claude / Anthropic 补齐 `ant.dev`、`anthropic.team`、`chatbotclaude.com`、`clau.de`、`claude.app`、`claude.site`、`claudepages.dev`、MCP/Studio 等专属域名；Grok 补齐 `grok.x.com`、`grokbot.com`，避免前者被 Twitter 规则截走。
+  - 新增 `OpenAI_Voice.list` 与 `scripts/sync-openai-voice-rules.js`，从 OpenAI 官方 `chatgpt-voice.json` 生成 411 条主机 IP 路由；双端在 AI 域名规则之后、Apple 之前接入“🤖 AI”，并加入 `chatgpt.livekit.cloud`、`host.livekit.cloud`、`turn.livekit.cloud`，使 ChatGPT Voice 的 LiveKit/TURN 与 UDP/3478 服务器不再落到香港兜底出口。
+  - 新增 `check-openai-voice-rules.js`，拒绝宽网段、重复项、缺失 `no-resolve` 或未知语法；外部依赖巡检下载官方 JSON 校验列表新鲜度，Mihomo runtime、双端一致性、Claude/Grok 完整性及漂移负例同步扩展。共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机仍保持原分流。
 - 内部版本升至 `v2.7.35`：精简 `Custom.list` 并为成人网站新设双端“🔞 NSFW”分组：
   - 从 `Custom.list` 移除效率工具分类（Notion / Dropbox / Slack / Atlassian 共 25 条，改由正常兜底规则处理）；`hero-sms.com` 与 `greasyfork.org` 保留在 `Custom.list` 的“其他”分类下。
   - 将原 `Custom.list` 中的 48 条成人网站规则（JapaneseASMR、ASMR.one、Pornhub、XVideos、XNXX、xHamster、RedTube、YouPorn、Tube8、SpankBang、Eporner、TNAFlix、Jable、MissAV、Hanime1）拆出至独立共享清单 `Adult.list`。

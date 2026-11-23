@@ -73,9 +73,27 @@ assert(!shadowRules.some(r=>/Advertising|广告拦截/.test(r))&&!clash.rules.so
 assert(shadowRules.includes('GEOIP,CN,DIRECT'),'Shadowrocket GEOIP direct rule missing');
 assert(clash.rules.includes('GEOIP,CN,DIRECT'),'Clash GEOIP direct rule missing');
 assert(!clash.rules.includes('GEOIP,CN,DIRECT,no-resolve'),'Clash GEOIP must not use no-resolve for parity');
-const shadowAi=shadowRules.filter(r=>r.endsWith(',🤖 AI'));
-const clashAi=clash.rules.filter(r=>r.endsWith(',🤖 AI'));
+const rulePolicy = rule => {
+  const parts = rule.split(',');
+  return parts[parts.length - 1] === 'no-resolve' ? parts[parts.length - 2] : parts[parts.length - 1];
+};
+const isAiRule = rule => rulePolicy(rule) === '🤖 AI';
+const shadowAi=shadowRules.filter(r=>r.startsWith('DOMAIN')&&isAiRule(r));
+const clashAi=clash.rules.filter(r=>r.startsWith('DOMAIN')&&isAiRule(r));
 assert(JSON.stringify(shadowAi)===JSON.stringify(clashAi),'AI manual rules drift between clients');
+const shadowVoice='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
+const clashVoice='RULE-SET,OpenAI_Voice,🤖 AI,no-resolve';
+assert(shadowRules.includes(shadowVoice),'Shadowrocket OpenAI voice rule missing');
+assert(clash.rules.includes(clashVoice),'Clash OpenAI voice rule missing');
+assert(shadowRules.indexOf(shadowVoice) < shadowRules.findIndex(r=>r.includes('/Apple/Apple.list')),'Shadowrocket OpenAI voice rule must precede Apple');
+const clashAppleIndex=clash.rules.findIndex(r=>r.startsWith('RULE-SET,Apple,'));
+assert(clashAppleIndex!==-1,'Clash Apple rule missing');
+assert(clash.rules.indexOf(clashVoice) < clashAppleIndex,'Clash OpenAI voice rule must precede Apple');
+assert(clash['rule-providers'].OpenAI_Voice,'Clash OpenAI voice rule-provider missing');
+assert(clash['rule-providers'].OpenAI_Voice.url.endsWith('/OpenAI_Voice.list'),'Clash OpenAI voice provider URL drift');
+assert(clash['rule-providers'].OpenAI_Voice.path==='./rule_providers/OpenAI_Voice.list','Clash OpenAI voice provider path drift');
+assert(clash['rule-providers'].OpenAI_Voice.behavior==='classical','Clash OpenAI voice provider behavior drift');
+assert(clash['rule-providers'].OpenAI_Voice.format==='text','Clash OpenAI voice provider format drift');
 
 for(const rule of ['DOMAIN-SUFFIX,deepseek.com,DIRECT','DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT']){
   assert(shadowRules.includes(rule),'Shadowrocket missing direct rule: '+rule);
@@ -148,8 +166,8 @@ const expectedClashNonAi=[
   'GEOIP,CN,DIRECT',
   'MATCH,🐟 漏网之鱼'
 ];
-const shadowNonAi=shadowRules.filter(r=>!r.endsWith(',🤖 AI'));
-const clashNonAi=clash.rules.filter(r=>!r.endsWith(',🤖 AI'));
+const shadowNonAi=shadowRules.filter(r=>!isAiRule(r));
+const clashNonAi=clash.rules.filter(r=>!isAiRule(r));
 assert(JSON.stringify(shadowNonAi)===JSON.stringify(expectedShadowNonAi),'Shadowrocket non-AI rule sequence drift');
 assert(JSON.stringify(clashNonAi)===JSON.stringify(expectedClashNonAi),'Clash non-AI rule sequence drift');
 console.log('PASS: Shadowrocket and Clash Custom/parity checks (no Advertising)');

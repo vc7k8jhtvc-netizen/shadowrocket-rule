@@ -139,6 +139,11 @@ function main(config) {
       url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list',
       path: './rule_providers/Adult.list', interval: 86400, proxy: '🚀 默认代理'
     },
+    OpenAI_Voice: {
+      type: 'http', behavior: 'classical', format: 'text',
+      url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list',
+      path: './rule_providers/OpenAI_Voice.list', interval: 86400, proxy: '🚀 默认代理'
+    },
     China: classicalProvider('China'),
     China_Domain: domainProvider('China')
   };
@@ -339,15 +344,34 @@ function main(config) {
     'DOMAIN-SUFFIX,deepseek.com,DIRECT',
     // >>> BEGIN AI RULES (generated from rules/ai-rules.json; run `node scripts/sync-ai-rules.js`) >>>
     // OpenAI / ChatGPT
+    'DOMAIN-SUFFIX,chat.com,🤖 AI',
     'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
+    'DOMAIN-SUFFIX,chatgpt.site,🤖 AI',
+    'DOMAIN-SUFFIX,crixet.com,🤖 AI',
     'DOMAIN-SUFFIX,oaistatic.com,🤖 AI',
     'DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI',
     'DOMAIN-SUFFIX,openai.com,🤖 AI',
+    'DOMAIN-SUFFIX,openai.org,🤖 AI',
     'DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
+    'DOMAIN-SUFFIX,sora.com,🤖 AI',
     'DOMAIN,cdn.openaimerge.com,🤖 AI',
     'DOMAIN,o207216.ingest.sentry.io,🤖 AI',
     'DOMAIN,o33249.ingest.sentry.io,🤖 AI',
+    'DOMAIN,o33249.ingest.us.sentry.io,🤖 AI',
+    'DOMAIN,openai.com.cdn.cloudflare.net,🤖 AI',
+    'DOMAIN,openaiapi-site.azureedge.net,🤖 AI',
+    'DOMAIN,openaiassets.blob.core.windows.net,🤖 AI',
+    'DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 AI',
+    'DOMAIN,openaicom.imgix.net,🤖 AI',
+    'DOMAIN,openaicomproductionae4b.blob.core.windows.net,🤖 AI',
+    'DOMAIN,production-openaicom-storage.azureedge.net,🤖 AI',
+    'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI',
     // OpenAI 共享依赖（WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog）保持正常分流。
+    // OpenAI / ChatGPT Voice
+    // 高级语音使用 LiveKit 信令与 TURN；服务器 IP 由 OpenAI_Voice.list 从官方 chatgpt-voice.json 同步。
+    'DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI',
+    'DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI',
+    'DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI',
     // 个人 AI 中转
     'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
     'DOMAIN-SUFFIX,a6api.com,🤖 AI',
@@ -457,16 +481,33 @@ function main(config) {
     // Grok / xAI
     'DOMAIN-SUFFIX,x.ai,🤖 AI',
     'DOMAIN-SUFFIX,grok.com,🤖 AI',
+    'DOMAIN-SUFFIX,grok.x.com,🤖 AI',
+    'DOMAIN-SUFFIX,grokbot.com,🤖 AI',
     'DOMAIN-SUFFIX,grokusercontent.com,🤖 AI',
     'DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI',
     'DOMAIN-SUFFIX,groktpcontent.com,🤖 AI',
     'DOMAIN-SUFFIX,grok.me,🤖 AI',
     'DOMAIN-SUFFIX,grokipedia.com,🤖 AI',
     // Claude / Anthropic
-    'DOMAIN-SUFFIX,claude.ai,🤖 AI',
-    'DOMAIN-SUFFIX,claude.com,🤖 AI',
+    'DOMAIN-SUFFIX,ant.dev,🤖 AI',
     'DOMAIN-SUFFIX,anthropic.com,🤖 AI',
+    'DOMAIN-SUFFIX,anthropic.team,🤖 AI',
+    'DOMAIN-SUFFIX,chatbotclaude.com,🤖 AI',
+    'DOMAIN-SUFFIX,clau.de,🤖 AI',
+    'DOMAIN-SUFFIX,claude.ai,🤖 AI',
+    'DOMAIN-SUFFIX,claude.app,🤖 AI',
+    'DOMAIN-SUFFIX,claude.com,🤖 AI',
+    'DOMAIN-SUFFIX,claude.dev,🤖 AI',
+    'DOMAIN-SUFFIX,claude.new,🤖 AI',
+    'DOMAIN-SUFFIX,claude.site,🤖 AI',
+    'DOMAIN-SUFFIX,claudeacademy.com,🤖 AI',
+    'DOMAIN-SUFFIX,claudemcpclient.com,🤖 AI',
+    'DOMAIN-SUFFIX,claudemcpcontent.com,🤖 AI',
+    'DOMAIN-SUFFIX,claudepages.dev,🤖 AI',
+    'DOMAIN-SUFFIX,claudestudio.com,🤖 AI',
     'DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
+    'DOMAIN,servd-anthropic-website.b-cdn.net,🤖 AI',
+    'DOMAIN,o1158394.ingest.us.sentry.io,🤖 AI',
     // Canva
     // Canva 可画（中国大陆服务）直连；其余 Canva 自有域名走 AI。
     'DOMAIN-SUFFIX,canva.cn,DIRECT',
@@ -486,6 +527,7 @@ function main(config) {
     'DOMAIN-SUFFIX,canvacode.com,🤖 AI',
     'DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
     // <<< END AI RULES <<<
+    'RULE-SET,OpenAI_Voice,🤖 AI,no-resolve',
     'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve','RULE-SET,GitHub,💻 GitHub,no-resolve','RULE-SET,Telegram,✈️ Telegram,no-resolve',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',

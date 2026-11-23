@@ -48,10 +48,16 @@ assert(direct['rule-providers'].Adult.behavior==='classical','Adult provider beh
 assert(direct['rule-providers'].Adult.format==='text','Adult provider format');
 assert(direct['rule-providers'].Adult.url.endsWith('/Adult.list'),'Adult provider source');
 assert(direct['rule-providers'].Adult.path==='./rule_providers/Adult.list','Adult provider path');
+assert(direct['rule-providers'].OpenAI_Voice,'OpenAI voice provider missing');
+assert(direct['rule-providers'].OpenAI_Voice.behavior==='classical','OpenAI voice provider behavior');
+assert(direct['rule-providers'].OpenAI_Voice.format==='text','OpenAI voice provider format');
+assert(direct['rule-providers'].OpenAI_Voice.url.endsWith('/OpenAI_Voice.list'),'OpenAI voice provider source');
+assert(direct['rule-providers'].OpenAI_Voice.path==='./rule_providers/OpenAI_Voice.list','OpenAI voice provider path');
 assert(!('Global' in direct['rule-providers']),'old Global provider must be absent');
 assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Global,')),'old Global rule must be absent');
 assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义,no-resolve'),'Custom routing rule missing');
 assert(direct.rules.includes('RULE-SET,Adult,🔞 NSFW,no-resolve'),'Adult routing rule missing');
+assert(direct.rules.includes('RULE-SET,OpenAI_Voice,🤖 AI,no-resolve'),'OpenAI voice routing rule missing');
 assert(direct.rules[direct.rules.length-1]==='MATCH,🐟 漏网之鱼','MATCH must route to fallback');
 
 const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google,no-resolve');
@@ -82,6 +88,7 @@ const classicalNoResolveRules=[
   'RULE-SET,Google,🔎 Google,no-resolve',
   'RULE-SET,Custom,🧩 自定义,no-resolve',
   'RULE-SET,Adult,🔞 NSFW,no-resolve',
+  'RULE-SET,OpenAI_Voice,🤖 AI,no-resolve',
   'RULE-SET,China,DIRECT,no-resolve'
 ];
 for(const rule of classicalNoResolveRules){
@@ -101,7 +108,9 @@ for(const rule of direct.rules){
   const name=rule.split(',')[1];
   assert(ruleSetNames.has(name),`missing rule provider: ${name}`);
 }
+const voiceIndex=direct.rules.indexOf('RULE-SET,OpenAI_Voice,🤖 AI,no-resolve');
 const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve');
+assert(voiceIndex!==-1&&voiceIndex<appleIndex,'OpenAI voice rule must precede Apple');
 const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
 const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
 assert(appleIndex>0&&appleIndex<googleIndex,'AI/Apple/Google order');

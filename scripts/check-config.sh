@@ -19,6 +19,9 @@ validator_check="$root/scripts/check-validator-regressions.js"
 version_check="$root/scripts/check-version.js"
 external_check="$root/scripts/check-external-dependencies.sh"
 external_test="$root/scripts/check-external-dependencies.test.sh"
+openai_voice_list="$root/OpenAI_Voice.list"
+openai_voice_check="$root/scripts/check-openai-voice-rules.js"
+openai_voice_sync="$root/scripts/sync-openai-voice-rules.js"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$routing_config" ]] || fail "missing Shadowrocket routing config"
 [[ -f "$ai_rules_source" ]] || fail "missing AI rules source"
@@ -38,6 +41,9 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$version_check" ]] || fail "missing version consistency checker"
 [[ -f "$external_check" ]] || fail "missing external dependency checker"
 [[ -f "$external_test" ]] || fail "missing external dependency regression test"
+[[ -f "$openai_voice_list" ]] || fail "missing OpenAI voice rule list"
+[[ -f "$openai_voice_check" ]] || fail "missing OpenAI voice rule checker"
+[[ -f "$openai_voice_sync" ]] || fail "missing OpenAI voice rule sync script"
 grep -qF 'Shadowrocket_Routing.conf' "$readme" || fail 'README routing config reference'
 grep -qF 'Clash_Verge_Rev_Script.js' "$readme" || fail 'README Clash script reference'
 grep -qF 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Shadowrocket_Routing.conf' "$readme" || fail 'README routing import URL'
@@ -55,6 +61,7 @@ node "$routing_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"
 node "$claude_check"
+node "$openai_voice_check"
 node "$youtube_check"
 node "$hardening_check"
 node "$validator_check"

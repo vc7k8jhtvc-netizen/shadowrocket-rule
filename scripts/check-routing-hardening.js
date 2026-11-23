@@ -44,11 +44,48 @@ for (const rule of [
   'DOMAIN-SUFFIX,openai.com,🤖 AI',
   'DOMAIN,cdn.openaimerge.com,🤖 AI',
   'DOMAIN,o207216.ingest.sentry.io,🤖 AI',
-  'DOMAIN,o33249.ingest.sentry.io,🤖 AI'
+  'DOMAIN,o33249.ingest.sentry.io,🤖 AI',
+  'DOMAIN-SUFFIX,chat.com,🤖 AI',
+  'DOMAIN-SUFFIX,chatgpt.site,🤖 AI',
+  'DOMAIN-SUFFIX,crixet.com,🤖 AI',
+  'DOMAIN-SUFFIX,openai.org,🤖 AI',
+  'DOMAIN-SUFFIX,sora.com,🤖 AI',
+  'DOMAIN,openai.com.cdn.cloudflare.net,🤖 AI',
+  'DOMAIN,openaicom.imgix.net,🤖 AI',
+  'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI',
+  'DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI',
+  'DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI',
+  'DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI'
 ]) {
   assert(valid.rules.includes(rule), 'Clash missing scoped OpenAI rule: ' + rule);
   assert(routing.includes(rule), 'Shadowrocket missing scoped OpenAI rule: ' + rule);
 }
+for (const rule of [
+  'DOMAIN-SUFFIX,grok.x.com,🤖 AI',
+  'DOMAIN-SUFFIX,grokbot.com,🤖 AI'
+]) {
+  assert(valid.rules.includes(rule), 'Clash missing scoped Grok rule: ' + rule);
+  assert(routing.includes(rule), 'Shadowrocket missing scoped Grok rule: ' + rule);
+}
+const grokRule='DOMAIN-SUFFIX,grok.x.com,🤖 AI';
+assert(valid.rules.indexOf(grokRule)<valid.rules.indexOf('RULE-SET,Twitter,📱 社交媒体,no-resolve'),'Clash grok.x.com must precede Twitter');
+assert(routing.indexOf(grokRule)<routing.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Twitter/Twitter.list,📱 社交媒体'),'Shadowrocket grok.x.com must precede Twitter');
+const shadowVoiceRule='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
+const clashVoiceRule='RULE-SET,OpenAI_Voice,🤖 AI,no-resolve';
+assert(valid.rules.includes(clashVoiceRule),'Clash missing OpenAI voice rule');
+assert(routing.includes(shadowVoiceRule),'Shadowrocket missing OpenAI voice rule');
+assert(valid['rule-providers'].OpenAI_Voice&&valid['rule-providers'].OpenAI_Voice.format==='text','Clash OpenAI voice provider missing');
+assert(valid.rules.indexOf(clashVoiceRule)<valid.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve'),'Clash OpenAI voice rule order drift');
+assert(routing.indexOf(shadowVoiceRule)<routing.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple'),'Shadowrocket OpenAI voice rule order drift');
+const voiceList=fs.readFileSync(path.join(root,'OpenAI_Voice.list'),'utf8');
+const voiceEntries=voiceList.split(/\r?\n/).filter(line=>line.startsWith('IP-CIDR')||line.startsWith('IP-CIDR6'));
+assert(voiceEntries.length>0,'OpenAI voice list must contain host IP routes');
+for(const line of voiceEntries){
+  const isV4=line.startsWith('IP-CIDR,')&&line.includes('/32,');
+  const isV6=line.startsWith('IP-CIDR6,')&&line.includes('/128,');
+  assert(line.endsWith(',no-resolve')&&(isV4||isV6),'OpenAI voice list must contain only host routes with no-resolve: '+line);
+}
+
 // Declared personal AI relay: an explicit exception to the OpenAI-only rule, asserted so it cannot drift silently.
 for (const rule of [
   'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
@@ -388,4 +425,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift, locks Gemini/Google AI/Canva plus migrated AI routing, retains listener/tunnel/DNS RULES dependencies, and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks OpenAI voice, Gemini/Google AI, Canva, Grok and migrated AI routing, retains listener/tunnel/DNS RULES dependencies, and avoids shared-SaaS AI capture');

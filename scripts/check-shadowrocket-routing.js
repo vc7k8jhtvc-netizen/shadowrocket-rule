@@ -87,6 +87,7 @@ for (const rule of rules) {
 }
 
 const customMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
+const voiceMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
 const adultMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW';
 assert(rules.includes(customMarker), 'Custom.list routing rule missing');
 assert(rules.includes(adultMarker), 'Adult.list routing rule missing');
@@ -117,6 +118,7 @@ const requiredOrder = [
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
   'DOMAIN-SUFFIX,gemini.google,🤖 AI',
   'DOMAIN-SUFFIX,grok.com,🤖 AI',
+  voiceMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple_Domain.list,🍎 Apple',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Microsoft/Microsoft.list,🪟 Microsoft',
