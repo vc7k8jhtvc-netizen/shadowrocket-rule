@@ -7,10 +7,11 @@
 Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置；私人文件不得提交仓库。
-- `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单。
+- `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单；AI 规则区块由 `rules/ai-rules.json` 同步生成。
+- `rules/ai-rules.json`：双端手工 AI 分流规则（OpenAI / 个人中转 / Exa / Tavily / Supabase / Hugging Face / Gemini / Grok / Claude / Canva）的单一数据源；通过 `node scripts/sync-ai-rules.js` 回写双端标记区块，由 `check-config.sh` 强制校验同步一致性。
 - `Custom.list`：两端共用的个人显式自定义域名规则，由原 `Global.list` 恢复并更名；已提升为专项 AI 分组的 Exa、Tavily、Supabase、Hugging Face 不再收录，JapaneseASMR 与 ASMR.one 归入成人网站分类。
 - `YouTube.Enhance.Shadowrocket.sgmodule`：仅 YouTube 增强脚本、专属规则与两个专属 MITM 主机；不包含 CA 材料及通用 Advertising MITM 范围；脚本直接跟随 `Maasea/sgmodule` 的 `master` 分支。
-- Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers。
+- Clash Verge Rev：保留订阅基础参数，通过扩展脚本重建策略组与规则，无通用广告 Providers；AI 规则区块由 `rules/ai-rules.json` 同步生成。
 
 ## 外部配置文档
 
@@ -26,11 +27,11 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 修改内容 | 维护要求 |
 |---|---|
 | 个人显式自定义域名 | 只修改 `Custom.list`；不得重新使用 `Global.list` 名称 |
-| 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，只改双端 AI 手工规则；必须同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
-| Canva 等专项 AI 自有域名 | 只改双端 AI 手工规则；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
-| Gemini / Google AI 专属域名 | 只改双端 AI 手工规则；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
-| Exa / Tavily 等 AI 搜索服务 | 在双端显式归入 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
-| Supabase / Hugging Face | 按用户偏好固定双端 `🤖 AI`，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
+| 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
+| Canva 等专项 AI 自有域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
+| Gemini / Google AI 专属域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
+| Exa / Tavily 等 AI 搜索服务 | 在 `rules/ai-rules.json` 中显式归入 `🤖 AI` 并同步双端，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
+| Supabase / Hugging Face | 按用户偏好在 `rules/ai-rules.json` 中固定 `🤖 AI` 并同步双端，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
 | 国内明确应直连服务 | 若中国规则未覆盖且实机落入漏网之鱼，增加最小必要官方域名直连例外 |
 | 专项规则、策略组、节点筛选或规则顺序 | 同步修改并检查 Shadowrocket Routing 与 Clash |

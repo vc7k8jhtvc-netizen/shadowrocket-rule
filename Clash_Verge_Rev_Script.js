@@ -331,18 +331,32 @@ function main(config) {
   config.rules = [
     'RULE-SET,Lan,DIRECT,no-resolve',
     'DOMAIN-SUFFIX,deepseek.com,DIRECT',
-    // Shared vendors from the OpenAI allowlist intentionally follow normal routing;
-    // only OpenAI-owned or instance-specific hosts are forced through the AI policy.
-    'DOMAIN-SUFFIX,chatgpt.com,🤖 AI','DOMAIN-SUFFIX,oaistatic.com,🤖 AI','DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI','DOMAIN-SUFFIX,openai.com,🤖 AI','DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
-    'DOMAIN,cdn.openaimerge.com,🤖 AI','DOMAIN,o207216.ingest.sentry.io,🤖 AI','DOMAIN,o33249.ingest.sentry.io,🤖 AI',
-    // Personal AI relay, not OpenAI-owned; kept in sync with Shadowrocket and asserted by hardening checks.
-    'DOMAIN-SUFFIX,a6api.vip,🤖 AI','DOMAIN-SUFFIX,a6api.com,🤖 AI',
-    // Exa / Tavily are AI search services; kept out of Custom.list and routed to AI.
-    'DOMAIN-SUFFIX,exa.ai,🤖 AI','DOMAIN-SUFFIX,tavily.com,🤖 AI',
-    // Supabase and Hugging Face follow AI by user preference; retain explicit ownership outside Custom.list.
-    'DOMAIN-SUFFIX,supabase.com,🤖 AI','DOMAIN-SUFFIX,supabase.co,🤖 AI','DOMAIN-SUFFIX,supabase.in,🤖 AI',
-    'DOMAIN-SUFFIX,huggingface.co,🤖 AI','DOMAIN-SUFFIX,hf.co,🤖 AI','DOMAIN-SUFFIX,hf.space,🤖 AI',
-    // Gemini / Google AI dedicated endpoints; shared Google hosts keep their existing policies.
+    // >>> BEGIN AI RULES (generated from rules/ai-rules.json; run `node scripts/sync-ai-rules.js`) >>>
+    // OpenAI / ChatGPT
+    'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
+    'DOMAIN-SUFFIX,oaistatic.com,🤖 AI',
+    'DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI',
+    'DOMAIN-SUFFIX,openai.com,🤖 AI',
+    'DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
+    'DOMAIN,cdn.openaimerge.com,🤖 AI',
+    'DOMAIN,o207216.ingest.sentry.io,🤖 AI',
+    'DOMAIN,o33249.ingest.sentry.io,🤖 AI',
+    // OpenAI 共享依赖（WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog）保持正常分流。
+    // 个人 AI 中转
+    'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
+    'DOMAIN-SUFFIX,a6api.com,🤖 AI',
+    // Exa / Tavily
+    'DOMAIN-SUFFIX,exa.ai,🤖 AI',
+    'DOMAIN-SUFFIX,tavily.com,🤖 AI',
+    // Supabase / Hugging Face
+    'DOMAIN-SUFFIX,supabase.com,🤖 AI',
+    'DOMAIN-SUFFIX,supabase.co,🤖 AI',
+    'DOMAIN-SUFFIX,supabase.in,🤖 AI',
+    'DOMAIN-SUFFIX,huggingface.co,🤖 AI',
+    'DOMAIN-SUFFIX,hf.co,🤖 AI',
+    'DOMAIN-SUFFIX,hf.space,🤖 AI',
+    // Gemini / Google AI
+    // 含 Antigravity、Google Labs / Flow / Opal、Gemini Web 后端与 Gemini Enterprise 专属入口；共享 Google 主机保持原分流。
     'DOMAIN-SUFFIX,gemini.google,🤖 AI',
     'DOMAIN-SUFFIX,gemini.google.com,🤖 AI',
     'DOMAIN-SUFFIX,bard.google.com,🤖 AI',
@@ -433,16 +447,39 @@ function main(config) {
     'DOMAIN-SUFFIX,global-discoveryengine.mtls.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,opa-pa.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,opa-pa.clients6.google.com,🤖 AI',
-    // Regional Vertex AI hosts use a location prefix joined by a hyphen, which a DNS suffix cannot cover.
-    // The wildcard is anchored to googleapis.com, unlike a keyword that also matches look-alike hosts.
     'DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI',
-    'DOMAIN-SUFFIX,x.ai,🤖 AI','DOMAIN-SUFFIX,grok.com,🤖 AI','DOMAIN-SUFFIX,grokusercontent.com,🤖 AI','DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI','DOMAIN-SUFFIX,groktpcontent.com,🤖 AI','DOMAIN-SUFFIX,grok.me,🤖 AI','DOMAIN-SUFFIX,grokipedia.com,🤖 AI',
-    'DOMAIN-SUFFIX,claude.ai,🤖 AI','DOMAIN-SUFFIX,claude.com,🤖 AI','DOMAIN-SUFFIX,anthropic.com,🤖 AI','DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
-    // Canva China (可画) is a mainland service and stays DIRECT; other Canva-owned domains use AI.
-    // Custom domains and shared CDNs are not inferred.
-    'DOMAIN-SUFFIX,canva.cn,DIRECT','DOMAIN-SUFFIX,canva-apps.cn,DIRECT','DOMAIN-SUFFIX,canva-code.cn,DIRECT','DOMAIN-SUFFIX,my.canvasite.cn,DIRECT',
-    'DOMAIN-SUFFIX,canva.com,🤖 AI','DOMAIN-SUFFIX,canva.ai,🤖 AI','DOMAIN-SUFFIX,canva.app,🤖 AI','DOMAIN-SUFFIX,canva.dev,🤖 AI','DOMAIN-SUFFIX,canva.me,🤖 AI','DOMAIN-SUFFIX,canva.site,🤖 AI','DOMAIN-SUFFIX,canva.link,🤖 AI','DOMAIN-SUFFIX,canva.run,🤖 AI',
-    'DOMAIN-SUFFIX,canva-apps.com,🤖 AI','DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI','DOMAIN-SUFFIX,canvacode.com,🤖 AI','DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
+    // Grok / xAI
+    'DOMAIN-SUFFIX,x.ai,🤖 AI',
+    'DOMAIN-SUFFIX,grok.com,🤖 AI',
+    'DOMAIN-SUFFIX,grokusercontent.com,🤖 AI',
+    'DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI',
+    'DOMAIN-SUFFIX,groktpcontent.com,🤖 AI',
+    'DOMAIN-SUFFIX,grok.me,🤖 AI',
+    'DOMAIN-SUFFIX,grokipedia.com,🤖 AI',
+    // Claude / Anthropic
+    'DOMAIN-SUFFIX,claude.ai,🤖 AI',
+    'DOMAIN-SUFFIX,claude.com,🤖 AI',
+    'DOMAIN-SUFFIX,anthropic.com,🤖 AI',
+    'DOMAIN-SUFFIX,claudeusercontent.com,🤖 AI',
+    // Canva
+    // Canva 可画（中国大陆服务）直连；其余 Canva 自有域名走 AI。
+    'DOMAIN-SUFFIX,canva.cn,DIRECT',
+    'DOMAIN-SUFFIX,canva-apps.cn,DIRECT',
+    'DOMAIN-SUFFIX,canva-code.cn,DIRECT',
+    'DOMAIN-SUFFIX,my.canvasite.cn,DIRECT',
+    'DOMAIN-SUFFIX,canva.com,🤖 AI',
+    'DOMAIN-SUFFIX,canva.ai,🤖 AI',
+    'DOMAIN-SUFFIX,canva.app,🤖 AI',
+    'DOMAIN-SUFFIX,canva.dev,🤖 AI',
+    'DOMAIN-SUFFIX,canva.me,🤖 AI',
+    'DOMAIN-SUFFIX,canva.site,🤖 AI',
+    'DOMAIN-SUFFIX,canva.link,🤖 AI',
+    'DOMAIN-SUFFIX,canva.run,🤖 AI',
+    'DOMAIN-SUFFIX,canva-apps.com,🤖 AI',
+    'DOMAIN-SUFFIX,canva-hosted-embed.com,🤖 AI',
+    'DOMAIN-SUFFIX,canvacode.com,🤖 AI',
+    'DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
+    // <<< END AI RULES <<<
     'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve','RULE-SET,GitHub,💻 GitHub,no-resolve','RULE-SET,Telegram,✈️ Telegram,no-resolve',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',

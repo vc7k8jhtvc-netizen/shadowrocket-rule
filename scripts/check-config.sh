@@ -2,8 +2,10 @@
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 routing_config="$root/Shadowrocket_Routing.conf"
+ai_rules_source="$root/rules/ai-rules.json"
 readme="$root/README.md"
 clash_script="$root/Clash_Verge_Rev_Script.js"
+sync_ai_check="$root/scripts/sync-ai-rules.js"
 clash_check="$root/scripts/check-clash-script.js"
 mihomo_check="$root/scripts/check-mihomo-runtime.js"
 routing_check="$root/scripts/check-shadowrocket-routing.js"
@@ -19,7 +21,9 @@ external_check="$root/scripts/check-external-dependencies.sh"
 external_test="$root/scripts/check-external-dependencies.test.sh"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$routing_config" ]] || fail "missing Shadowrocket routing config"
+[[ -f "$ai_rules_source" ]] || fail "missing AI rules source"
 [[ -f "$clash_script" ]] || fail "missing Clash Verge Rev script"
+[[ -f "$sync_ai_check" ]] || fail "missing AI rules sync checker"
 [[ -f "$clash_check" ]] || fail "missing Clash script checker"
 [[ -f "$mihomo_check" ]] || fail "missing Mihomo runtime checker"
 [[ -f "$routing_check" ]] || fail "missing Shadowrocket routing checker"
@@ -45,6 +49,7 @@ done
 bash -n "$external_check"
 bash -n "$external_test"
 node "$sensitive_check"
+node "$sync_ai_check" --check
 node "$routing_check"
 node "$dual_check"
 node "$clash_check" "$clash_script"

@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.33`。本版本在 Clash 依赖保留中放行 Mihomo 保留的 DNS `#RULES` 标签、保留 `listeners` / `tunnels` 策略引用并清理孤立 `sub-rules`、补齐策略组 `proxies` 数组校验，并为 `Custom` 规则集补齐 `no-resolve`；双端同步移除共享 CDN `featureassets.org`、将 Canva 可画中国大陆域名改为直连，并将 Vertex 区域规则收窄为 `DOMAIN-WILDCARD,*-aiplatform.googleapis.com`。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.34`。本版本将双端手工 AI 分流规则收口至单一数据源 `rules/ai-rules.json`，通过 `scripts/sync-ai-rules.js` 自动同步生成 `Shadowrocket_Routing.conf` 与 `Clash_Verge_Rev_Script.js` 的对应区块，并在本地与 CI 门禁中强制校验同步一致性；双端运行规则与分流行为与 `v2.7.33` 完全一致。**
 
 ## Shadowrocket
 
@@ -12,10 +12,11 @@
 | 来源 | 职责 |
 |---|---|
 | WestData.conf | 节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础能力；不要将私人订阅提交仓库 |
-| Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组** |
+| Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组**（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
+| rules/ai-rules.json | 双端手工 AI 分流规则单一数据源；修改后运行 `node scripts/sync-ai-rules.js` 同步 |
 | Custom.list | 两端共用的个人显式分流规则；Exa、Tavily、Supabase、Hugging Face 已移至 AI，不在此清单 |
 | YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机；脚本直接跟随 Maasea `master`，不再固定 commit SHA |
-| Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts |
+| Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
 
 当前 Routing 优先于被包含的配置。保留末尾三条显式终结规则，让剩余域名和纯 IP 流量优先归入“🐟 漏网之鱼”，避免进入 WestData 的旧 `[Rule]`；该机制在 2026-09-09 曾通过 Shadowrocket 实机日志验证。**v2.7.19 新增的 Claude / Anthropic 分流已于 2026-10-06 完成设备端连接验证，结果正常。**
 
@@ -119,4 +120,4 @@ Canva 规则为 v2.7.25 新增，当前仅完成静态规则、双端一致性�
 - [变更记录](CHANGELOG.md)
 - [安全说明](SECURITY.md)
 
-本地发布前运行 `bash scripts/check-config.sh`；私人订阅可使用 `WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh` 单独校验，但不得提交到仓库。GitHub Actions 另每日检查 Maasea YouTube 脚本及 Blackmatrix 关键规则源的可达性和基础结构。
+修改 AI 手工规则时编辑 `rules/ai-rules.json` 后运行 `node scripts/sync-ai-rules.js` 同步双端；本地发布前运行 `bash scripts/check-config.sh`；私人订阅可使用 `WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh` 单独校验，但不得提交到仓库。GitHub Actions 另每日检查 Maasea YouTube 脚本及 Blackmatrix 关键规则源的可达性和基础结构。

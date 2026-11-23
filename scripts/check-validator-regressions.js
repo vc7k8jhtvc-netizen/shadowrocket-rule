@@ -49,11 +49,13 @@ function runSuite(eol) {
     if (eol === '\r\n') for (const file of fixtures) write(file, read(file));
 
     let routing=read('Shadowrocket_Routing.conf');
+    const aiRules=read('rules/ai-rules.json');
     const custom=read('Custom.list');
     const readme=read('README.md');
     let changelog=read('CHANGELOG.md');
     let clash=read('Clash_Verge_Rev_Script.js');
 
+    check('sync-ai-rules.js',['--check'],0);
     check('check-shadowrocket-routing.js',[],0);
     check('check-dual-client.js',[],0);
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],0);
@@ -69,7 +71,7 @@ function runSuite(eol) {
     // check covers file content on both EOL modes without pretending CRLF scripts run.
     const jsFiles=fixtures.filter(file=>file.endsWith('.js'));
     const shFiles=fixtures.filter(file=>file.endsWith('.sh'));
-    assert(jsFiles.length>=12,`${label}: expected at least 12 JS fixtures, got ${jsFiles.length}`);
+    assert(jsFiles.length>=13,`${label}: expected at least 13 JS fixtures, got ${jsFiles.length}`);
     assert(shFiles.length>=3,`${label}: expected at least 3 shell fixtures, got ${shFiles.length}`);
     for(const file of jsFiles){
       const result=spawnSync(process.execPath,['--check',at(file)],{encoding:'utf8',timeout:10000});
@@ -95,8 +97,27 @@ function runSuite(eol) {
       'Mihomo subscription dependency validation failed'
     ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
     const gate=read('scripts/check-config.sh');
-    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','bash "$external_test"'])
+    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','bash "$external_test"'])
       assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
+
+    // AI rules single-source-of-truth sync checks: drift, missing markers, invalid rules, and write-mode recovery.
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grok.me,🤖 AI",\n',''));
+    check('sync-ai-rules.js',['--check'],1,'AI rules out of sync with rules/ai-rules.json');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI"','"DOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI"'));
+    check('sync-ai-rules.js',['--check'],1,'unsupported AI rule syntax');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.vip,🤖 AI"'));
+    check('sync-ai-rules.js',['--check'],1,'duplicate AI rule');
+    write('rules/ai-rules.json',aiRules);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,grok.me,🤖 AI\n',''));
+    check('sync-ai-rules.js',['--check'],1,'Shadowrocket_Routing.conf');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# >>> BEGIN AI RULES (generated from rules/ai-rules.json; run `node scripts/sync-ai-rules.js`) >>>\n',''));
+    check('sync-ai-rules.js',['--check'],1,'missing AI rules begin marker');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    'DOMAIN-SUFFIX,grok.me,🤖 AI',\n",''));
+    check('sync-ai-rules.js',['--check'],1,'Clash_Verge_Rev_Script.js');
+    check('sync-ai-rules.js',[],0);
+    check('sync-ai-rules.js',['--check'],0);
+    write('Clash_Verge_Rev_Script.js',clash);
 
     let youtubeModule=read('YouTube.Enhance.Shadowrocket.sgmodule');
     write('YouTube.Enhance.Shadowrocket.sgmodule',mutate('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule,'youtubei.googleapis.com\n','youtubei.googleapis.com, *.beacon.qq.com\n'));

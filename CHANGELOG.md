@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.34`：落地审计项 L7（构建期单一数据源，不新增远端 Provider）：
+  - 新增 `rules/ai-rules.json` 作为双端手工 AI 分流规则（8 个分组、136 条规则）的单一数据源，新增 `scripts/sync-ai-rules.js` 支持写回生成（`node scripts/sync-ai-rules.js`）与同步检查（`--check`），并严格校验规则语法、去重与标记完整性。
+  - `Shadowrocket_Routing.conf` 与 `Clash_Verge_Rev_Script.js` 在 AI 规则区块加入同步起止标记，由同步脚本自动维护，双端实际生效规则、顺序与客户端行为与 `v2.7.33` 完全一致。
+  - `check-config.sh` 接入 `node scripts/sync-ai-rules.js --check`，`check-validator-regressions.js` 同步补充源/产物漂移、非法规则、重复条目、标记缺失及写回恢复回归（覆盖 LF / CRLF 双换行）。
 - 内部版本升至 `v2.7.33`：修复全量审计发现的兼容性、输入校验与规则精度问题：
   - **DNS `#RULES` 保留标签**：`Clash_Verge_Rev_Script.js` 的 `preserveDnsServer()` 原样放行 Mihomo 保留标签 `#RULES`（`tunnel.DnsRespectRules`），避免包含该标签的合法订阅被误判为缺失策略并拒绝生成。
   - **附属结构依赖与校验**：保留订阅 `listeners[].proxy` 与 `tunnels`（对象与紧凑字符串格式）所引用的策略组；移除随 `rules` 重建而孤立的 `sub-rules`（若 `listeners[].rule` 引用 `sub-rules` 则 fail-closed 拒绝）；补齐保留策略组 `proxies` 非数组时的统一中文错误拦截，消除未处理 `TypeError`。
