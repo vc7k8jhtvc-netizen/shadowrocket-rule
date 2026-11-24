@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.36`。本版本补齐 OpenAI / Claude / Grok 的专属域名，并新增由 OpenAI 官方语音 IP 数据生成的 `OpenAI_Voice.list`，使 ChatGPT 语音信令、TURN 与 UDP/3478 服务器尽量与“🤖 AI”保持同一出口。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.37`。本版本修复全量审计发现的 Clash 订阅依赖保留边界缺陷（`geosite`/`rule-set` 混合键与策略组 `dialer-proxy` / `empty-fallback`）、语音离线测试 IPv6 盲区、移除 `Custom.list` 共享 Auth0 CDN，并增强离线校验可移植性与凭据扫描模式。**
 
 ## Shadowrocket
 
@@ -53,7 +53,7 @@ ChatGPT 手工规则只强制 OpenAI 自有域名和实例专属主机进入“�
 
 Gemini / Google AI 现按 Google AI 专属入口统一指向“🤖 AI”，覆盖 Gemini Web 与内部后端、Google AI Studio、Gemini Notebook（原 NotebookLM）、Gemini in Workspace、Generative Language API、Vertex AI、Gemini Code Assist、DeepMind、Jules、Google Antigravity、Google Labs / Flow / Opal / Stitch、AI Test Kitchen、Gemma、Android Studio Gemini Code Assist 与 Gemini Enterprise。Antigravity 包含 `antigravity.google` / `antigravity.google.com`、`antigravity.googleapis.com`、`antigravity-pa.googleapis.com` 与 `antigravity-unleash.goog`；Vertex 区域主机 `*-aiplatform.googleapis.com` 由 `DOMAIN-WILDCARD` 规则精确锚定覆盖。`accounts.google.com`、`www.googleapis.com`、`apis.google.com`、`firebaseinstallations.googleapis.com`、`play.google.com`、`googleusercontent.com`、`gstatic.com`、YouTube、广告与分析等共享主机不因 AI 服务被全局接管，继续按原业务规则处理。参考：[Google Gemini geosite 规则](https://github.com/MetaCubeX/meta-rules-dat/tree/meta/geo/geosite/classical)、[v2fly Google DeepMind 规则](https://github.com/v2fly/domain-list-community/blob/master/data/google-deepmind)、[Antigravity Enterprise 网络要求](https://antigravity.google/docs/enterprise)、[Gemini 应用防火墙主机](https://knowledge.workspace.google.com/admin/generative-ai/gemini-app/gemini-app-firewall-settings)。
 
-Claude 新增四条专属后缀分流：`claude.ai`（Web / 登录 / 下载）、`claude.com`（平台与文档）、`anthropic.com`（API 与自有服务，包含 `api.anthropic.com`）、`claudeusercontent.com`（Artifacts / 内容预览），均指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
+Claude / Anthropic 现包含 19 条专属分流规则（17 条 `DOMAIN-SUFFIX` + 2 条精确主机 `DOMAIN`）：覆盖 `claude.ai`、`claude.com`、`anthropic.com`、`claudeusercontent.com`、`claude.app`、`claude.site`、`claudepages.dev`、`claudemcpclient.com`、`claudemcpcontent.com`、`ant.dev`、`clau.de`、`anthropic.team` 等自有域名，以及专属静态/监控主机 `servd-anthropic-website.b-cdn.net`、`o1158394.ingest.us.sentry.io`，全部指向“🤖 AI”。规则置于其他服务规则与中国直连规则之前，不新增第三方共用 CDN / 统计域名、不引入新 Provider / MITM / DNS；未命中的依赖继续沿用原有分流。参考：[Anthropic 官方网络要求](https://code.claude.com/docs/en/network-config)、[官方 Claude 网络控制文档](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions)。
 
 Canva 国际版及自有开发/应用/状态域名（`canva.com`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-hosted-embed.com`、`canvacode.com`、`canvastatus.com`）通过 `DOMAIN-SUFFIX` 指向“🤖 AI”，不引入 Cloudflare 等共享 CDN；Canva 可画中国大陆域名（`canva.cn`、`canva-apps.cn`、`canva-code.cn`、`my.canvasite.cn`）保持 `DIRECT` 直连。用户自行绑定到 Canva 的自定义域名不属于 Canva 自有后缀，无法仅按域名自动识别。
 
@@ -86,7 +86,7 @@ Clash Verge Rev 的运行模式由应用设置控制；请在客户端设置中�
 
 Clash 扩展脚本与小火箭同步业务组、Claude / Gemini 规则、Custom 及中国直连语义。Apple 与中国域名 Provider 统一使用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`+.` 语法，确保根域名与子域名同时命中），`GEOIP,CN,DIRECT` 之前的古典规则集均附加 `no-resolve` 避免提前 DNS 解析，`GEOIP,CN,DIRECT` 本身不带 `no-resolve`；空地区池无论来自静态 `proxies` 还是 `proxy-providers` 均以 `REJECT` 失败关闭，避免跨区静默回退；保留原订阅 DNS、hosts、IPv6 及节点参数。旧 Advertising 规则与缓存需要由客户端按实际配置清理。
 
-订阅节点的 `dialer-proxy`、Provider 下载策略、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含混合 `nameserver-policy` 键）所需依赖会单独保留；Mihomo 保留的 DNS `#RULES` 标签原样透传；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称并自动隔离冲突的缓存 `path`，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组、规则集及孤立 `sub-rules` 会被移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）。无效节点/策略组对象（含非数组 `proxies`）、重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
+订阅节点的 `dialer-proxy`、被保留策略组自身的 `dialer-proxy` / `empty-fallback`、Provider 下载策略、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含 `geosite:...,rule-set:...` 与 `rule-set:...,domain` 等混合 `nameserver-policy` 键）所需依赖会单独保留；注意全部 16 个规则集均通过“🚀 默认代理”下载，若“🇭🇰 香港”空池触发 `REJECT`，请先将“🚀 默认代理”切换至其他有节点的地区以刷新规则集。Mihomo 保留的 DNS `#RULES` 标签原样透传；依赖组显示为 `__subscription_group_*`，依赖规则集使用 `__subscription_rule_*` 名称并自动隔离冲突的缓存 `path`，避免与业务配置重名。DNS 中对应引用会同步更新；原订阅中未被使用的策略组、规则集及孤立 `sub-rules` 会被移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）。无效节点/策略组对象（含非数组 `proxies`）、重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider 会在写回配置前直接拒绝，避免生成半有效配置。
 
 **客户端版本基线：Clash Verge Rev `v2.5.10` 正式版已完成客户端版本验证（2026-11-08），内置 Mihomo 内核 `v1.19.33` 与项目 CI 基线一致；该结论同时覆盖 v2.7.23 / v2.7.24 的路由与校验改动。`v2.5.8` 保留为 v2.7.22 及此前配置的历史验证基线。**
 
@@ -126,9 +126,17 @@ Windows 覆盖安装前仍需先完全退出客户端。
 
 2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验。**v2.7.24 已于 2026-11-08 在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`）上按上述样本完成设备端回归，结果正常；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。** 该次回归同时关闭了 v2.7.23 遗留的验证欠账。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
-v2.7.36 新增的 OpenAI Voice IP、Claude/Grok 扩展域名与语音规则已完成静态回归、双端一致性及本地 Mihomo 加载验证；Shadowrocket 端真实语音 UDP/3478 与 TURN 连接仍需设备连接日志核验。
+### 待实机核验清单（v2.7.25–v2.7.37）
 
-Canva 规则为 v2.7.25 新增，当前仅完成静态规则、双端一致性及本地校验回归；尚未以客户端连接日志完成设备端核验。Exa、Tavily 规则为 v2.7.26 新增，同样仅完成静态规则、双端一致性及本地校验回归。Supabase、Hugging Face 规则为 v2.7.27 新增，当前同样仅完成静态规则、双端一致性及本地校验回归。Gemini / Google AI 扩展规则在 v2.7.30 / v2.7.31 分两轮补齐，当前完成静态规则、双端一致性及本地校验回归；Antigravity 等新增入口的设备端连接日志核验仍待完成。v2.7.32 修复 Clash 域名规则集 `+.` 语法、古典规则集 `no-resolve` 与依赖保留逻辑，当前仅完成静态与离线回归，建议在 Clash Verge Rev 客户端完成 `apple.com` / `bilibili.com` 根域名命中与 DNS 日志核验。v2.7.33 补齐 Clash 依赖保留（DNS `#RULES`、`listeners` / `tunnels`、清理孤立 `sub-rules`、`proxies` 数组校验）及 `Custom` `no-resolve`，并调整双端 Vertex 区域规则、移除共享 CDN `featureassets.org`、将 Canva 中国大陆域名改为直连；当前完成静态回归与 Mihomo 运行时验证，Shadowrocket 端 `DOMAIN-WILDCARD,*-aiplatform.googleapis.com` 与 Canva 直连行为仍建议在设备连接日志中核验。
+以下改动均已通过静态规则、双端一致性与离线/Mihomo 回归，但**尚未完成设备端连接日志核验**，建议在下次更新配置后按表一次性完成双端回归：
+
+| 版本范围 | 待核验项 | 目标客户端 |
+|---|---|---|
+| v2.7.25–v2.7.27 / v2.7.33 | `canva.cn` 走 `DIRECT`、`canva.com` / `exa.ai` / `tavily.com` / `supabase.com` / `huggingface.co` 走 `🤖 AI` | Shadowrocket + Clash |
+| v2.7.30–v2.7.31 / v2.7.33 | Gemini / Antigravity 专属入口与 `DOMAIN-WILDCARD,*-aiplatform.googleapis.com` 走 `🤖 AI` | Shadowrocket + Clash |
+| v2.7.32–v2.7.33 | Clash `apple.com` / `bilibili.com` 根域名命中（`+.` 语法）与 `GEOIP` 前零提前 DNS 解析 | Clash Verge Rev |
+| v2.7.35 | `Adult.list` 命中 `🔞 NSFW` 且与 `Custom.list` 互不干扰 | Shadowrocket + Clash |
+| v2.7.36–v2.7.37 | ChatGPT Voice LiveKit / TURN 与 UDP/3478 走 `🤖 AI`；Claude/Grok 扩展域名生效；移除 `cdn.auth0.com` 后登录正常 | Shadowrocket + Clash |
 
 ## 维护
 

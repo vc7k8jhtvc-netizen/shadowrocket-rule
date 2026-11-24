@@ -195,6 +195,12 @@ function main(config) {
         }
         retained.use = [...original.use];
       }
+      if (original['dialer-proxy'] !== undefined) {
+        retained['dialer-proxy'] = preservePolicy(original['dialer-proxy']);
+      }
+      if (original['empty-fallback'] !== undefined) {
+        retained['empty-fallback'] = preservePolicy(original['empty-fallback']);
+      }
       visiting.delete(name);
       return retained.name;
     }
@@ -256,18 +262,24 @@ function main(config) {
     return `${base}#${nextParts.join('&')}`;
   };
   const preserveDnsServers = value => Array.isArray(value) ? value.map(preserveDnsServer) : preserveDnsServer(value);
+  const isDnsMatcherToken = token => /^(?:geosite|domain|full|regexp):/i.test(token) || /[.*+]/.test(token);
   const preserveDnsPolicyKey = key => {
     if (typeof key !== 'string') return key;
-    const lower = key.toLowerCase();
-    if (lower.startsWith('rule-set:')) {
-      return 'rule-set:' + preserveRuleSetList(key.slice('rule-set:'.length));
-    }
-    if (lower.startsWith('geosite:')) return key;
-    if (!key.includes(',')) return key;
-    return key.split(',').map(part => {
+    const parts = key.split(',');
+    let inRuleSetList = false;
+    return parts.map(part => {
       const trimmed = part.trim();
-      if (trimmed.toLowerCase().startsWith('rule-set:')) {
+      const lower = trimmed.toLowerCase();
+      if (lower.startsWith('rule-set:')) {
+        inRuleSetList = true;
         return 'rule-set:' + preserveDnsRule(trimmed.slice('rule-set:'.length).trim());
+      }
+      if (inRuleSetList) {
+        if (!Object.prototype.hasOwnProperty.call(originalRuleProviders, trimmed) && isDnsMatcherToken(trimmed)) {
+          inRuleSetList = false;
+          return part;
+        }
+        return preserveDnsRule(trimmed);
       }
       return part;
     }).join(',');

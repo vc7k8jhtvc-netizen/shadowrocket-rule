@@ -38,8 +38,24 @@ function runSuite(eol) {
     fs.mkdirSync(path.join(temp, 'scripts'));
     // Derive fixtures from the tracked file list: a newly added checker or gate can
     // never be silently skipped by a hand-maintained list.
-    const fixtures = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
-      .split('\0').filter(Boolean);
+    let fixtures;
+    try {
+      fixtures = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+        .split('\0').filter(Boolean);
+    } catch {
+      const skip = new Set(['.git', 'node_modules', 'private', '.private']);
+      fixtures = [];
+      const walk = current => {
+        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+          if (skip.has(entry.name)) continue;
+          const full = path.join(current, entry.name);
+          if (entry.isDirectory()) walk(full);
+          else if (entry.isFile()) fixtures.push(path.relative(root, full).replace(/\\/g, '/'));
+        }
+      };
+      walk(root);
+      fixtures.sort();
+    }
     assert(fixtures.length > 0, `${label}: git ls-files returned no tracked files`);
     for (const file of fixtures) {
       fs.mkdirSync(path.dirname(at(file)), { recursive: true });
@@ -123,6 +139,10 @@ function runSuite(eol) {
     write('OpenAI_Voice.list',voiceList);
     fs.writeFileSync(at('voice-bad.json'),'{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"0.0.0.0/0"}]}');
     check('sync-openai-voice-rules.js',['--source',at('voice-bad.json')],1,'host routes');
+    fs.writeFileSync(at('voice-v6.json'),'{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"102.37.57.54/32"},{"ipv6Prefix":"2001:db8::1/128"}]}');
+    check('sync-openai-voice-rules.js',['--source',at('voice-v6.json')],0);
+    check('check-openai-voice-rules.js',[],0);
+    write('OpenAI_Voice.list',voiceList);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,grok.me,🤖 AI\n',''));
     check('sync-ai-rules.js',['--check'],1,'Shadowrocket_Routing.conf');
@@ -332,6 +352,12 @@ function runSuite(eol) {
     const syntheticToken='ghp_'+'A'.repeat(24);
     fs.writeFileSync(candidate,syntheticToken+' # placeholder\n');
     check('check-sensitive-data.js',[],1,'GitHub token');
+    const syntheticGoogleKey='AIza'+'A'.repeat(35);
+    fs.writeFileSync(candidate,syntheticGoogleKey+'\n');
+    check('check-sensitive-data.js',[],1,'Google API key');
+    const syntheticJwt='eyJhbGciOiJIUzI1NiJ9.'+'eyJzdWIiOiJ0ZXN0In0.'+'ABCDEFGHIJ1234567890';
+    fs.writeFileSync(candidate,syntheticJwt+'\n');
+    check('check-sensitive-data.js',[],1,'JWT token');
     fs.writeFileSync(candidate,assignment+'test-only\n'+assignment+'placeholder\n'+assignment+'YOUR_PASSWORD\n');
     check('check-sensitive-data.js',[],0);
 

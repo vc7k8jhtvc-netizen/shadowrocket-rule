@@ -25,6 +25,7 @@ openai_voice_sync="$root/scripts/sync-openai-voice-rules.js"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$routing_config" ]] || fail "missing Shadowrocket routing config"
 [[ -f "$ai_rules_source" ]] || fail "missing AI rules source"
+[[ -f "$root/Custom.list" ]] || fail "missing Custom.list"
 [[ -f "$root/Adult.list" ]] || fail "missing Adult.list"
 [[ -f "$clash_script" ]] || fail "missing Clash Verge Rev script"
 [[ -f "$sync_ai_check" ]] || fail "missing AI rules sync checker"

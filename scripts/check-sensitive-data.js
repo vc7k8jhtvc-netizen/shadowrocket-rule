@@ -5,11 +5,32 @@ const { execFileSync } = require('child_process');
 const root = path.resolve(__dirname, '..');
 const self = path.relative(root, __filename).replace(/\\/g, '/');
 
-const files = execFileSync('git', ['ls-files', '-z'], { cwd: root })
-  .toString('utf8')
-  .split('\0')
-  .filter(Boolean)
-  .filter(file => file !== self);
+function listRepoFiles(dir) {
+  try {
+    return execFileSync('git', ['ls-files', '-z'], { cwd: dir, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString('utf8')
+      .split('\0')
+      .filter(Boolean);
+  } catch {
+    const ignoredNames = new Set(['.git', 'node_modules', 'private', '.private']);
+    const ignoredFilePattern = /^(?:Shadowrocket_Generated\.conf|westdata.*\.conf|.*\.(?:local|private)\.conf|\.env(?:\.(?!example$).*)?)$/i;
+    const walked = [];
+    const walk = current => {
+      for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+        if (ignoredNames.has(entry.name)) continue;
+        const full = path.join(current, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.isFile() && !ignoredFilePattern.test(entry.name)) {
+          walked.push(path.relative(dir, full).replace(/\\/g, '/'));
+        }
+      }
+    };
+    walk(dir);
+    return walked.sort();
+  }
+}
+
+const files = listRepoFiles(root).filter(file => file !== self);
 
 const patterns = [
   ['private key', /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/],
@@ -18,6 +39,8 @@ const patterns = [
   ['secret query parameter', /[?&](?:token|access_token|auth|key|api_key|secret|password|passwd|uuid)=[^&\s"'<>]{6,}/i],
   ['GitHub token', /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b/],
   ['AWS access key', /\bAKIA[0-9A-Z]{16}\b/],
+  ['Google API key', /\bAIza[0-9A-Za-z_-]{35}\b/],
+  ['JWT token', /\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/],
   ['OpenAI-style key', /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/],
   ['UUID credential', /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i],
   ['authorization header', /\bAuthorization\s*:\s*(?:Bearer|Basic)\s+[A-Za-z0-9+/_=.-]{8,}/i],

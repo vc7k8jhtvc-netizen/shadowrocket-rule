@@ -130,6 +130,7 @@ for (const domain of ['supabase.com', 'supabase.co', 'supabase.in', 'huggingface
   const entry = 'DOMAIN-SUFFIX,' + domain;
   assert(!customEntries.includes(entry), 'Supabase/HuggingFace must not remain in Custom.list: ' + entry);
 }
+assert(!customEntries.includes('DOMAIN,cdn.auth0.com') && !customEntries.includes('DOMAIN-SUFFIX,cdn.auth0.com'), 'shared Auth0 CDN must not be captured in Custom.list');
 
 // Gemini and Google AI dedicated endpoints must stay explicitly routed to AI.
 // Shared Google hosts retain their normal Google/YouTube policies so unrelated services are not captured.

@@ -148,7 +148,8 @@ const dependencyInput={
   proxies:[{...directInput.proxies[0],'dialer-proxy':'🚀 默认代理'}],
   'proxy-groups':[
     {name:'🚀 默认代理',type:'select',proxies:['Transport']},
-    {name:'Transport',type:'select',proxies:['DIRECT']},
+    {name:'Transport',type:'select',proxies:['DIRECT'],'dialer-proxy':'RelayExit','empty-fallback':'RelayExit'},
+    {name:'RelayExit',type:'select',proxies:['DIRECT']},
     {name:'DnsExit',type:'select',proxies:['DIRECT']},
     {name:'Unused',type:'select',proxies:['REJECT']}
   ],
@@ -160,6 +161,8 @@ const dependencyInput={
     'nameserver-policy':{
       'rule-set:China,SubscriptionDomain':['1.1.1.1','https://dns.google/dns-query#Transport'],
       'example.com,rule-set:MixedDomain':'https://dns.google/dns-query#DnsExit',
+      'geosite:cn,rule-set:MixedDomain':['223.5.5.5'],
+      'rule-set:SubscriptionDomain,example.org':['1.1.1.1'],
       'geosite:cn,netflix':['223.5.5.5']
     },
     'fake-ip-filter':['rule-set:SubscriptionDomain']
@@ -176,6 +179,9 @@ const dialerGroup=group(dependencies,dependencies.proxies[0]['dialer-proxy']);
 assert(dialerGroup&&dialerGroup.name!=='🚀 默认代理','original colliding dialer group must be retained separately');
 const transportGroup=group(dependencies,dialerGroup.proxies[0]);
 assert(JSON.stringify(transportGroup.proxies)==='["DIRECT"]','transitive dialer group dependency must retain its exit');
+const relayGroup=group(dependencies,transportGroup['dialer-proxy']);
+assert(relayGroup&&relayGroup.name.startsWith('__subscription_group_'),'retained group dialer-proxy dependency must be preserved');
+assert(transportGroup['empty-fallback']===relayGroup.name,'retained group empty-fallback dependency must be preserved');
 assert(!group(dependencies,'Unused'),'unreferenced subscription groups must be discarded');
 assert(dependencies['proxy-providers'].WestData.proxy===transportGroup.name,'provider download policy dependency');
 assert(dependencies['proxy-providers'].WestData.override['dialer-proxy']===transportGroup.name,'provider override dialer dependency');
@@ -196,7 +202,11 @@ assert(policyEntries[0][1][1]==='https://dns.google/dns-query#'+transportGroup.n
 const mixedParts=policyEntries[1][0].split(',');
 assert(mixedParts[0]==='example.com'&&mixedParts[1].startsWith('rule-set:__subscription_rule_'),'mixed nameserver-policy rule-set key must be preserved');
 assert(policyEntries[1][1]==='https://dns.google/dns-query#'+dnsExitMatch[1],'string nameserver-policy server #proxy dependency');
-assert(policyEntries[2][0]==='geosite:cn,netflix','geosite nameserver-policy key must remain unchanged');
+const geositeMixedParts=policyEntries[2][0].split(',');
+assert(geositeMixedParts[0]==='geosite:cn'&&geositeMixedParts[1].startsWith('rule-set:__subscription_rule_'),'geosite+rule-set mixed nameserver-policy key must be preserved');
+const ruleSetDomainParts=policyEntries[3][0].split(',');
+assert(ruleSetDomainParts[0].startsWith('rule-set:__subscription_rule_')&&ruleSetDomainParts[1]==='example.org','rule-set+domain mixed nameserver-policy key must be preserved');
+assert(policyEntries[4][0]==='geosite:cn,netflix','geosite nameserver-policy key must remain unchanged');
 assert(dependencies.dns['fake-ip-filter'][0]==='rule-set:'+dnsSets[1],'fake-ip-filter must reference retained DNS rule-provider');
 assert(!dependencies['rule-providers'].Unused,'unreferenced subscription rule-providers must be discarded');
 assert(group(dependencies,'🚀 默认代理').proxies[0]==='🇭🇰 香港','dependency preservation must keep routing default');

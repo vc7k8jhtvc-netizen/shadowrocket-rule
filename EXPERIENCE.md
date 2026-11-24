@@ -56,7 +56,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - 所有业务组及“🐟 漏网之鱼”均须包含香港、台湾、新加坡、日本、美国五个地区选项与“👆 手动选择”；新增地区组时同步两端、候选断言和文档，首个默认出口不得改变。
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；Apple / 中国域名 Provider 统一使用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`+.` 语法，避免根域名漏匹配）；`GEOIP,CN,DIRECT` 之前的所有古典规则集统一使用 `no-resolve` 避免提前 DNS 解析，`GEOIP,CN,DIRECT` 本身不使用 `no-resolve`。
 - Clash 空地区节点池无论来自静态 `proxies` 还是 `proxy-providers`，一律以 `REJECT` 失败关闭，不得静默回退至“👆 手动选择”导致跨区误路由。
-- Clash 额外保留节点 `dialer-proxy`、Provider 下载策略、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含混合 `nameserver-policy` 键）所需的订阅依赖，Mihomo 保留的 DNS `#RULES` 标签原样透传；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称及非冲突缓存 `path` 并同步更新引用，避免覆盖业务配置。孤立 `sub-rules` 随规则重建一并移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）；检查依赖失败时不得部分改写订阅。
+- Clash 额外保留节点 `dialer-proxy`、被保留策略组自身的 `dialer-proxy` / `empty-fallback`、Provider 下载策略、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含 `geosite:...,rule-set:...` 与 `rule-set:...,domain` 等混合 `nameserver-policy` 键）所需的订阅依赖，Mihomo 保留的 DNS `#RULES` 标签原样透传；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称及非冲突缓存 `path` 并同步更新引用，避免覆盖业务配置。孤立 `sub-rules` 随规则重建一并移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）；检查依赖失败时不得部分改写订阅。
 - Clash 必须拒绝无效节点/策略组对象（含非数组 `proxies`）、重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
 - OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机以及 Statsig 共享 CDN `featureassets.org` 不得被全局强制归入 AI；仅自有或实例专属主机使用手工 AI 规则。个人 AI 中转 `a6api.vip` / `a6api.com` 是显式声明的例外，由 hardening 断言锁定，不得再扩大范围。
 - ChatGPT Voice 固定把 `chatgpt.livekit.cloud`、`host.livekit.cloud`、`turn.livekit.cloud` 与官方发布的主机 IP 归入“🤖 AI”；IP 列表使用独立 Provider / RULE-SET，位于 AI 域名规则之后、Apple 之前，并以 `no-resolve` 避免提前 DNS 查询。 `host.livekit.cloud` / `turn.livekit.cloud` 为 LiveKit 共享 TURN 端点，其他使用同一端点的应用也会随“🤖 AI”出口。
@@ -78,7 +78,7 @@ bash scripts/check-config.sh
 WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 ```
 
-检查覆盖：Routing 仅包含 include/Proxy Group/Rule；Custom.list 语法、去重和双端引用；OpenAI Voice 主机路由、去重与双端顺序；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/OpenAI/Gemini/Grok/Claude/Canva/Exa/Tavily/Supabase/Hugging Face 及全部非 AI 规则序列双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 域名 Provider（`Apple_Domain.yaml` / `China_Domain.yaml`）、古典规则集（含 `Custom`）`no-resolve` 与 `GEOIP` 语义；以及离线外部依赖回归测试。CI 另用 Mihomo 核心验证合成配置、全链路 `GEOIP` 前无提前 DNS 查询及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
+检查覆盖：Routing 仅包含 include/Proxy Group/Rule；`rules/ai-rules.json` 单一数据源双端同步；`Custom.list` 与 `Adult.list` 语法、去重、跨清单防重和双端引用（共享 CDN `cdn.auth0.com` 不得进入 `Custom.list`）；OpenAI Voice 主机路由（含 IPv4 `/32` 与 IPv6 `/128`）、去重与双端顺序；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/OpenAI/Gemini/Grok/Claude/Canva/Exa/Tavily/Supabase/Hugging Face 及全部非 AI 规则序列双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 域名 Provider（`Apple_Domain.yaml` / `China_Domain.yaml`）、古典规则集（含 `Custom`）`no-resolve` 与 `GEOIP` 语义；以及离线外部依赖回归测试。CI 另用 Mihomo 核心验证合成配置、全链路 `GEOIP` 前无提前 DNS 查询及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
 无 Git Bash 的 Windows 环境可用 `BASH_SYNTAX_CHECK=/path/to/shfmt.exe` 让负例套件以 `shfmt -ln=bash` 解析 shell；CI 未设置该变量时仍使用 `bash -n`。
 

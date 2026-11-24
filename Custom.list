@@ -18,10 +18,9 @@ DOMAIN-SUFFIX,jina.ai
 # ===== 开发工具 =====
 DOMAIN-SUFFIX,docker.io
 DOMAIN-SUFFIX,docker.com
-# Docker 官方镜像与认证依赖；共享平台使用精确主机
+# Docker 官方镜像依赖；Auth0 共享认证 CDN（cdn.auth0.com）保持正常分流，不全局归入自定义分组
 # 来源：https://docs.docker.com/desktop/setup/allow-list/
 DOMAIN-SUFFIX,dhi.io
-DOMAIN,cdn.auth0.com
 DOMAIN-SUFFIX,stackoverflow.com
 # Stack Exchange 静态资源及图片
 # 来源：https://meta.stackexchange.com/questions/395024

@@ -2,6 +2,12 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.37`：修复全量审计发现的代码、测试、规则边界与文档问题（M1–M5、L1–L4）：
+  - **M1 / M2**：重写 `Clash_Verge_Rev_Script.js` 的 `preserveDnsPolicyKey()`，统一按逗号分段解析 `nameserver-policy` 混合键，修复 `geosite:cn,rule-set:Sub` 漏保留依赖以及 `rule-set:Sub,example.com` 误把后续域名当规则集抛错的问题。
+  - **M3**：`preservePolicy()` 克隆保留订阅策略组时递归保留该组自身的 `dialer-proxy` 与 `empty-fallback` 依赖，并同步补齐 `check-clash-script.js` 单元测试。
+  - **M4**：`scripts/check-external-dependencies.test.sh` 构造 `OpenAI_Voice.list` 离线 fixture 时同时支持 `IP-CIDR,` 与 `IP-CIDR6,`，并在 `check-validator-regressions.js` 补充 IPv6 `/128` 同步与校验回归。
+  - **L1 / L2**：从 `Custom.list` 移除全局共享认证 CDN `cdn.auth0.com` 并加入 `check-routing-hardening.js` 防回归断言；`check-sensitive-data.js` 与 `check-validator-regressions.js` 增加无 `.git` 目录时的文件遍历回退，同时为凭据扫描补充 Google API Key（`AIza...`）与 JWT 规则及负例测试。
+  - **M5 / L3 / L4**：修正 `README.md` 过时的 Claude 规则数量说明（4 条 → 19 条），将 `v2.7.25`–`v2.7.37` 待实机核验项整合为单一核验清单；`EXPERIENCE.md` 同步补齐 `Adult.list`、`rules/ai-rules.json` 与依赖保留说明；`scripts/check-config.sh` 补齐 `Custom.list` 存在性检查；补全 `scripts/check-claude-routing.js` 末尾换行符。
 - 内部版本升至 `v2.7.36`：修复 AI 分流完整性检查发现的缺口：
   - OpenAI / ChatGPT 补齐 `chat.com`、`chatgpt.site`、`crixet.com`、`openai.org`、`sora.com`、OpenAI 专属 CDN/Azure/WebPubSub 主机与 Sentry 主机；Claude / Anthropic 补齐 `ant.dev`、`anthropic.team`、`chatbotclaude.com`、`clau.de`、`claude.app`、`claude.site`、`claudepages.dev`、MCP/Studio 等专属域名；Grok 补齐 `grok.x.com`、`grokbot.com`，避免前者被 Twitter 规则截走。
   - 新增 `OpenAI_Voice.list` 与 `scripts/sync-openai-voice-rules.js`，从 OpenAI 官方 `chatgpt-voice.json` 生成 411 条主机 IP 路由；双端在 AI 域名规则之后、Apple 之前接入“🤖 AI”，并加入 `chatgpt.livekit.cloud`、`host.livekit.cloud`、`turn.livekit.cloud`，使 ChatGPT Voice 的 LiveKit/TURN 与 UDP/3478 服务器不再落到香港兜底出口。
