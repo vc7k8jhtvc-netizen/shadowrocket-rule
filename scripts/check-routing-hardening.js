@@ -18,6 +18,10 @@ vm.runInContext(clashSource, context, { filename: clashPath });
 const assert = (ok, message) => { if (!ok) throw new Error(message); };
 const node = (name, port = 8388) => ({ name, type: 'ss', server: '127.0.0.1', port, cipher: 'aes-128-gcm', password: 'test-only' });
 
+const routingRuleSectionMatch = routing.match(/(?:^|\r?\n)\[Rule\][ \t]*\r?\n([\s\S]*?)(?=\r?\n\[[^\]]+\]|$)/);
+assert(routingRuleSectionMatch, 'Shadowrocket [Rule] section missing');
+const routingRules = routingRuleSectionMatch[1].split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+
 const sharedAiRules = [
   'DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI',
   'DOMAIN-SUFFIX,intercom.io,🤖 AI',
@@ -37,46 +41,62 @@ const sharedAiRules = [
 const valid = context.main({ proxies: [node('Hong Kong | HK-01')] });
 for (const rule of sharedAiRules) {
   assert(!valid.rules.includes(rule), 'Clash must not globally force shared SaaS through AI: ' + rule);
-  assert(!routing.includes(rule), 'Shadowrocket must not globally force shared SaaS through AI: ' + rule);
+  assert(!routingRules.includes(rule), 'Shadowrocket must not globally force shared SaaS through AI: ' + rule);
 }
 for (const rule of [
+  'DOMAIN-SUFFIX,chat.com,🤖 AI',
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
+  'DOMAIN-SUFFIX,chatgpt.site,🤖 AI',
+  'DOMAIN-SUFFIX,crixet.com,🤖 AI',
+  'DOMAIN-SUFFIX,oaistatic.com,🤖 AI',
+  'DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI',
   'DOMAIN-SUFFIX,openai.com,🤖 AI',
+  'DOMAIN-SUFFIX,openai.org,🤖 AI',
+  'DOMAIN-SUFFIX,oaistatsig.com,🤖 AI',
+  'DOMAIN-SUFFIX,sora.com,🤖 AI',
   'DOMAIN,cdn.openaimerge.com,🤖 AI',
   'DOMAIN,o207216.ingest.sentry.io,🤖 AI',
   'DOMAIN,o33249.ingest.sentry.io,🤖 AI',
-  'DOMAIN-SUFFIX,chat.com,🤖 AI',
-  'DOMAIN-SUFFIX,chatgpt.site,🤖 AI',
-  'DOMAIN-SUFFIX,crixet.com,🤖 AI',
-  'DOMAIN-SUFFIX,openai.org,🤖 AI',
-  'DOMAIN-SUFFIX,sora.com,🤖 AI',
+  'DOMAIN,o33249.ingest.us.sentry.io,🤖 AI',
   'DOMAIN,openai.com.cdn.cloudflare.net,🤖 AI',
+  'DOMAIN,openaiapi-site.azureedge.net,🤖 AI',
+  'DOMAIN,openaiassets.blob.core.windows.net,🤖 AI',
+  'DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 AI',
   'DOMAIN,openaicom.imgix.net,🤖 AI',
+  'DOMAIN,openaicomproductionae4b.blob.core.windows.net,🤖 AI',
+  'DOMAIN,production-openaicom-storage.azureedge.net,🤖 AI',
   'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI',
   'DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI',
   'DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI',
   'DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI'
 ]) {
   assert(valid.rules.includes(rule), 'Clash missing scoped OpenAI rule: ' + rule);
-  assert(routing.includes(rule), 'Shadowrocket missing scoped OpenAI rule: ' + rule);
+  assert(routingRules.includes(rule), 'Shadowrocket missing scoped OpenAI rule: ' + rule);
 }
 for (const rule of [
+  'DOMAIN-SUFFIX,x.ai,🤖 AI',
+  'DOMAIN-SUFFIX,grok.com,🤖 AI',
   'DOMAIN-SUFFIX,grok.x.com,🤖 AI',
-  'DOMAIN-SUFFIX,grokbot.com,🤖 AI'
+  'DOMAIN-SUFFIX,grokbot.com,🤖 AI',
+  'DOMAIN-SUFFIX,grokusercontent.com,🤖 AI',
+  'DOMAIN-SUFFIX,grok-sandbox.com,🤖 AI',
+  'DOMAIN-SUFFIX,groktpcontent.com,🤖 AI',
+  'DOMAIN-SUFFIX,grok.me,🤖 AI',
+  'DOMAIN-SUFFIX,grokipedia.com,🤖 AI'
 ]) {
   assert(valid.rules.includes(rule), 'Clash missing scoped Grok rule: ' + rule);
-  assert(routing.includes(rule), 'Shadowrocket missing scoped Grok rule: ' + rule);
+  assert(routingRules.includes(rule), 'Shadowrocket missing scoped Grok rule: ' + rule);
 }
 const grokRule='DOMAIN-SUFFIX,grok.x.com,🤖 AI';
 assert(valid.rules.indexOf(grokRule)<valid.rules.indexOf('RULE-SET,Twitter,📱 社交媒体,no-resolve'),'Clash grok.x.com must precede Twitter');
-assert(routing.indexOf(grokRule)<routing.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Twitter/Twitter.list,📱 社交媒体'),'Shadowrocket grok.x.com must precede Twitter');
+assert(routingRules.indexOf(grokRule)<routingRules.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Twitter/Twitter.list,📱 社交媒体'),'Shadowrocket grok.x.com must precede Twitter');
 const shadowVoiceRule='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
 const clashVoiceRule='RULE-SET,OpenAI_Voice,🤖 AI,no-resolve';
 assert(valid.rules.includes(clashVoiceRule),'Clash missing OpenAI voice rule');
-assert(routing.includes(shadowVoiceRule),'Shadowrocket missing OpenAI voice rule');
+assert(routingRules.includes(shadowVoiceRule),'Shadowrocket missing OpenAI voice rule');
 assert(valid['rule-providers'].OpenAI_Voice&&valid['rule-providers'].OpenAI_Voice.format==='text','Clash OpenAI voice provider missing');
 assert(valid.rules.indexOf(clashVoiceRule)<valid.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve'),'Clash OpenAI voice rule order drift');
-assert(routing.indexOf(shadowVoiceRule)<routing.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple'),'Shadowrocket OpenAI voice rule order drift');
+assert(routingRules.indexOf(shadowVoiceRule)<routingRules.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple'),'Shadowrocket OpenAI voice rule order drift');
 const voiceList=fs.readFileSync(path.join(root,'OpenAI_Voice.list'),'utf8');
 const voiceEntries=voiceList.split(/\r?\n/).filter(line=>line.startsWith('IP-CIDR')||line.startsWith('IP-CIDR6'));
 assert(voiceEntries.length>0,'OpenAI voice list must contain host IP routes');
@@ -92,7 +112,7 @@ for (const rule of [
   'DOMAIN-SUFFIX,a6api.com,🤖 AI'
 ]) {
   assert(valid.rules.includes(rule), 'Clash missing personal AI relay rule: ' + rule);
-  assert(routing.includes(rule), 'Shadowrocket missing personal AI relay rule: ' + rule);
+  assert(routingRules.includes(rule), 'Shadowrocket missing personal AI relay rule: ' + rule);
 }
 
 // Exa and Tavily are AI search services. They must route explicitly to AI and
@@ -103,7 +123,7 @@ const aiSearchRules = [
 ];
 for (const rule of aiSearchRules) {
   assert(valid.rules.includes(rule), 'Clash missing Exa/Tavily AI search rule: ' + rule);
-  assert(routing.includes(rule), 'Shadowrocket missing Exa/Tavily AI search rule: ' + rule);
+  assert(routingRules.includes(rule), 'Shadowrocket missing Exa/Tavily AI search rule: ' + rule);
 }
 
 // Supabase and Hugging Face are explicit AI-group choices. Their former Custom
@@ -118,7 +138,7 @@ const aiPlatformRules = [
 ];
 for (const rule of aiPlatformRules) {
   assert(valid.rules.includes(rule), 'Clash missing Supabase/HuggingFace AI platform rule: ' + rule);
-  assert(routing.includes(rule), 'Shadowrocket missing Supabase/HuggingFace AI platform rule: ' + rule);
+  assert(routingRules.includes(rule), 'Shadowrocket missing Supabase/HuggingFace AI platform rule: ' + rule);
 }
 const migratedAiRules = [...aiSearchRules, ...aiPlatformRules];
 const customEntries = customList.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
@@ -157,8 +177,6 @@ const geminiDomainSuffixes = [
   'geller-pa.googleapis.com',
   'generativelanguage.googleapis.com',
   'generativelanguage.mtls.googleapis.com',
-  'jnn-pa.googleapis.com',
-  'waa-pa.clients6.google.com',
   'appsgenaiserver-pa.clients.google.com',
   'appsgenaiserver-pa.clients6.google.com',
   'appsgenaiserver-pa.googleapis.com',
@@ -245,9 +263,10 @@ const sharedGeminiDependencyHosts = [
   'www.google-analytics.com',
   'googleads.g.doubleclick.net',
   'accounts.google.com',
-  'firebaseinstallations.googleapis.com'
+  'firebaseinstallations.googleapis.com',
+  'jnn-pa.googleapis.com',
+  'waa-pa.clients6.google.com'
 ];
-const routingRules = routing.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
 const routeManualRule = (rules, host) => {
   for (const rule of rules) {
     if (!rule.endsWith(',🤖 AI')) continue;
@@ -256,7 +275,7 @@ const routeManualRule = (rules, host) => {
     if (type === 'DOMAIN-SUFFIX' && (host === domain || host.endsWith('.' + domain))) return policy;
     if (type === 'DOMAIN-KEYWORD' && host.includes(domain)) return policy;
     if (type === 'DOMAIN-WILDCARD') {
-      const pattern = domain.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      const pattern = domain.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^.]*');
       if (new RegExp('^' + pattern + '$').test(host)) return policy;
     }
   }
@@ -277,7 +296,6 @@ const geminiPositiveHosts = [
   'alkali.generativelanguage.googleapis.com',
   'geller-pa.googleapis.com',
   'appsgenaiserver-pa.googleapis.com',
-  'waa-pa.clients6.google.com',
   'us-central1-aiplatform.googleapis.com',
   'cloudaicompanion.googleapis.com',
   'antigravity.google',
@@ -294,7 +312,7 @@ const geminiPositiveHosts = [
   'gemma.ai',
   'jules.google.com'
 ];
-const geminiNegativeHosts = ['example.com', 'google.com', 'www.googleapis.com', 'apis.google.com', 'www.youtube.com', 'gemini.google.evil.example', 'x-aiplatform.googleapis.com.attacker.example', 'aiplatform.googleapis.com.evil.example'];
+const geminiNegativeHosts = ['example.com', 'google.com', 'www.googleapis.com', 'apis.google.com', 'www.youtube.com', 'jnn-pa.googleapis.com', 'waa-pa.clients6.google.com', 'gemini.google.evil.example', 'x-aiplatform.googleapis.com.attacker.example', 'aiplatform.googleapis.com.evil.example'];
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
   for (const rule of expectedGeminiRules) assert(rules.includes(rule), name + ' missing Gemini/Google AI rule: ' + rule);
   assert(!rules.some(rule => rule.startsWith('DOMAIN-KEYWORD,') && rule.endsWith(',🤖 AI')), name + ' AI rules must not use unanchored DOMAIN-KEYWORD');

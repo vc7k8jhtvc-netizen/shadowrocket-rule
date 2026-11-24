@@ -14,11 +14,29 @@ const SHADOW_END = '# <<< END AI RULES <<<';
 const CLASH_BEGIN = '    // >>> BEGIN AI RULES (generated from rules/ai-rules.json; run `node scripts/sync-ai-rules.js`) >>>';
 const CLASH_END = '    // <<< END AI RULES <<<';
 
-const RULE_PATTERN = /^(?:DOMAIN|DOMAIN-SUFFIX|DOMAIN-WILDCARD),[A-Za-z0-9.*-]+,(?:🤖 AI|DIRECT)$/;
+const HOST_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+const WILDCARD_HOST_PATTERN = /^(?=.*\*)[a-z0-9*](?:[a-z0-9*-]{0,61}[a-z0-9*])?(?:\.[a-z0-9*](?:[a-z0-9*-]{0,61}[a-z0-9*])?)+$/;
+const ALLOWED_POLICIES = new Set(['🤖 AI', 'DIRECT']);
 
 const assert = (ok, message) => {
   if (!ok) throw new Error(message);
 };
+
+function parseAiRule(rule, sectionId) {
+  assert(typeof rule === 'string', `unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  const parts = rule.split(',');
+  assert(parts.length === 3, `unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  const [type, host, policy] = parts;
+  assert(ALLOWED_POLICIES.has(policy), `unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  if (type === 'DOMAIN' || type === 'DOMAIN-SUFFIX') {
+    assert(HOST_PATTERN.test(host), `unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  } else if (type === 'DOMAIN-WILDCARD') {
+    assert(WILDCARD_HOST_PATTERN.test(host), `unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  } else {
+    throw new Error(`unsupported AI rule syntax in rules/ai-rules.json (${sectionId}): ${rule}`);
+  }
+  return { type, host, policy, raw: rule, sectionId };
+}
 
 function validateComments(comments, label) {
   if (comments === undefined) return [];
@@ -41,6 +59,8 @@ function loadSource() {
 
   const seenIds = new Set();
   const seenRules = new Set();
+  const seenDomainPolicies = new Map();
+  const parsedRules = [];
   let totalRules = 0;
 
   const sections = data.sections.map((section, index) => {
@@ -55,9 +75,19 @@ function loadSource() {
 
     assert(Array.isArray(section.rules) && section.rules.length > 0, `section[${section.id}] must have a non-empty rules array`);
     for (const rule of section.rules) {
-      assert(typeof rule === 'string' && RULE_PATTERN.test(rule), `unsupported AI rule syntax in rules/ai-rules.json (${section.id}): ${rule}`);
-      assert(!seenRules.has(rule), `duplicate AI rule in rules/ai-rules.json: ${rule}`);
-      seenRules.add(rule);
+      const parsed = parseAiRule(rule, section.id);
+      const canonicalKey = `${parsed.type},${parsed.host.toLowerCase()},${parsed.policy}`;
+      assert(!seenRules.has(canonicalKey), `duplicate AI rule in rules/ai-rules.json: ${rule}`);
+      seenRules.add(canonicalKey);
+
+      const hostKey = parsed.host.toLowerCase();
+      if (seenDomainPolicies.has(hostKey)) {
+        const previous = seenDomainPolicies.get(hostKey);
+        assert(previous.policy === parsed.policy, `conflicting AI rule policies in rules/ai-rules.json: ${previous.raw} vs ${rule}`);
+        throw new Error(`duplicate AI rule in rules/ai-rules.json: ${rule}`);
+      }
+      seenDomainPolicies.set(hostKey, parsed);
+      parsedRules.push(parsed);
       totalRules++;
     }
 
@@ -69,6 +99,25 @@ function loadSource() {
       rules: section.rules
     };
   });
+
+  // Prevent redundant same-policy shadowing or parent suffix swallowing a later different-policy child rule.
+  for (let i = 0; i < parsedRules.length; i++) {
+    const parent = parsedRules[i];
+    if (parent.type !== 'DOMAIN-SUFFIX') continue;
+    for (let j = 0; j < parsedRules.length; j++) {
+      if (i === j) continue;
+      const child = parsedRules[j];
+      if (child.type === 'DOMAIN-WILDCARD') continue;
+      if (child.host.endsWith('.' + parent.host)) {
+        if (child.policy === parent.policy) {
+          throw new Error(`redundant shadowed AI rule in rules/ai-rules.json: ${child.raw} is already covered by ${parent.raw}`);
+        }
+        if (i < j) {
+          throw new Error(`shadowed AI rule order in rules/ai-rules.json: ${child.raw} is preceded by ${parent.raw}`);
+        }
+      }
+    }
+  }
 
   return { sections, totalRules };
 }

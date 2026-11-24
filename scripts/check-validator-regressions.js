@@ -115,24 +115,31 @@ function runSuite(eol) {
     for(const marker of [
       'empty filtered group is not blocked',
       'LAN unexpectedly triggered DNS before domain routing',
-      'Mihomo subscription dependency validation failed'
+      'Mihomo subscription dependency validation failed',
+      'Mihomo routing mismatch'
     ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
     const gate=read('scripts/check-config.sh');
     for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','node "$openai_voice_check"','bash "$external_test"'])
       assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
 
-    // AI rules single-source-of-truth sync checks: drift, missing markers, invalid rules, and write-mode recovery.
+    // AI rules single-source-of-truth sync checks: drift, missing markers, invalid rules, conflicts, and write-mode recovery.
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grok.me,🤖 AI",\n',''));
     check('sync-ai-rules.js',['--check'],1,'AI rules out of sync with rules/ai-rules.json');
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-WILDCARD,*-aiplatform.googleapis.com,🤖 AI"','"DOMAIN-KEYWORD,-aiplatform.googleapis.com,🤖 AI"'));
     check('sync-ai-rules.js',['--check'],1,'unsupported AI rule syntax');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grok.me,🤖 AI"','"DOMAIN-SUFFIX,*.grok.me,🤖 AI"'));
+    check('sync-ai-rules.js',['--check'],1,'unsupported AI rule syntax');
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.vip,🤖 AI"'));
     check('sync-ai-rules.js',['--check'],1,'duplicate AI rule');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.vip,DIRECT"'));
+    check('sync-ai-rules.js',['--check'],1,'conflicting AI rule policies');
     write('rules/ai-rules.json',aiRules);
     const voiceList=read('OpenAI_Voice.list');
     const voiceFirst=voiceList.split('\n').find(line=>line.startsWith('IP-CIDR,'));
     assert(voiceFirst,label+': OpenAI voice fixture has no IPv4 rule');
     write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,'IP-CIDR,0.0.0.0/0,no-resolve'));
+    check('check-openai-voice-rules.js',[],1,'host routes');
+    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,voiceFirst.replace('/32,','/032,')));
     check('check-openai-voice-rules.js',[],1,'host routes');
     write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,voiceFirst.replace(',no-resolve','')));
     check('check-openai-voice-rules.js',[],1,'unsupported OpenAI voice rule');
@@ -199,6 +206,10 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',clash);
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# Gemini / Google AI\n','# Gemini / Google AI\nDOMAIN-SUFFIX,www.googleapis.com,🤖 AI\n'));
     check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# Gemini / Google AI\n','# Gemini / Google AI\nDOMAIN-SUFFIX,jnn-pa.googleapis.com,🤖 AI\n'));
+    check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# Gemini / Google AI\n','# Gemini / Google AI\nDOMAIN-SUFFIX,waa-pa.clients6.google.com,🤖 AI\n'));
+    check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
     write('Shadowrocket_Routing.conf',routing);
 
     // v2.7.33: regional Vertex AI must stay anchored, shared Statsig CDN and mainland Canva stay out of AI.
@@ -217,6 +228,10 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'tunnel proxy must map to the retained group');
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"  delete config['sub-rules'];\n",''));
     check('check-routing-hardening.js',[],1,'orphaned sub-rules must be removed');
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"  if (ntp !== undefined) config.ntp = ntp;\n",''));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'ntp.dialer-proxy must map to retained group');
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"      if (key === 'fake-ip-filter' && isFakeIpRuleMode && Array.isArray(value)) {\n        return [key, value.map(preserveFakeIpFilterRule)];\n      }\n",''));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'rule-mode fake-ip-filter RULE-SET must map to retained rule-provider');
     write('Clash_Verge_Rev_Script.js',clash);
 
     // Personal AI relay rules are explicit exceptions and must not silently disappear.
@@ -227,9 +242,11 @@ function runSuite(eol) {
     check('check-dual-client.js',[],1,'AI manual rules drift between clients');
     write('Clash_Verge_Rev_Script.js',clash);
 
-    // The hardening checker itself must reject drift; parity checks alone would not
-    // notice a weakened hardening assertion.
+    // The hardening checker itself must reject drift and commented-out rules; parity checks
+    // alone would not notice a weakened hardening assertion.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n',''));
+    check('check-routing-hardening.js',[],1,'personal AI relay rule');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,a6api.vip,🤖 AI\n','# DOMAIN-SUFFIX,a6api.vip,🤖 AI\n'));
     check('check-routing-hardening.js',[],1,'personal AI relay rule');
     write('Shadowrocket_Routing.conf',routing);
 
@@ -262,6 +279,10 @@ function runSuite(eol) {
     check('check-shadowrocket-routing.js',[],1,'duplicate Custom.list entry');
     write('Custom.list',custom+'INVALID,example.com\n');
     check('check-shadowrocket-routing.js',[],1,'unsupported Custom.list rule syntax');
+    write('Custom.list',custom+'DOMAIN-SUFFIX,https://example.com\n');
+    check('check-shadowrocket-routing.js',[],1,'unsupported Custom.list rule syntax');
+    write('Custom.list',custom+'DOMAIN-SUFFIX,openai.com\n');
+    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Shadowrocket_Routing.conf');
     write('Custom.list',custom);
 
     write('Adult.list',adult+'DOMAIN-SUFFIX,jable.tv\n');
@@ -269,6 +290,8 @@ function runSuite(eol) {
     write('Adult.list',adult+'INVALID,example.com\n');
     check('check-shadowrocket-routing.js',[],1,'unsupported Adult.list rule syntax');
     write('Adult.list',adult+'DOMAIN-SUFFIX,wikipedia.org\n');
+    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Adult.list');
+    write('Adult.list',adult+'DOMAIN,en.wikipedia.org\n');
     check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Adult.list');
     write('Adult.list',adult);
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW\n',''));
@@ -283,6 +306,10 @@ function runSuite(eol) {
     check('check-shadowrocket-routing.js',[],1,'fallback group must include DIRECT');
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-WILDCARD,*,🐟 漏网之鱼\n',''));
     check('check-shadowrocket-routing.js',[],1,'explicit terminal rules');
+    // Comment containing [Rule] must not hijack anchored section() parsing (L3).
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'[General]\n','# note mentioning [Rule] in comment\n[General]\n'));
+    check('check-shadowrocket-routing.js',[],0);
+    check('check-dual-client.js',[],0);
     write('Shadowrocket_Routing.conf',routing);
 
     write('README.md',mutatePattern('README.md',readme,/内部版本为 `v\d+\.\d+\.\d+`/,'内部版本为 `v9.9.9`'));
@@ -292,6 +319,10 @@ function runSuite(eol) {
     write('CHANGELOG.md',mutatePattern('CHANGELOG.md',changelog,/内部版本(?:升至|为) `v\d+\.\d+\.\d+`/,'内部版本为 `v9.9.9`'));
     check('check-version.js',[],1,'version mismatch');
     write('CHANGELOG.md',changelog);
+
+    write('Clash_Verge_Rev_Script.js',mutatePattern('Clash_Verge_Rev_Script.js',clash,/const scriptVersion = 'v\d+\.\d+\.\d+';/,"const scriptVersion = 'v9.9.9';"));
+    check('check-version.js',[],1,'version mismatch');
+    write('Clash_Verge_Rev_Script.js',clash);
 
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,'url: `${blackmatrix}/Clash/${name}/${name}_Domain.yaml`','url: `${blackmatrix}/Clash/${name}/${name}_Domain.txt`'));
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Apple domain rule-provider source');
@@ -358,7 +389,18 @@ function runSuite(eol) {
     const syntheticJwt='eyJhbGciOiJIUzI1NiJ9.'+'eyJzdWIiOiJ0ZXN0In0.'+'ABCDEFGHIJ1234567890';
     fs.writeFileSync(candidate,syntheticJwt+'\n');
     check('check-sensitive-data.js',[],1,'JWT token');
+    // Empty CA field must not skip scanning tokens on the same line (M7).
+    fs.writeFileSync(candidate,'ca-passphrase = "" # '+syntheticToken+'\n');
+    check('check-sensitive-data.js',[],1,'GitHub token');
+    // Modern proxy URI must be detected (M7).
+    fs.writeFileSync(candidate,'any'+'tls://synthetic@198.51.100.1:443\n');
+    check('check-sensitive-data.js',[],1,'proxy URI');
     fs.writeFileSync(candidate,assignment+'test-only\n'+assignment+'placeholder\n'+assignment+'YOUR_PASSWORD\n');
+    // Untracked non-ignored files with secrets must also be caught before git add (M7).
+    const untrackedLeak=path.join(temp,'untracked-leak.txt');
+    fs.writeFileSync(untrackedLeak,syntheticToken+'\n');
+    check('check-sensitive-data.js',[],1,'GitHub token');
+    fs.rmSync(untrackedLeak);
     check('check-sensitive-data.js',[],0);
 
     console.log(`PASS: validator regressions cover every tracked checker, EOL syntax, hardening and M4 guards (${label})`);

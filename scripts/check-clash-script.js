@@ -70,7 +70,7 @@ assert(group(direct,'🇺🇸 美国').proxies.includes('United States | US-01')
 assert(!group(direct,'👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'),'all-node filter');
 assert(JSON.stringify(group(direct,'🏝️ 台湾').proxies)===JSON.stringify(['REJECT']),'empty region must fail closed to REJECT');
 assert(JSON.stringify(group(direct,'🇸🇬 新加坡').proxies)===JSON.stringify(['REJECT']),'empty Singapore region must fail closed to REJECT');
-assert(logs.some(item=>item.message.includes('开始生成')),'start log');
+assert(logs.some(item=>/开始生成 Clash Verge Rev 配置 \(v\d+\.\d+\.\d+\)/.test(item.message)),'start log must include script version');
 assert(logs.some(item=>item.message.includes('完成：')),'completion log');
 assert(logs.some(item=>item.level==='warn'&&item.message.includes('台湾')),'fallback warning');
 assert(!logs.some(item=>item.message.includes('HK-01')),'console must not expose node names');
@@ -131,6 +131,16 @@ for(const name of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯
   assert(region['empty-fallback']==='REJECT',name+' fail closed');
   assert(!region.proxies||!region.proxies.includes('👆 手动选择'),name+' provider fallback must not mask filtering');
 }
+// YAML empty keys deserialize as null; null proxies (with providers), listeners, and tunnels must be accepted.
+const nullFields=context.main({
+  proxies:null,
+  'proxy-groups':null,
+  'rule-providers':null,
+  listeners:null,
+  tunnels:null,
+  'proxy-providers':{WestData:{type:'http',url:'https://example.invalid/sub'}}
+});
+assert(group(nullFields,'👆 手动选择').use.includes('WestData'),'null proxies with provider must be accepted');
 let rejected=false;try{context.main({});}catch(error){rejected=/proxies/.test(error.message);}assert(rejected,'empty subscriptions must fail closed');
 for(const name of ['HK-01','剩余流量：10GB']){
   const input={proxies:[{...directInput.proxies[0],name}],rules:['MATCH,DIRECT']};
@@ -165,12 +175,14 @@ const dependencyInput={
       'rule-set:SubscriptionDomain,example.org':['1.1.1.1'],
       'geosite:cn,netflix':['223.5.5.5']
     },
-    'fake-ip-filter':['rule-set:SubscriptionDomain']
+    'fake-ip-filter':['rule-set:SubscriptionDomain','rule-set:WinBackslash','rule-set:CaseClash']
   },
   'rule-providers':{
     China:{type:'inline',behavior:'domain',payload:['+.fixture.invalid'],path:'./rule_providers/China.yaml'},
     SubscriptionDomain:{type:'inline',behavior:'domain',payload:['+.subscription.invalid'],proxy:'Transport'},
     MixedDomain:{type:'inline',behavior:'domain',payload:['+.mixed.invalid']},
+    WinBackslash:{type:'inline',behavior:'domain',payload:['+.win.invalid'],path:'.\\rule_providers\\China.yaml'},
+    CaseClash:{type:'inline',behavior:'domain',payload:['+.case.invalid'],path:'./rule_providers/china.yaml'},
     Unused:{type:'inline',behavior:'domain',payload:['+.unused.invalid']}
   }
 };
@@ -208,15 +220,55 @@ const ruleSetDomainParts=policyEntries[3][0].split(',');
 assert(ruleSetDomainParts[0].startsWith('rule-set:__subscription_rule_')&&ruleSetDomainParts[1]==='example.org','rule-set+domain mixed nameserver-policy key must be preserved');
 assert(policyEntries[4][0]==='geosite:cn,netflix','geosite nameserver-policy key must remain unchanged');
 assert(dependencies.dns['fake-ip-filter'][0]==='rule-set:'+dnsSets[1],'fake-ip-filter must reference retained DNS rule-provider');
+const winRetainedName=dependencies.dns['fake-ip-filter'][1].slice('rule-set:'.length);
+const caseRetainedName=dependencies.dns['fake-ip-filter'][2].slice('rule-set:'.length);
+const normalizedAllPaths=Object.values(dependencies['rule-providers']).map(p=>p.path).filter(Boolean).map(p=>p.replace(/\\/g,'/').replace(/\/+/g,'/').replace(/^(?:\.\/)+/,'').toLowerCase());
+assert(new Set(normalizedAllPaths).size===normalizedAllPaths.length,'Windows backslash and case-insensitive rule-provider paths must never collide');
+assert(dependencies['rule-providers'][winRetainedName].path!=='.\\rule_providers\\China.yaml','backslash colliding path must be isolated');
+assert(dependencies['rule-providers'][caseRetainedName].path!=='./rule_providers/china.yaml','case-colliding path must be isolated');
 assert(!dependencies['rule-providers'].Unused,'unreferenced subscription rule-providers must be discarded');
 assert(group(dependencies,'🚀 默认代理').proxies[0]==='🇭🇰 香港','dependency preservation must keep routing default');
 assert(dependencies['rule-providers'].China.url.endsWith('/Clash/China/China.yaml'),'dependency preservation must keep routing provider');
+
+// M3: fake-ip-filter-mode: rule (RULE-SET,<name>,fake-ip|real-ip) and ntp.dialer-proxy retention.
+const ruleModeInput={
+  proxies:[directInput.proxies[0]],
+  'proxy-groups':[{name:'NtpExit',type:'select',proxies:['DIRECT']}],
+  ntp:{enable:true,server:'time.apple.com',port:123,'dialer-proxy':'NtpExit'},
+  dns:{
+    enable:true,
+    'enhanced-mode':'fake-ip',
+    'fake-ip-filter-mode':'rule',
+    'fake-ip-filter':['RULE-SET,RuleModeDomain,real-ip','DOMAIN-SUFFIX,example.invalid,fake-ip','MATCH,fake-ip']
+  },
+  'rule-providers':{
+    RuleModeDomain:{type:'inline',behavior:'domain',payload:['+.rulemode.invalid']},
+    UnusedRuleMode:{type:'inline',behavior:'domain',payload:['+.unused.invalid']}
+  }
+};
+const ruleMode=context.main(JSON.parse(JSON.stringify(ruleModeInput)));
+const ruleModeEntry=ruleMode.dns['fake-ip-filter'][0];
+const ruleModeParts=ruleModeEntry.split(',');
+assert(ruleModeParts[0]==='RULE-SET'&&ruleModeParts[1].startsWith('__subscription_rule_')&&ruleModeParts[2]==='real-ip','rule-mode fake-ip-filter RULE-SET must map to retained rule-provider');
+assert(ruleMode['rule-providers'][ruleModeParts[1]]&&!ruleMode['rule-providers'].UnusedRuleMode,'only referenced rule-mode fake-ip-filter provider must be retained');
+assert(ruleMode.dns['fake-ip-filter'][1]==='DOMAIN-SUFFIX,example.invalid,fake-ip','non RULE-SET fake-ip-filter rule must stay untouched');
+assert(ruleMode.ntp&&ruleMode.ntp['dialer-proxy'].startsWith('__subscription_group_')&&group(ruleMode,ruleMode.ntp['dialer-proxy']),'ntp.dialer-proxy must map to retained group');
+const ntpNull=context.main({proxies:[directInput.proxies[0]],ntp:null});
+assert(ntpNull.ntp===null,'null ntp YAML key must be accepted');
+
 for(const invalid of [
   {...dependencyInput,'proxy-groups':[{name:'🚀 默认代理',type:'select',proxies:['🚀 默认代理']}]},
   {...dependencyInput,'rule-providers':{}},
   {...dependencyInput,dns:{enable:true,nameserver:['https://dns.google/dns-query#MissingPolicy']}},
   {...dependencyInput,'proxy-groups':[null]},
-  {proxies:[{...directInput.proxies[0]},null]}
+  {proxies:[{...directInput.proxies[0]},null]},
+  {proxies:[directInput.proxies[0]],'proxy-providers':[]},
+  {proxies:[directInput.proxies[0]],'rule-providers':[]},
+  {proxies:[directInput.proxies[0]],listeners:'invalid'},
+  {proxies:[directInput.proxies[0]],tunnels:'invalid'},
+  {proxies:[directInput.proxies[0]],ntp:[]},
+  {proxies:[directInput.proxies[0]],ntp:{enable:true,'dialer-proxy':'MissingPolicy'}},
+  {proxies:[directInput.proxies[0]],dns:{enable:true,'fake-ip-filter-mode':'rule','fake-ip-filter':['RULE-SET,MissingRuleSet,real-ip']}}
 ]){
   const input=JSON.parse(JSON.stringify(invalid)),before=JSON.stringify(input);
   let failed=false;try{context.main(input);}catch(error){failed=/订阅/.test(error.message);}
@@ -224,4 +276,4 @@ for(const invalid of [
   assert(JSON.stringify(input)===before,'dependency rejection must not partially mutate input');
 }
 if(process.env.MIHOMO_CONFIG_OUTPUT)fs.writeFileSync(process.env.MIHOMO_CONFIG_OUTPUT,JSON.stringify(direct,null,2));
-console.log('PASS: Clash Verge Rev Custom routing checks (no Advertising)');
+console.log('PASS: Clash Verge Rev Custom, Adult, OpenAI Voice and dependency checks (no Advertising)');

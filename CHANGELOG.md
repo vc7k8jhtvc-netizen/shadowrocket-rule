@@ -2,6 +2,11 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.38`：落地全量审计增量修复（H1 / M1–M7 / L1–L3）：
+  - **H1（共享 Google 反滥用域名收敛）**：从 `rules/ai-rules.json` 及双端“🤖 AI”规则移除 Google 全局 BotGuard / Web Anti-Abuse 域名 `jnn-pa.googleapis.com` 与 `waa-pa.clients6.google.com`，恢复走正常 Google 分流，避免 YouTube 播放器 PO Token 校验与视频流出口分裂触发风控；同步纳入 `check-routing-hardening.js` 禁止清单与负例回归。
+  - **M1 / M2 / M3（Clash 扩展脚本健壮性与依赖保留）**：`Clash_Verge_Rev_Script.js` 统一容忍 YAML 空值（`null`）的 `proxies` / `ntp` / `listeners` / `tunnels` 及策略组属性（同时拒绝非对象的 `proxy-providers` / `rule-providers` / `ntp`）；`normalizeRulePath` 规范化反斜杠、多余斜杠与大小写，并在碰撞改名时循环避重，消除 Windows（NTFS）规则集缓存覆盖隐患；补齐 `dns.fake-ip-filter-mode: rule` 下的 `RULE-SET,<名称>,fake-ip|real-ip` 规则集重写与 `ntp.dialer-proxy` 依赖保留，并在文档明确 DNS `#网卡名` 按 fail-closed 拒绝的边界。
+  - **M4 / M5 / M6 / M7（校验门禁、Mihomo 运行时与安全扫描加固）**：`check-routing-hardening.js` 改为基于 `[Rule]` 有效行数组断言，堵住注释行绕过 `routing.includes()` 漏洞，并补齐 OpenAI / Grok 全量规则锁定及单标签 `DOMAIN-WILDCARD` 模拟；`check-mihomo-runtime.js` 新增以 `type: 'file'` 加载仓库真实 `Custom.list` / `Adult.list` / `OpenAI_Voice.list` 及离线端到端路由命中验证（含 `DOMAIN-WILDCARD`、`fake-ip-filter-mode: rule` 与 `ntp.dialer-proxy`）；收紧 `sync-ai-rules.js`、`check-shadowrocket-routing.js` 与 `OpenAI_Voice` 主机名/CIDR 语法、跨清单重叠检测与 IPv6 规范去重；`check-sensitive-data.js` 移除空 CA 行的跳过逻辑，扩展扫描未跟踪未忽略文件并补全现代代理 URI / UUIDv6–8 / 凭据字段检测。
+  - **L1 / L2 / L3（文档、CI 与脚本工程质量）**：`Clash_Verge_Rev_Script.js` 新增头部与启动日志版本号并纳入 `check-version.js` 校验；CI 工作流补齐 `concurrency`、`timeout-minutes`、SHA 锁定版 `actions/setup-node` 与 Mihomo 下载重试，`check-config.sh` 补齐 `YouTube.Enhance.Shadowrocket.sgmodule` 存在性检查；全部区块解析器锚定行首防止注释误切区块；同步更新 README 与 EXPERIENCE。
 - 内部版本升至 `v2.7.37`：修复全量审计发现的代码、测试、规则边界与文档问题（M1–M5、L1–L4）：
   - **M1 / M2**：重写 `Clash_Verge_Rev_Script.js` 的 `preserveDnsPolicyKey()`，统一按逗号分段解析 `nameserver-policy` 混合键，修复 `geosite:cn,rule-set:Sub` 漏保留依赖以及 `rule-set:Sub,example.com` 误把后续域名当规则集抛错的问题。
   - **M3**：`preservePolicy()` 克隆保留订阅策略组时递归保留该组自身的 `dialer-proxy` 与 `empty-fallback` 依赖，并同步补齐 `check-clash-script.js` 单元测试。

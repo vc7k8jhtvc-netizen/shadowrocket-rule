@@ -27,6 +27,7 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f "$ai_rules_source" ]] || fail "missing AI rules source"
 [[ -f "$root/Custom.list" ]] || fail "missing Custom.list"
 [[ -f "$root/Adult.list" ]] || fail "missing Adult.list"
+[[ -f "$root/YouTube.Enhance.Shadowrocket.sgmodule" ]] || fail "missing YouTube Enhance module"
 [[ -f "$clash_script" ]] || fail "missing Clash Verge Rev script"
 [[ -f "$sync_ai_check" ]] || fail "missing AI rules sync checker"
 [[ -f "$clash_check" ]] || fail "missing Clash script checker"

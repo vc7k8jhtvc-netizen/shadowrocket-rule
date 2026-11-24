@@ -36,11 +36,19 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
 jobs:
   validate-checker:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
       - name: Validate external-check script syntax
         run: bash -n scripts/check-external-dependencies.sh scripts/check-external-dependencies.test.sh
       - name: Run external-check offline regressions
@@ -54,7 +62,10 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
       - name: Validate local YouTube module contract
         run: node scripts/check-youtube-module.js
-      - name: Smoke-test live Maasea and Blackmatrix dependencies
+      - name: Smoke-test live Maasea, Blackmatrix and OpenAI Voice dependencies
         run: bash scripts/check-external-dependencies.sh

@@ -11,7 +11,7 @@ const file = path.resolve(process.cwd(), input);
 const text = fs.readFileSync(file, 'utf8');
 
 function section(name) {
-  const match = text.match(new RegExp('\\[' + name + '\\]\\s*\\n([\\s\\S]*?)(?=\\n\\[[^\\]]+\\]|$)', 'i'));
+  const match = text.match(new RegExp('(?:^|\\r?\\n)\\[' + name + '\\][ \\t]*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\[[^\\]]+\\]|$)', 'i'));
   return match ? match[1] : '';
 }
 

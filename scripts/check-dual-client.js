@@ -7,7 +7,7 @@ const clashSource=fs.readFileSync(path.join(root,'Clash_Verge_Rev_Script.js'),'u
 const assert=(condition,message)=>{if(!condition)throw new Error(message);};
 function section(text,name) {
   const escaped=name.replace(/[.*+?^$()|[\]\\]/g,'\\$&');
-  const match=text.match(new RegExp('\\['+escaped+'\\]\\s*\\n([\\s\\S]*?)(?=\\n\\[[^\\]]+\\]|$)'));
+  const match=text.match(new RegExp('(?:^|\\r?\\n)\\['+escaped+'\\][ \\t]*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\[[^\\]]+\\]|$)'));
   assert(match,'missing ['+name+'] section');
   return match[1];
 }
