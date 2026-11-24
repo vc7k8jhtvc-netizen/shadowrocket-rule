@@ -54,10 +54,11 @@
     },
     {
       "id": "ai-search",
-      "title": "Exa / Tavily",
+      "title": "Exa / Tavily / Jina",
       "rules": [
         "DOMAIN-SUFFIX,exa.ai,🤖 AI",
-        "DOMAIN-SUFFIX,tavily.com,🤖 AI"
+        "DOMAIN-SUFFIX,tavily.com,🤖 AI",
+        "DOMAIN-SUFFIX,jina.ai,🤖 AI"
       ]
     },
     {

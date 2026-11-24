@@ -2,17 +2,13 @@
 # 供 Shadowrocket 与 Clash Verge Rev 共用
 # 恢复自原 Global.list，仅更名
 # 由用户自行维护
-# Exa、Tavily、Supabase、Hugging Face 已固定双端“🤖 AI”，不得重新加入本清单。
+# Exa、Tavily、Jina、Supabase、Hugging Face 已固定双端“🤖 AI”，不得重新加入本清单。
 # 成人网站已拆至 Adult.list（对应“🔞 NSFW”分组），不应与本清单重复收录。
 
 
 # ===== 知识资料 =====
 DOMAIN-SUFFIX,wikipedia.org
 DOMAIN-SUFFIX,wikimedia.org
-
-# Jina：网站、Reader、Search、Embedding / Reranker API
-# 覆盖 jina.ai、r.jina.ai、s.jina.ai、api.jina.ai
-DOMAIN-SUFFIX,jina.ai
 
 
 # ===== 开发工具 =====

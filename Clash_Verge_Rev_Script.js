@@ -1,13 +1,13 @@
 /**
  * Clash Verge Rev 订阅扩展脚本
- * 版本：v2.7.38
+ * 版本：v2.7.39
  * 与小火箭分流策略保持一致。
  * 继承订阅 DNS / hosts / 节点入口，重建代理组和正常分流。
  * 不加载通用 Advertising 广告黑名单；YouTube 增强为 Shadowrocket 专属模块。
  */
 
 function main(config) {
-  const scriptVersion = 'v2.7.38';
+  const scriptVersion = 'v2.7.39';
   const logPrefix = '[shadowrocket-rule]';
   const writeLog = (level, message) => {
     if (typeof console === 'undefined') return;
@@ -425,9 +425,10 @@ function main(config) {
     // 个人 AI 中转
     'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
     'DOMAIN-SUFFIX,a6api.com,🤖 AI',
-    // Exa / Tavily
+    // Exa / Tavily / Jina
     'DOMAIN-SUFFIX,exa.ai,🤖 AI',
     'DOMAIN-SUFFIX,tavily.com,🤖 AI',
+    'DOMAIN-SUFFIX,jina.ai,🤖 AI',
     // Supabase / Hugging Face
     'DOMAIN-SUFFIX,supabase.com,🤖 AI',
     'DOMAIN-SUFFIX,supabase.co,🤖 AI',
