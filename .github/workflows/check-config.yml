@@ -10,11 +10,19 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
       - name: Run static configuration checks
         run: bash scripts/check-config.sh
 
@@ -28,7 +36,12 @@ jobs:
           MIHOMO_VERSION: v1.19.33
         run: |
           archive="${RUNNER_TEMP}/mihomo.gz"
-          curl -fsSL "https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-amd64-${MIHOMO_VERSION}.gz" -o "${archive}"
+          curl -fsSL \
+            --retry 3 \
+            --retry-all-errors \
+            --connect-timeout 10 \
+            --max-time 60 \
+            "https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-amd64-${MIHOMO_VERSION}.gz" -o "${archive}"
           echo "132f6f3edf9a65e62f04853aed3358472e0b2b7666daa8419edfa2ddf5bb6323  ${archive}" | sha256sum -c -
           gzip -dc "${archive}" > "${RUNNER_TEMP}/mihomo"
           chmod +x "${RUNNER_TEMP}/mihomo"

@@ -15,10 +15,13 @@ function parseArgs(args) {
   let source = null;
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--check') check = true;
-    else if (args[index] === '--source') source = args[++index];
+    else if (args[index] === '--source') {
+      const next = args[++index];
+      assert(next && !next.startsWith('--'), '--source requires a file path');
+      source = next;
+    }
     else throw new Error('unknown argument: ' + args[index]);
   }
-  if (args.includes('--source')) assert(source, '--source requires a file path');
   return { check, source };
 }
 
@@ -27,11 +30,20 @@ function parsePrefix(value, family) {
   const match = value.match(/^(.+)\/(\d{1,3})$/);
   assert(match, 'invalid CIDR: ' + value);
   const address = match[1];
-  const prefix = Number(match[2]);
-  const max = family === 4 ? 32 : 128;
+  const prefixRaw = match[2];
+  const expectedPrefix = family === 4 ? '32' : '128';
   assert(net.isIP(address) === family, 'CIDR family mismatch: ' + value);
-  assert(prefix === max, 'ChatGPT Voice entries must be host routes: ' + value);
-  return { type: family === 4 ? 'IP-CIDR' : 'IP-CIDR6', address, cidr: value };
+  assert(prefixRaw === expectedPrefix, 'ChatGPT Voice entries must be host routes: ' + value);
+  const canonicalAddress = family === 6 ? address.toLowerCase() : address;
+  const dedupKey = family === 4
+    ? '4:' + ipv4ToNumber(canonicalAddress)
+    : '6:' + ipv6ToBigInt(canonicalAddress).toString(16);
+  return {
+    type: family === 4 ? 'IP-CIDR' : 'IP-CIDR6',
+    address: canonicalAddress,
+    cidr: `${canonicalAddress}/${expectedPrefix}`,
+    dedupKey
+  };
 }
 
 function ipv4ToNumber(address) {
@@ -75,7 +87,7 @@ function render(data) {
     const keys = ['ipv4Prefix', 'ipv6Prefix'].filter(key => entry[key] !== undefined);
     assert(keys.length === 1, 'source prefix entry must contain one IP family');
     const parsed = parsePrefix(entry[keys[0]], keys[0] === 'ipv4Prefix' ? 4 : 6);
-    unique.set(parsed.type + ',' + parsed.cidr, parsed);
+    if (!unique.has(parsed.dedupKey)) unique.set(parsed.dedupKey, parsed);
   }
   const entries = [...unique.values()].sort(compareEntries);
   const lines = [

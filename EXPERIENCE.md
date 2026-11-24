@@ -8,7 +8,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 
 - `WestData.conf`：节点、General / DNS / TUN、Host、URL Rewrite、MITM 与供应商基础设置；私人文件不得提交仓库。
 - `Shadowrocket_Routing.conf`：仅 Proxy Group 与 Rule，不含通用广告策略组或 Advertising 黑名单；AI 规则区块由 `rules/ai-rules.json` 同步生成。
-- `rules/ai-rules.json`：双端手工 AI 分流规则（OpenAI / 个人中转 / Exa / Tavily / Supabase / Hugging Face / Gemini / Grok / Claude / Canva）的单一数据源；通过 `node scripts/sync-ai-rules.js` 回写双端标记区块，由 `check-config.sh` 强制校验同步一致性。
+- `rules/ai-rules.json`：双端手工 AI 分流规则（OpenAI / ChatGPT Voice 域名 / 个人中转 / Exa / Tavily / Supabase / Hugging Face / Gemini / Grok / Claude / Canva）的单一数据源；通过 `node scripts/sync-ai-rules.js` 回写双端标记区块，由 `check-config.sh` 强制校验同步一致性。
 - `OpenAI_Voice.list`：由 OpenAI 官方 `chatgpt-voice.json` 生成的 ChatGPT Voice 主机 IP 规则集；`scripts/sync-openai-voice-rules.js` 只接受 `/32` 与 `/128` 主机路由，`scripts/check-openai-voice-rules.js` 校验格式、去重与 `no-resolve`。
 - `Custom.list`：两端共用的个人显式自定义域名规则（知识资料、开发工具及其他），由原 `Global.list` 恢复并更名；已提升为专项 AI 分组的 Exa、Tavily、Supabase、Hugging Face 不再收录，成人网站已拆至 `Adult.list`。
 - `Adult.list`：两端“🔞 NSFW”分组共用的成人网站显式分流规则；不得与 `Custom.list` 重复收录。
@@ -33,7 +33,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 | 个人 AI 中转（非 OpenAI 自有域名） | 仅限归属明确的个人中转，编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 断言与 CHANGELOG，不得扩大为共享域名后缀 |
 | Canva 等专项 AI 自有域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；同步 `check-routing-hardening.js` 与 CHANGELOG，不引入共享 CDN 或第三方统计域 |
 | ChatGPT Voice 服务器 IP | 运行 `node scripts/sync-openai-voice-rules.js` 从官方 JSON 重新生成 `OpenAI_Voice.list`；不得手工加入宽网段或共享云区域，变更后同步校验与 CHANGELOG |
-| Gemini / Google AI 专属域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
+| Gemini / Google AI 专属域名 | 编辑 `rules/ai-rules.json` 并运行 `node scripts/sync-ai-rules.js`；覆盖 Gemini、AI Studio、Gemini Notebook、Generative Language、Vertex、Code Assist、Antigravity、Labs / Flow / Opal / Stitch 与 Gemini Enterprise 的专属入口，保留 `accounts.google.com`、`www.googleapis.com`、`apis.google.com`、`jnn-pa.googleapis.com`、`waa-pa.clients6.google.com` 等共享 Google 主机原分流；同步 hardening 与 CHANGELOG |
 | Exa / Tavily 等 AI 搜索服务 | 在 `rules/ai-rules.json` 中显式归入 `🤖 AI` 并同步双端，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | Supabase / Hugging Face | 按用户偏好在 `rules/ai-rules.json` 中固定 `🤖 AI` 并同步双端，从 `Custom.list` 移除；同步 hardening 断言与 CHANGELOG，不得恢复为 Custom 规则集条目 |
 | 未分类流量 | 不维护域名清单；由 🐟 漏网之鱼最终接管 |
@@ -56,7 +56,7 @@ Shadowrocket 以 `Shadowrocket_Routing.conf` 为唯一主配置：
 - 所有业务组及“🐟 漏网之鱼”均须包含香港、台湾、新加坡、日本、美国五个地区选项与“👆 手动选择”；新增地区组时同步两端、候选断言和文档，首个默认出口不得改变。
 - Clash 保留订阅 DNS/hosts/IPv6/节点入口；Apple / 中国域名 Provider 统一使用上游 Clash 专用 `Apple_Domain.yaml` / `China_Domain.yaml`（`+.` 语法，避免根域名漏匹配）；`GEOIP,CN,DIRECT` 之前的所有古典规则集统一使用 `no-resolve` 避免提前 DNS 解析，`GEOIP,CN,DIRECT` 本身不使用 `no-resolve`。
 - Clash 空地区节点池无论来自静态 `proxies` 还是 `proxy-providers`，一律以 `REJECT` 失败关闭，不得静默回退至“👆 手动选择”导致跨区误路由。
-- Clash 额外保留节点 `dialer-proxy`、被保留策略组自身的 `dialer-proxy` / `empty-fallback`、Provider 下载策略、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含 `geosite:...,rule-set:...` 与 `rule-set:...,domain` 等混合 `nameserver-policy` 键）所需的订阅依赖，Mihomo 保留的 DNS `#RULES` 标签原样透传；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称及非冲突缓存 `path` 并同步更新引用，避免覆盖业务配置。孤立 `sub-rules` 随规则重建一并移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）；检查依赖失败时不得部分改写订阅。
+- Clash 额外保留节点 `dialer-proxy`、被保留策略组自身的 `dialer-proxy` / `empty-fallback`、Provider 下载策略、`ntp.dialer-proxy`、`listeners` / `tunnels` 出口策略、DNS 服务器 `#策略组` 标签以及 DNS `rule-set:` 引用（含 `geosite:...,rule-set:...`、`rule-set:...,domain` 等混合 `nameserver-policy` 键及 `fake-ip-filter-mode: rule` 下的 `RULE-SET,<名称>,fake-ip|real-ip`）所需的订阅依赖，Mihomo 保留的 DNS `#RULES` 标签原样透传（DNS `#网卡名` 在静态阶段无法与拼错的策略名区分，按 fail-closed 拒绝）；依赖组追加在业务/地区组之后，依赖组与规则集采用独立名称及非冲突缓存 `path`（含 Windows 反斜杠与大小写规范化）并同步更新引用，避免覆盖业务配置。孤立 `sub-rules` 随规则重建一并移除（若 `listeners` 引用了 `sub-rules` 则直接拒绝）；检查依赖失败时不得部分改写订阅。
 - Clash 必须拒绝无效节点/策略组对象（含非数组 `proxies`）、重复节点名、节点名与项目策略组冲突、缺失策略引用及缺失 proxy-provider；这些异常不得延迟到 Mihomo 加载阶段才暴露。
 - OpenAI 官方允许列表中的共享 WorkOS / Intercom / Stripe / Cloudflare / Apple / Datadog 主机以及 Statsig 共享 CDN `featureassets.org` 不得被全局强制归入 AI；仅自有或实例专属主机使用手工 AI 规则。个人 AI 中转 `a6api.vip` / `a6api.com` 是显式声明的例外，由 hardening 断言锁定，不得再扩大范围。
 - ChatGPT Voice 固定把 `chatgpt.livekit.cloud`、`host.livekit.cloud`、`turn.livekit.cloud` 与官方发布的主机 IP 归入“🤖 AI”；IP 列表使用独立 Provider / RULE-SET，位于 AI 域名规则之后、Apple 之前，并以 `no-resolve` 避免提前 DNS 查询。 `host.livekit.cloud` / `turn.livekit.cloud` 为 LiveKit 共享 TURN 端点，其他使用同一端点的应用也会随“🤖 AI”出口。
@@ -78,17 +78,17 @@ bash scripts/check-config.sh
 WESTDATA_CONFIG=/path/to/WestData.conf bash scripts/check-config.sh
 ```
 
-检查覆盖：Routing 仅包含 include/Proxy Group/Rule；`rules/ai-rules.json` 单一数据源双端同步；`Custom.list` 与 `Adult.list` 语法、去重、跨清单防重和双端引用（共享 CDN `cdn.auth0.com` 不得进入 `Custom.list`）；OpenAI Voice 主机路由（含 IPv4 `/32` 与 IPv6 `/128`）、去重与双端顺序；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/OpenAI/Gemini/Grok/Claude/Canva/Exa/Tavily/Supabase/Hugging Face 及全部非 AI 规则序列双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树敏感信息；版本一致；Clash 域名 Provider（`Apple_Domain.yaml` / `China_Domain.yaml`）、古典规则集（含 `Custom`）`no-resolve` 与 `GEOIP` 语义；以及离线外部依赖回归测试。CI 另用 Mihomo 核心验证合成配置、全链路 `GEOIP` 前无提前 DNS 查询及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
+检查覆盖：Routing 仅包含 include/Proxy Group/Rule；`rules/ai-rules.json` 单一数据源语法、防冲突及双端同步；`Custom.list` 与 `Adult.list` 严格域名语法、内部去重、跨清单及与主规则防重和双端引用（共享 CDN `cdn.auth0.com` 不得进入 `Custom.list`）；OpenAI Voice 主机路由（含 IPv4 `/32`、IPv6 `/128` 规范去重与拒绝前导零掩码）、去重与双端顺序；无旧 Global 与 Advertising 运行时配置回归；DeepSeek/OpenAI/Gemini/Grok/Claude/Canva/Exa/Tavily/Supabase/Hugging Face 及全部非 AI 规则序列双端一致；兜底完整；组名称、默认出口及顺序；YouTube 专属 MITM 最小范围、`master` 上游脚本路径及参数；当前树及未忽略未跟踪文件的敏感信息（支持无 `.git` 回退）；Routing / Clash 脚本 / README / CHANGELOG 版本一致；Clash 域名 Provider（`Apple_Domain.yaml` / `China_Domain.yaml`）、古典规则集（含 `Custom`、`Adult`、`OpenAI_Voice`）`no-resolve` 与 `GEOIP` 语义、YAML 空值容忍及 Windows 缓存路径碰撞隔离；以及离线外部依赖回归测试。CI 另用 Mihomo 核心验证合成配置、本地文本规则集加载、真实规则匹配（含 `DOMAIN-WILDCARD`、`fake-ip-filter-mode: rule` 与 `ntp.dialer-proxy`）、全链路 `GEOIP` 前无提前 DNS 查询及空节点组安全性。静态/CI 通过并不等于真实设备播放或误杀复测完成。
 
 无 Git Bash 的 Windows 环境可用 `BASH_SYNTAX_CHECK=/path/to/shfmt.exe` 让负例套件以 `shfmt -ln=bash` 解析 shell；CI 未设置该变量时仍使用 `bash -n`。
 
 本地门禁同时覆盖语法与换行：`node --check` 遍历根目录主脚本与 `scripts/` 下全部 JS 文件（含仅由 CI 执行的 `check-mihomo-runtime.js`），以文件遍历代替逐项列举，避免新增校验器被遗漏；`bash -n` 与离线单测覆盖外部依赖脚本；负例回归在 LF 与 CRLF 两种换行下各跑一遍，注入未生效即判定失败。仓库用 `.gitattributes` 固定 `eol=lf`，避免 Windows / macOS 检出产生假阴性。`check-mihomo-runtime.js` 依赖 CI 下载并校验的 Mihomo 二进制，本地门禁只做语法检查、不执行运行时回归，因此本地全绿不等于 CI 运行时回归通过。
 
-修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段并递增内部版本；该项为文档约定，不新增 CI 强制校验。
+修改 `Shadowrocket_Routing.conf` 或 `Clash_Verge_Rev_Script.js` 时必须同步当前 CHANGELOG 版本段并递增内部版本（同时更新 Clash 脚本头部与运行日志版本常量）；该项由 `check-version.js` 核验各处版本一致。
 
-回归还覆盖订阅依赖的名称冲突、传递引用、`listeners` / `tunnels` 出口引用、孤立 `sub-rules` 清理、非数组 `proxies` 拒绝、DNS `#策略组` 与 `#RULES` 标签、混合 `nameserver-policy` 键、缓存路径隔离与 `fake-ip-filter` 引用，以及 Vertex 区域规则锚定（拒绝 `DOMAIN-KEYWORD`）；Mihomo 验证依赖配置转换前后均可加载。敏感信息白名单仅豁免匹配到的占位值；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
+回归还覆盖订阅依赖的名称冲突、传递引用、`listeners` / `tunnels` 出口引用、孤立 `sub-rules` 清理、YAML 空值 `null` 容忍、非数组 `proxies` 拒绝、DNS `#策略组` 与 `#RULES` 标签、混合 `nameserver-policy` 键、Windows 大小写/反斜杠缓存路径隔离与 `fake-ip-filter` 引用，以及 Vertex 区域规则锚定（拒绝 `DOMAIN-KEYWORD`）与共享 Google 主机排除；Mihomo 验证依赖配置转换前后及本地文本规则集均可加载并准确命中目标策略组。敏感信息白名单仅豁免匹配到的占位值，且空 CA 字段不跳过同行扫描；YouTube response/init 缺失 argument 时拒绝通过；YouTube 脚本若重新固定到 40 位 commit SHA 也必须被拒绝。
 
-负例回归的 fixtures 由 `git ls-files` 动态生成，覆盖仓库全部跟踪文件，避免新增校验器被手写清单遗漏；LF 与 CRLF 两种换行下均对全部 JS 校验器执行 `node --check`；shell 门禁在 LF 轮直接执行 `bash -n`，CRLF 轮因 Linux bash 无法解析 CRLF 脚本（正是 `.gitattributes` 固定 `eol=lf` 的原因）改为对归一化 LF 副本执行 `bash -n`，并断言副本不含 `\r`。`check-routing-hardening.js` 有独立漂移负例；`check-mihomo-runtime.js`（依赖 CI 下载并校验的 Mihomo 二进制）与 `check-config.sh`（在本套件内执行会递归）不实际运行，改以源码级断言锁定关键运行时断言及 M4 的遍历式语法门禁，防止被静默削弱。该源码级断言不能替代 CI 的实际运行时回归。
+负例回归的 fixtures 由 `git ls-files` 动态生成，覆盖仓库全部跟踪文件，避免新增校验器被手写清单遗漏；LF 与 CRLF 两种换行下均对全部 JS 校验器执行 `node --check`；shell 门禁在 LF 轮直接执行 `bash -n`，CRLF 轮因 Linux bash 无法解析 CRLF 脚本（正是 `.gitattributes` 固定 `eol=lf` 的原因）改为对归一化 LF 副本执行 `bash -n`，并断言副本不含 `\r`。`check-routing-hardening.js` 有独立漂移与注释绕过负例；`check-mihomo-runtime.js`（依赖 CI 下载并校验的 Mihomo 二进制）与 `check-config.sh`（在本套件内执行会递归）不实际运行，改以源码级断言锁定关键运行时断言及 M4 的遍历式语法门禁，防止被静默削弱。该源码级断言不能替代 CI 的实际运行时回归。
 
 GitHub Actions 的 `Check external dependencies` 每日独立运行在线巡检：实际下载当前模块引用的 Maasea `master` YouTube 脚本，检查 Shadowrocket / Clash 当前引用的 Blackmatrix 规则源可达性与基础结构（含 Clash 域名规则集 `+.` 语法校验），并下载 OpenAI 官方语音 IP JSON 核对 `OpenAI_Voice.list` 是否过期；PR 与 `main` 推送仅运行离线 mock 回归，避免临时网络故障阻塞正常提交。该巡检不能替代真实客户端行为验证。
 

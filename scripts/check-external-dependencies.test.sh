@@ -9,9 +9,13 @@ voice_fixture="$tmpdir/voice.json"
 export VOICE_FIXTURE="$voice_fixture"
 node - "$root/OpenAI_Voice.list" "$voice_fixture" <<'NODE'
 const fs = require('fs');
-const lines = fs.readFileSync(process.argv[2], 'utf8').split('\n');
+const lines = fs.readFileSync(process.argv[2], 'utf8').split(/\r?\n/);
 const creationTime = (lines.find(line => line.startsWith('# Creation-Time: ')) || '').slice('# Creation-Time: '.length);
-const prefixes = lines.filter(line => line.startsWith('IP-CIDR,') || line.startsWith('IP-CIDR6,')).map(line => line.startsWith('IP-CIDR6,') ? { ipv6Prefix: line.split(',')[1] } : { ipv4Prefix: line.split(',')[1] });
+const prefixes = [];
+for (const line of lines) {
+  if (line.startsWith('IP-CIDR,')) prefixes.push({ ipv4Prefix: line.split(',')[1] });
+  else if (line.startsWith('IP-CIDR6,')) prefixes.push({ ipv6Prefix: line.split(',')[1] });
+}
 fs.writeFileSync(process.argv[3], JSON.stringify({ creationTime, prefixes }));
 NODE
 

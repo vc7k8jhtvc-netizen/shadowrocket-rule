@@ -6,10 +6,10 @@ const text = fs.readFileSync(path.join(root, 'YouTube.Enhance.Shadowrocket.sgmod
 const config = fs.readFileSync(path.join(root, 'Shadowrocket_Routing.conf'), 'utf8');
 const assert = (ok, message) => { if (!ok) throw new Error(message); };
 function section(name) {
-  const start = text.indexOf('[' + name + ']');
-  assert(start !== -1, 'missing section: ' + name);
-  return text.slice(start + name.length + 2).split(/\n\[/)[0]
-    .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+  const escaped = name.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+  const match = text.match(new RegExp('(?:^|\\r?\\n)\\[' + escaped + '\\][ \\t]*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\[[^\\]]+\\]|$)'));
+  assert(match, 'missing section: ' + name);
+  return match[1].split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
 }
 
 const rules = section('Rule');
@@ -36,7 +36,9 @@ for (const [name, type, file, sample] of cases) {
   const url = line.match(/script-path=([^,]+)/)?.[1];
   assert(url === upstreamBase + file, 'unexpected upstream script');
   for (const field of ['requires-body=1', 'max-size=-1', 'binary-body-mode=1']) assert(line.includes(field), 'missing body option');
-  const pattern = new RegExp(line.match(/pattern=(.*?),requires-body=/)[1]);
+  const patternMatch = line.match(/pattern=(.*?),requires-body=/);
+  assert(patternMatch && patternMatch[1], 'missing pattern: ' + name);
+  const pattern = new RegExp(patternMatch[1]);
   assert(pattern.test(sample), 'hook does not match expected endpoint');
   assert(!pattern.test('https://example.invalid/youtubei/v1/player'), 'hook matches unrelated host');
   const argument = line.match(/,argument="(.*)"$/);

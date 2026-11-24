@@ -27,6 +27,17 @@ const routingVersion = extractExactly(
   /^# 版本：(v\d+\.\d+\.\d+)$/gm,
   'Routing config'
 );
+const clashSource = read('Clash_Verge_Rev_Script.js');
+const clashHeaderVersion = extractExactly(
+  clashSource,
+  /^\s*\*\s*版本：(v\d+\.\d+\.\d+)$/gm,
+  'Clash script header'
+);
+const clashRuntimeVersion = extractExactly(
+  clashSource,
+  /const\s+scriptVersion\s*=\s*'(v\d+\.\d+\.\d+)'\s*;/g,
+  'Clash script runtime version'
+);
 const readmeVersion = extractExactly(
   read('README.md'),
   /内部版本为\s+`(v\d+\.\d+\.\d+)`/g,
@@ -41,9 +52,11 @@ const changelogVersion = extractFirst(
   'current CHANGELOG section'
 );
 
-const versions = [routingVersion, readmeVersion, changelogVersion];
+const versions = [routingVersion, clashHeaderVersion, clashRuntimeVersion, readmeVersion, changelogVersion];
 if (new Set(versions).size !== 1) {
   fail('version mismatch: Routing=' + routingVersion +
+    ', ClashHeader=' + clashHeaderVersion +
+    ', ClashRuntime=' + clashRuntimeVersion +
     ', README=' + readmeVersion + ', CHANGELOG=' + changelogVersion);
 }
 

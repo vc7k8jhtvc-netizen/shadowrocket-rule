@@ -8,7 +8,7 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 
 function section(text, name) {
   const escaped = name.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
-  const match = text.match(new RegExp('\\[' + escaped + '\\]\\s*\\n([\\s\\S]*?)(?=\\n\\[[^\\]]+\\]|$)'));
+  const match = text.match(new RegExp('(?:^|\\r?\\n)\\[' + escaped + '\\][ \\t]*\\r?\\n([\\s\\S]*?)(?=\\r?\\n\\[[^\\]]+\\]|$)'));
   assert(match, 'missing [' + name + '] section');
   return match[1];
 }
@@ -78,8 +78,10 @@ const rules = activeLines(section(routing,'Rule'));
 assert(new Set(rules).size === rules.length, 'duplicate Shadowrocket rules detected');
 assert(!rules.some(rule => /Advertising|广告拦截/.test(rule)), 'legacy Advertising routing rule must be absent');
 const builtins = new Set(['DIRECT','REJECT']);
+const allowedRuleTypes = new Set(['DOMAIN','DOMAIN-SUFFIX','DOMAIN-WILDCARD','IP-CIDR','IP-CIDR6','GEOIP','RULE-SET','DOMAIN-SET']);
 for (const rule of rules) {
   const parts = rule.split(',');
+  assert(allowedRuleTypes.has(parts[0]), 'unsupported Shadowrocket rule type: ' + rule);
   let policy;
   if (parts[0] === 'GEOIP') policy = parts[2];
   else policy = parts[parts.length - 1] === 'no-resolve' ? parts[parts.length - 2] : parts[parts.length - 1];
@@ -94,19 +96,53 @@ assert(rules.includes(adultMarker), 'Adult.list routing rule missing');
 assert(!routing.includes('/Global.list'), 'routing must not use old Global.list');
 assert(!groups.has('🌍 Global'), 'old Global policy group must not return');
 
+const strictListRulePattern = /^DOMAIN(?:-SUFFIX)?,[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+const parseDomainRule = (rule, label) => {
+  const [type, domain] = rule.split(',');
+  return { type, domain: domain.toLowerCase(), raw: rule, label };
+};
+const rulesOverlap = (a, b) => (
+  a.domain === b.domain ||
+  (a.type === 'DOMAIN-SUFFIX' && b.domain.endsWith('.' + a.domain)) ||
+  (b.type === 'DOMAIN-SUFFIX' && a.domain.endsWith('.' + b.domain))
+);
+
 const customRules = activeLines(customRulesText);
 assert(customRules.length > 0, 'Custom.list must not be empty');
 assert(new Set(customRules).size === customRules.length, 'duplicate Custom.list entry detected');
-for (const rule of customRules) assert(/^DOMAIN(?:-SUFFIX)?,[^,\s]+$/.test(rule), 'unsupported Custom.list rule syntax: ' + rule);
+for (const rule of customRules) assert(strictListRulePattern.test(rule), 'unsupported Custom.list rule syntax: ' + rule);
 assert(!customRules.some(rule => /^DOMAIN-SUFFIX,npmjs\.(com|org)$/.test(rule)), 'npm must remain owned by GitHub rules');
 
 const adultRulesText = fs.readFileSync(path.join(root, 'Adult.list'), 'utf8');
 const adultRules = activeLines(adultRulesText);
 assert(adultRules.length > 0, 'Adult.list must not be empty');
 assert(new Set(adultRules).size === adultRules.length, 'duplicate Adult.list entry detected');
-for (const rule of adultRules) assert(/^DOMAIN(?:-SUFFIX)?,[^,\s]+$/.test(rule), 'unsupported Adult.list rule syntax: ' + rule);
-const customRuleSet = new Set(customRules);
-for (const rule of adultRules) assert(!customRuleSet.has(rule), 'overlapping rule between Custom.list and Adult.list: ' + rule);
+for (const rule of adultRules) assert(strictListRulePattern.test(rule), 'unsupported Adult.list rule syntax: ' + rule);
+
+const parsedCustom = customRules.map(rule => parseDomainRule(rule, 'Custom.list'));
+const parsedAdult = adultRules.map(rule => parseDomainRule(rule, 'Adult.list'));
+for (const [label, list] of [['Custom.list', parsedCustom], ['Adult.list', parsedAdult]]) {
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      assert(!rulesOverlap(list[i], list[j]), `overlapping/redundant ${label} entries: ${list[i].raw} vs ${list[j].raw}`);
+    }
+  }
+}
+for (const customItem of parsedCustom) {
+  for (const adultItem of parsedAdult) {
+    assert(!rulesOverlap(customItem, adultItem), 'overlapping rule between Custom.list and Adult.list: ' + adultItem.raw);
+  }
+}
+const mainDomainRules = rules
+  .filter(rule => rule.startsWith('DOMAIN,') || rule.startsWith('DOMAIN-SUFFIX,'))
+  .map(rule => parseDomainRule(rule, 'Shadowrocket_Routing.conf'));
+for (const [label, list] of [['Custom.list', parsedCustom], ['Adult.list', parsedAdult]]) {
+  for (const item of list) {
+    for (const mainItem of mainDomainRules) {
+      assert(!rulesOverlap(item, mainItem), `overlapping rule between ${label} and Shadowrocket_Routing.conf: ${item.raw} vs ${mainItem.raw}`);
+    }
+  }
+}
 
 const terminalRules = ['DOMAIN-WILDCARD,*,🐟 漏网之鱼','IP-CIDR,0.0.0.0/0,🐟 漏网之鱼,no-resolve','IP-CIDR,::/0,🐟 漏网之鱼,no-resolve'];
 assert(!rules.some(rule => rule.startsWith('FINAL,')), 'Shadowrocket FINAL must not be used');

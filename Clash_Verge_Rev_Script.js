@@ -1,11 +1,13 @@
 /**
  * Clash Verge Rev 订阅扩展脚本
+ * 版本：v2.7.38
  * 与小火箭分流策略保持一致。
  * 继承订阅 DNS / hosts / 节点入口，重建代理组和正常分流。
  * 不加载通用 Advertising 广告黑名单；YouTube 增强为 Shadowrocket 专属模块。
  */
 
 function main(config) {
+  const scriptVersion = 'v2.7.38';
   const logPrefix = '[shadowrocket-rule]';
   const writeLog = (level, message) => {
     if (typeof console === 'undefined') return;
@@ -13,12 +15,15 @@ function main(config) {
     if (typeof output === 'function') output.call(console, `${logPrefix} ${message}`);
   };
 
-  writeLog('log', '开始生成 Clash Verge Rev 配置');
+  writeLog('log', `开始生成 Clash Verge Rev 配置 (${scriptVersion})`);
 
-  if (config.proxies !== undefined && (!Array.isArray(config.proxies) || config.proxies.some(p => !p || typeof p !== 'object' || typeof p.name !== 'string' || !p.name))) {
+  if (config.proxies != null && (!Array.isArray(config.proxies) || config.proxies.some(p => !p || typeof p !== 'object' || typeof p.name !== 'string' || !p.name))) {
     throw new Error('订阅 proxies 格式无效，已停止生成配置。');
   }
-  const allProxies = (config.proxies || []).map(p => p.name);
+  if (config['proxy-providers'] != null && (typeof config['proxy-providers'] !== 'object' || Array.isArray(config['proxy-providers']))) {
+    throw new Error('订阅 proxy-providers 格式无效，已停止生成配置。');
+  }
+  const allProxies = (Array.isArray(config.proxies) ? config.proxies : []).map(p => p.name);
   const providerNames = Object.keys(config['proxy-providers'] || {});
   const providerNameSet = new Set(providerNames);
   writeLog('log', `节点来源：proxies=${allProxies.length}，proxy-providers=${providerNames.length}`);
@@ -163,6 +168,9 @@ function main(config) {
     throw new Error('订阅节点名称与订阅策略组名称冲突，已停止生成配置。');
   }
   const originalGroups = new Map(originalGroupList.map(group => [group.name, group]));
+  if (config['rule-providers'] != null && (typeof config['rule-providers'] !== 'object' || Array.isArray(config['rule-providers']))) {
+    throw new Error('订阅 rule-providers 格式无效，已停止生成配置。');
+  }
   const originalRuleProviders = config['rule-providers'] || {};
   const policyNames = new Set([...allProxies, ...proxyGroups.map(group => group.name), ...originalGroups.keys()]);
   const retainedGroups = new Map();
@@ -185,7 +193,7 @@ function main(config) {
       const original = originalGroups.get(name);
       const retained = { ...original, name: privateName('__subscription_group_', policyNames) };
       retainedGroups.set(name, retained);
-      if (original.proxies !== undefined) {
+      if (original.proxies != null) {
         if (!Array.isArray(original.proxies)) throw new Error('订阅依赖策略组 proxies 格式无效。');
         retained.proxies = original.proxies.map(preservePolicy);
       }
@@ -195,10 +203,10 @@ function main(config) {
         }
         retained.use = [...original.use];
       }
-      if (original['dialer-proxy'] !== undefined) {
+      if (original['dialer-proxy'] != null) {
         retained['dialer-proxy'] = preservePolicy(original['dialer-proxy']);
       }
-      if (original['empty-fallback'] !== undefined) {
+      if (original['empty-fallback'] != null) {
         retained['empty-fallback'] = preservePolicy(original['empty-fallback']);
       }
       visiting.delete(name);
@@ -218,7 +226,12 @@ function main(config) {
     return retained;
   };
   const ruleProviderNames = new Set([...Object.keys(ruleProviders), ...Object.keys(originalRuleProviders)]);
-  const normalizeRulePath = filePath => filePath.replace(/^\.\//, '');
+  // Normalize separators, repeated leading ./, and case so Windows (NTFS) cannot collide on cache files.
+  const normalizeRulePath = filePath => filePath
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/')
+    .replace(/^(?:\.\/)+/, '')
+    .toLowerCase();
   const usedRulePaths = new Set(Object.values(ruleProviders).map(p => p.path).filter(Boolean).map(normalizeRulePath));
   const preserveDnsRule = name => {
     if (retainedRuleProviders.has(name)) return retainedRuleProviders.get(name);
@@ -232,7 +245,13 @@ function main(config) {
       const normalizedPath = normalizeRulePath(retainedProvider.path);
       if (usedRulePaths.has(normalizedPath)) {
         const extMatch = retainedProvider.path.match(/(\.[A-Za-z0-9]+)$/);
-        retainedProvider.path = `./rule_providers/${retainedName}${extMatch ? extMatch[1] : '.yaml'}`;
+        const ext = extMatch ? extMatch[1] : '.yaml';
+        let candidate = `./rule_providers/${retainedName}${ext}`;
+        let suffix = 1;
+        while (usedRulePaths.has(normalizeRulePath(candidate))) {
+          candidate = `./rule_providers/${retainedName}_${suffix++}${ext}`;
+        }
+        retainedProvider.path = candidate;
       }
       usedRulePaths.add(normalizeRulePath(retainedProvider.path));
     }
@@ -295,12 +314,24 @@ function main(config) {
     }
     return value;
   };
+  const preserveFakeIpFilterRule = entry => {
+    if (typeof entry !== 'string') return entry;
+    const parts = entry.split(',');
+    if (parts.length < 3 || parts[0].trim().toUpperCase() !== 'RULE-SET') return entry;
+    const nextParts = [...parts];
+    nextParts[1] = preserveDnsRule(parts[1].trim());
+    return nextParts.join(',');
+  };
   const dnsServerListKeys = new Set(['nameserver', 'fallback', 'default-nameserver', 'proxy-server-nameserver', 'direct-nameserver']);
   const dnsPolicyMapKeys = new Set(['nameserver-policy', 'proxy-server-nameserver-policy']);
   const preserveDns = dnsConfig => {
     if (!dnsConfig || typeof dnsConfig !== 'object' || Array.isArray(dnsConfig)) return dnsConfig;
+    const isFakeIpRuleMode = typeof dnsConfig['fake-ip-filter-mode'] === 'string' && dnsConfig['fake-ip-filter-mode'].trim().toLowerCase() === 'rule';
     return Object.fromEntries(Object.entries(dnsConfig).map(([key, value]) => {
       if (dnsServerListKeys.has(key)) return [key, preserveDnsServers(value)];
+      if (key === 'fake-ip-filter' && isFakeIpRuleMode && Array.isArray(value)) {
+        return [key, value.map(preserveFakeIpFilterRule)];
+      }
       if (dnsPolicyMapKeys.has(key) && value && typeof value === 'object' && !Array.isArray(value)) {
         return [key, Object.fromEntries(Object.entries(value).map(([policyKey, servers]) => [
           preserveDnsPolicyKey(policyKey),
@@ -310,22 +341,28 @@ function main(config) {
       return [key, preserveDnsRuleRefs(value)];
     }));
   };
-  const proxies = config.proxies && config.proxies.map(preserveDialer);
-  const proxyProviders = config['proxy-providers'] && Object.fromEntries(
+  const proxies = Array.isArray(config.proxies) ? config.proxies.map(preserveDialer) : undefined;
+  const proxyProviders = config['proxy-providers'] != null ? Object.fromEntries(
     Object.entries(config['proxy-providers']).map(([name, provider]) => [name, preserveDownload(provider)])
-  );
+  ) : undefined;
   const dns = preserveDns(config.dns);
+  const ntp = config.ntp == null ? undefined : (() => {
+    if (typeof config.ntp !== 'object' || Array.isArray(config.ntp)) {
+      throw new Error('订阅 ntp 格式无效，已停止生成配置。');
+    }
+    return preserveDialer(config.ntp);
+  })();
   // Listeners and tunnels pin an exit policy; keep those dependencies like dialer-proxy.
   // Listener `rule` targets sub-rules, which cannot survive the full rule replacement below.
-  const listeners = config.listeners === undefined ? undefined : (() => {
+  const listeners = config.listeners == null ? undefined : (() => {
     if (!Array.isArray(config.listeners)) throw new Error('订阅 listeners 格式无效，已停止生成配置。');
     return config.listeners.map(listener => {
       if (!listener || typeof listener !== 'object') throw new Error('订阅 listeners 格式无效，已停止生成配置。');
-      if (listener.rule !== undefined) throw new Error('订阅 listeners 引用了 sub-rules，脚本重建规则后无法保留，已停止生成配置。');
-      return listener.proxy === undefined ? listener : { ...listener, proxy: preservePolicy(listener.proxy) };
+      if (listener.rule != null) throw new Error('订阅 listeners 引用了 sub-rules，脚本重建规则后无法保留，已停止生成配置。');
+      return listener.proxy == null ? listener : { ...listener, proxy: preservePolicy(listener.proxy) };
     });
   })();
-  const tunnels = config.tunnels === undefined ? undefined : (() => {
+  const tunnels = config.tunnels == null ? undefined : (() => {
     if (!Array.isArray(config.tunnels)) throw new Error('订阅 tunnels 格式无效，已停止生成配置。');
     return config.tunnels.map(tunnel => {
       if (typeof tunnel === 'string') {
@@ -336,7 +373,7 @@ function main(config) {
         return parts.join(',');
       }
       if (!tunnel || typeof tunnel !== 'object') throw new Error('订阅 tunnels 格式无效，已停止生成配置。');
-      return tunnel.proxy === undefined ? tunnel : { ...tunnel, proxy: preservePolicy(tunnel.proxy) };
+      return tunnel.proxy == null ? tunnel : { ...tunnel, proxy: preservePolicy(tunnel.proxy) };
     });
   })();
   // Commit together after dependency checks, so rejected inputs are not half-rewritten.
@@ -345,6 +382,7 @@ function main(config) {
   if (proxies) config.proxies = proxies;
   if (proxyProviders) config['proxy-providers'] = proxyProviders;
   if (dns !== undefined) config.dns = dns;
+  if (ntp !== undefined) config.ntp = ntp;
   if (listeners) config.listeners = listeners;
   if (tunnels) config.tunnels = tunnels;
   // Sub-rules are only reachable from the subscription's own rules, which are replaced below.
@@ -421,8 +459,6 @@ function main(config) {
     'DOMAIN-SUFFIX,geller-pa.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,generativelanguage.googleapis.com,🤖 AI',
     'DOMAIN-SUFFIX,generativelanguage.mtls.googleapis.com,🤖 AI',
-    'DOMAIN-SUFFIX,jnn-pa.googleapis.com,🤖 AI',
-    'DOMAIN-SUFFIX,waa-pa.clients6.google.com,🤖 AI',
     'DOMAIN-SUFFIX,appsgenaiserver-pa.clients.google.com,🤖 AI',
     'DOMAIN-SUFFIX,appsgenaiserver-pa.clients6.google.com,🤖 AI',
     'DOMAIN-SUFFIX,appsgenaiserver-pa.googleapis.com,🤖 AI',
