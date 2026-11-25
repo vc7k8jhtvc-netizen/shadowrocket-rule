@@ -33,27 +33,46 @@ const sectionRules = id => {
 };
 const allAiSourceRules = aiSource.sections.flatMap(section => section.rules);
 
-const sharedAiRules = [
-  'DOMAIN-SUFFIX,ct.sendgrid.net,🤖 AI',
-  'DOMAIN-SUFFIX,intercom.io,🤖 AI',
-  'DOMAIN-SUFFIX,intercomcdn.com,🤖 AI',
-  'DOMAIN,cdn.workos.com,🤖 AI',
-  'DOMAIN,challenges.cloudflare.com,🤖 AI',
-  'DOMAIN,forwarder.workos.com,🤖 AI',
-  'DOMAIN,humb.apple.com,🤖 AI',
-  'DOMAIN,images.workoscdn.com,🤖 AI',
-  'DOMAIN,js.stripe.com,🤖 AI',
-  'DOMAIN,rum.browser-intake-datadoghq.com,🤖 AI',
-  'DOMAIN,setup.workos.com,🤖 AI',
-  'DOMAIN,workos.imgix.net,🤖 AI',
+const routeManualRule = (rules, host) => {
+  const normalizedHost = host.toLowerCase();
+  for (const rule of rules) {
+    if (!rule.endsWith(',🤖 AI')) continue;
+    const parts = rule.split(',');
+    if (parts.length !== 3) continue;
+    const [type, rawDomain, policy] = parts;
+    const domain = rawDomain.toLowerCase();
+    if (type === 'DOMAIN' && normalizedHost === domain) return policy;
+    if (type === 'DOMAIN-SUFFIX' && (normalizedHost === domain || normalizedHost.endsWith('.' + domain))) return policy;
+    if (type === 'DOMAIN-KEYWORD' && normalizedHost.includes(domain)) return policy;
+    if (type === 'DOMAIN-WILDCARD') {
+      const pattern = domain.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^.]*');
+      if (new RegExp('^' + pattern + '$').test(normalizedHost)) return policy;
+    }
+  }
+  return null;
+};
+
+const sharedAiHosts = [
+  'ct.sendgrid.net',
+  'intercom.io',
+  'intercomcdn.com',
+  'cdn.workos.com',
+  'challenges.cloudflare.com',
+  'forwarder.workos.com',
+  'humb.apple.com',
+  'images.workoscdn.com',
+  'js.stripe.com',
+  'rum.browser-intake-datadoghq.com',
+  'setup.workos.com',
+  'workos.imgix.net',
   // Statsig's shared SDK/config CDN serves many non-AI apps.
-  'DOMAIN-SUFFIX,featureassets.org,🤖 AI'
+  'featureassets.org'
 ];
 const valid = context.main({ proxies: [node('Hong Kong | HK-01')] });
-for (const rule of sharedAiRules) {
-  assert(!allAiSourceRules.includes(rule), 'ai-rules.json must not globally force shared SaaS through AI: ' + rule);
-  assert(!valid.rules.includes(rule), 'Clash must not globally force shared SaaS through AI: ' + rule);
-  assert(!routingRules.includes(rule), 'Shadowrocket must not globally force shared SaaS through AI: ' + rule);
+for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
+  for (const host of sharedAiHosts) {
+    assert(routeManualRule(rules, host) !== '🤖 AI', name + ' must not globally force shared SaaS through AI: ' + host);
+  }
 }
 
 const openaiRules = [...sectionRules('openai'), ...sectionRules('openai-voice')];
@@ -123,7 +142,14 @@ for (const rule of aiSearchRules) {
 }
 
 const aiPlatformRules = sectionRules('ai-platforms');
-for (const anchor of ['DOMAIN-SUFFIX,supabase.com,🤖 AI', 'DOMAIN-SUFFIX,huggingface.co,🤖 AI', 'DOMAIN-SUFFIX,hf.co,🤖 AI']) {
+for (const anchor of [
+  'DOMAIN-SUFFIX,supabase.com,🤖 AI',
+  'DOMAIN-SUFFIX,supabase.co,🤖 AI',
+  'DOMAIN-SUFFIX,supabase.in,🤖 AI',
+  'DOMAIN-SUFFIX,huggingface.co,🤖 AI',
+  'DOMAIN-SUFFIX,hf.co,🤖 AI',
+  'DOMAIN-SUFFIX,hf.space,🤖 AI'
+]) {
   assert(aiPlatformRules.includes(anchor), 'Supabase/HuggingFace AI platform anchor missing: ' + anchor);
 }
 for (const rule of aiPlatformRules) {
@@ -170,20 +196,6 @@ const sharedGeminiDependencyHosts = [
   'jnn-pa.googleapis.com',
   'waa-pa.clients6.google.com'
 ];
-const routeManualRule = (rules, host) => {
-  for (const rule of rules) {
-    if (!rule.endsWith(',🤖 AI')) continue;
-    const [type, domain, policy] = rule.split(',');
-    if (type === 'DOMAIN' && host === domain) return policy;
-    if (type === 'DOMAIN-SUFFIX' && (host === domain || host.endsWith('.' + domain))) return policy;
-    if (type === 'DOMAIN-KEYWORD' && host.includes(domain)) return policy;
-    if (type === 'DOMAIN-WILDCARD') {
-      const pattern = domain.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^.]*');
-      if (new RegExp('^' + pattern + '$').test(host)) return policy;
-    }
-  }
-  return null;
-};
 const geminiPositiveHosts = [
   'gemini.google.com',
   'geminiweb-pa.clients6.google.com',
@@ -221,13 +233,14 @@ for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', vali
   assert(!rules.some(rule => rule.startsWith('DOMAIN-KEYWORD,') && rule.endsWith(',🤖 AI')), name + ' AI rules must not use unanchored DOMAIN-KEYWORD');
   const first = rules.indexOf(expectedGeminiRules[0]);
   const last = rules.indexOf(expectedGeminiRules[expectedGeminiRules.length - 1]);
-  assert(first > rules.indexOf(aiPlatformRules[aiPlatformRules.length - 1]), name + ' Gemini rules must follow AI platforms');
-  assert(last < rules.indexOf(grokRules[0]), name + ' Gemini rules must precede Grok');
+  const aiPlatformLast = rules.indexOf(aiPlatformRules[aiPlatformRules.length - 1]);
+  const grokFirst = rules.indexOf(grokRules[0]);
+  assert(first !== -1 && last !== -1 && aiPlatformLast !== -1 && grokFirst !== -1, name + ' Gemini order boundary rule missing');
+  assert(first > aiPlatformLast, name + ' Gemini rules must follow AI platforms');
+  assert(last < grokFirst, name + ' Gemini rules must precede Grok');
   assert(JSON.stringify(rules.slice(first, last + 1)) === JSON.stringify(expectedGeminiRules), name + ' Gemini dedicated-domain rules must match exact AI list');
   for (const host of sharedGeminiDependencyHosts) {
-    for (const type of ['DOMAIN', 'DOMAIN-SUFFIX']) {
-      assert(!rules.includes(type + ',' + host + ',🤖 AI'), name + ' shared Google host must not be globally routed to AI: ' + host);
-    }
+    assert(routeManualRule(rules, host) !== '🤖 AI', name + ' shared Google host must not be globally routed to AI: ' + host);
   }
   for (const host of geminiPositiveHosts) {
     assert(routeManualRule(rules, host) === '🤖 AI', name + ' Gemini host not routed through AI: ' + host);
@@ -238,13 +251,15 @@ for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', vali
 }
 
 // Canva-owned domains are sourced from rules/ai-rules.json; enforce the mainland (.cn -> DIRECT) vs global (AI) split independently.
+const canvaSuffixPattern = /^(?:canva(?:-[a-z0-9-]+|code|status)?|my\.canvasite)\.[a-z]{2,10}$/i;
 const expectedCanvaRules = sectionRules('canva');
 assert(expectedCanvaRules.includes('DOMAIN-SUFFIX,canva.cn,DIRECT'), 'Canva dedicated-domain rules must keep canva.cn DIRECT');
 assert(expectedCanvaRules.includes('DOMAIN-SUFFIX,canva.com,🤖 AI'), 'Canva dedicated-domain rules must keep canva.com on AI');
 for (const rule of expectedCanvaRules) {
-  assert(/^DOMAIN-SUFFIX,(?:canva|my\.canvasite\.)/i.test(rule), 'Canva dedicated-domain rules must only contain Canva-owned suffixes: ' + rule);
-  const [, domain, policy] = rule.split(',');
-  const expectedPolicy = domain.endsWith('.cn') ? 'DIRECT' : '🤖 AI';
+  const parts = rule.split(',');
+  assert(parts.length === 3 && parts[0] === 'DOMAIN-SUFFIX' && canvaSuffixPattern.test(parts[1]), 'Canva dedicated-domain rules must only contain Canva-owned suffixes: ' + rule);
+  const [, domain, policy] = parts;
+  const expectedPolicy = domain.toLowerCase().endsWith('.cn') ? 'DIRECT' : '🤖 AI';
   assert(policy === expectedPolicy, 'Canva dedicated-domain rules must keep .cn DIRECT and global AI: ' + rule);
 }
 const claudeRules = sectionRules('claude');
@@ -259,9 +274,11 @@ for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRul
   assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact DIRECT/AI list');
   const first = rules.indexOf(expectedCanvaRules[0]);
   const last = rules.indexOf(expectedCanvaRules[expectedCanvaRules.length - 1]);
-  assert(first > rules.indexOf(claudeRules[claudeRules.length - 1]), name + ' Canva rules must follow Claude');
+  const claudeLast = rules.indexOf(claudeRules[claudeRules.length - 1]);
+  assert(first !== -1 && last !== -1, name + ' Canva rules missing');
+  assert(claudeLast !== -1 && first > claudeLast, name + ' Canva rules must follow Claude');
   const apple = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /(?:\/Apple\/Apple\.list|,Apple,🍎 Apple)/.test(rule));
-  assert(apple > last, name + ' Canva rules must precede Apple and China/fallback');
+  assert(apple !== -1 && apple > last, name + ' Canva rules must precede Apple and China/fallback');
   assert(JSON.stringify(rules.slice(first, last + 1)) === JSON.stringify(expectedCanvaRules), name + ' Canva rules must remain contiguous');
 }
 

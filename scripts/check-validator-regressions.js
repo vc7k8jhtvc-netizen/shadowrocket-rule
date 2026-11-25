@@ -266,10 +266,22 @@ function runSuite(eol) {
     // Direct mutations of rules/ai-rules.json must still trip independent security/policy redlines.
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grokipedia.com,🤖 AI"','"DOMAIN-SUFFIX,grokipedia.com,🤖 AI",\n        "DOMAIN-SUFFIX,featureassets.org,🤖 AI"'));
     check('check-routing-hardening.js',[],1,'must not globally force shared SaaS through AI');
-    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,canva.cn,DIRECT"','"DOMAIN-SUFFIX,canva.cn,🤖 AI"'));
-    check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grokipedia.com,🤖 AI"','"DOMAIN-SUFFIX,grokipedia.com,🤖 AI",\n        "DOMAIN,featureassets.org,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'must not globally force shared SaaS through AI');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grokipedia.com,🤖 AI"','"DOMAIN-SUFFIX,grokipedia.com,🤖 AI",\n        "DOMAIN-SUFFIX,stripe.com,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'must not globally force shared SaaS through AI');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,gemini.google,🤖 AI"','"DOMAIN-SUFFIX,gemini.google,🤖 AI",\n        "DOMAIN-SUFFIX,googleusercontent.com,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,gemini.google,🤖 AI"','"DOMAIN-SUFFIX,gemini.google,🤖 AI",\n        "DOMAIN-WILDCARD,*.gstatic.com,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'shared Google host must not be globally routed to AI');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,canva-apps.cn,DIRECT"','"DOMAIN-SUFFIX,canva-apps.cn,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'must keep .cn DIRECT and global AI');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,canvastatus.com,🤖 AI"','"DOMAIN-SUFFIX,canvastatus.com,🤖 AI",\n        "DOMAIN-SUFFIX,canva-attacker.evil.com,🤖 AI"'));
+    check('check-routing-hardening.js',[],1,'must only contain Canva-owned suffixes');
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.com,🤖 AI",\n        "DOMAIN-SUFFIX,extra-relay.example,🤖 AI"'));
     check('check-routing-hardening.js',[],1,'personal AI relay rule set');
+    write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,',\n        "DOMAIN-SUFFIX,hf.space,🤖 AI"',''));
+    check('check-routing-hardening.js',[],1,'Supabase/HuggingFace AI platform anchor missing');
     write('rules/ai-rules.json',aiRules);
 
     // Supabase / Hugging Face are explicit AI choices and must also stay outside Custom.list.
@@ -323,6 +335,8 @@ function runSuite(eol) {
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'[General]\n','# note mentioning [Rule] in comment\n[General]\n'));
     check('check-shadowrocket-routing.js',[],0);
     check('check-dual-client.js',[],0);
+    check('check-claude-routing.js',[],0);
+    check('check-routing-hardening.js',[],0);
     write('Shadowrocket_Routing.conf',routing);
 
     write('README.md',mutatePattern('README.md',readme,/内部版本为 `v\d+\.\d+\.\d+`/,'内部版本为 `v9.9.9`'));
