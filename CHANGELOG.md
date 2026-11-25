@@ -2,6 +2,10 @@
 
 ## 2026-11-24
 
+- 内部版本升至 `v2.7.39`：
+  - 将 `jina.ai` 从 `Custom.list` 迁移至双端 `🤖 AI`（`rules/ai-rules.json` 的 `Exa / Tavily / Jina` 分区，共 169 条手工 AI 规则），与 Exa / Tavily 保持一致，并锁定不得重新进入 `Custom.list`；`check-mihomo-runtime.js` 同步补充 `r.jina.ai` 端到端路由断言。
+  - 精简 `scripts/check-routing-hardening.js` 与 `scripts/check-claude-routing.js` 中对 `rules/ai-rules.json` 的全量重复硬编码清单，改为直接从单一数据源推导规则列表，同时保留并强化独立安全红线（禁止共享 SaaS/Google 主机、禁止 `DOMAIN-KEYWORD`、个人中转两条上限、Canva `.cn` 直连 / 国际走 AI 规则拆分、代表性正负匹配样本），并在 `check-validator-regressions.js` 补充直接篡改 `rules/ai-rules.json` 的负例回归；`check-claude-routing.js` 同步改用行首锚定区块解析。
+  - 更新 `SECURITY.md` 中凭据扫描范围表述，与当前“Git 跟踪文件 + 工作区未忽略新增文件 + 无 `.git` 目录遍历回退”实现保持一致。
 - 内部版本升至 `v2.7.38`：落地全量审计增量修复（H1 / M1–M7 / L1–L3）：
   - **H1（共享 Google 反滥用域名收敛）**：从 `rules/ai-rules.json` 及双端“🤖 AI”规则移除 Google 全局 BotGuard / Web Anti-Abuse 域名 `jnn-pa.googleapis.com` 与 `waa-pa.clients6.google.com`，恢复走正常 Google 分流，避免 YouTube 播放器 PO Token 校验与视频流出口分裂触发风控；同步纳入 `check-routing-hardening.js` 禁止清单与负例回归。
   - **M1 / M2 / M3（Clash 扩展脚本健壮性与依赖保留）**：`Clash_Verge_Rev_Script.js` 统一容忍 YAML 空值（`null`）的 `proxies` / `ntp` / `listeners` / `tunnels` 及策略组属性（同时拒绝非对象的 `proxy-providers` / `rule-providers` / `ntp`）；`normalizeRulePath` 规范化反斜杠、多余斜杠与大小写，并在碰撞改名时循环避重，消除 Windows（NTFS）规则集缓存覆盖隐患；补齐 `dns.fake-ip-filter-mode: rule` 下的 `RULE-SET,<名称>,fake-ip|real-ip` 规则集重写与 `ntp.dialer-proxy` 依赖保留，并在文档明确 DNS `#网卡名` 按 fail-closed 拒绝的边界。

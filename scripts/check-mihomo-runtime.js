@@ -317,6 +317,7 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
       ['http://jnn-pa.googleapis.com/', 'jnn-pa.googleapis.com', 'JP', 'Shared Google BotGuard stays on Google'],
       ['http://waa-pa.clients6.google.com/', 'waa-pa.clients6.google.com', 'JP', 'Shared Google WAA stays on Google'],
       [`http://${voiceFirstIp}/`, voiceFirstIp, 'SG', 'OpenAI_Voice.list host IP routes to AI'],
+      ['http://r.jina.ai/', 'r.jina.ai', 'SG', 'Jina migrated AI search routes to AI'],
       ['http://wikipedia.org/', 'wikipedia.org', 'TW', 'Custom.list routes to Custom'],
       ['http://jable.tv/', 'jable.tv', 'US', 'Adult.list routes to NSFW'],
       [`http://canva.cn:${directSink.port}/`, `canva.cn:${directSink.port}`, 'DIRECT', 'Canva China routes DIRECT'],

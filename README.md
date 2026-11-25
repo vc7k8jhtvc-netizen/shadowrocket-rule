@@ -1,6 +1,6 @@
 # Shadowrocket / Clash Verge Rev 分流配置
 
-适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.38`。本版本将 Google 共享反滥用 / BotGuard 域名（`jnn-pa.googleapis.com`、`waa-pa.clients6.google.com`）移出“🤖 AI”恢复正常分流，并补齐 Clash YAML 空值容忍、Windows 规则集路径隔离、`fake-ip-filter-mode: rule` 与 `ntp.dialer-proxy` 依赖保留、Mihomo 端到端路由运行时验证及安全/CI 加固。**
+适用于 WestData 的个人分流配置。Shadowrocket 与 Clash 保持相同的业务分组及“中国大陆直连、其余未知流量默认代理”语义。**内部版本为 `v2.7.39`。本版本将 `jina.ai` 从 `Custom.list` 移入双端“🤖 AI”与 Exa / Tavily 统一出口，精简校验脚本中对 `rules/ai-rules.json` 的重复规则清单（保留独立安全红线），并同步更新 `SECURITY.md` 扫描范围说明。**
 
 ## Shadowrocket
 
@@ -15,7 +15,7 @@
 | Shadowrocket_Routing.conf | Proxy Group、Rule；**无 Advertising 规则或广告策略组**（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
 | rules/ai-rules.json | 双端手工 AI 分流规则单一数据源；修改后运行 `node scripts/sync-ai-rules.js` 同步 |
 | OpenAI_Voice.list | ChatGPT Voice 服务器 IP 规则集；由 `scripts/sync-openai-voice-rules.js` 从 `https://openai.com/chatgpt-voice.json` 生成，不要手工编辑 |
-| Custom.list | 两端共用的个人显式分流规则（知识资料、开发工具及其他）；Exa、Tavily、Supabase、Hugging Face 已移至 AI，成人网站已拆至 `Adult.list` |
+| Custom.list | 两端共用的个人显式分流规则（知识资料、开发工具及其他）；Exa、Tavily、Jina、Supabase、Hugging Face 已移至 AI，成人网站已拆至 `Adult.list` |
 | Adult.list | 两端“🔞 NSFW”分组共用的成人网站显式分流规则 |
 | YouTube.Enhance.Shadowrocket.sgmodule | 仅 YouTube 专属增强脚本/规则及专属 MITM 主机；脚本直接跟随 Maasea `master`，不再固定 commit SHA |
 | Clash_Verge_Rev_Script.js | Clash Verge Rev 扩展脚本，重建策略组和分流，继承订阅 DNS/hosts（AI 规则区块由 `rules/ai-rules.json` 同步生成） |
@@ -44,7 +44,7 @@ Shadowrocket 客户端：上游最新版为 `2.2.93`（2026-10-29）。该版本
 | 策略组 / 服务 | 默认出口 |
 |---|---|
 | 🚀 默认代理 | 🇭🇰 香港 |
-| 🤖 AI（ChatGPT / Gemini / Grok / Claude / Canva / Exa / Tavily / Supabase / Hugging Face） | 🇸🇬 新加坡 |
+| 🤖 AI（ChatGPT / Gemini / Grok / Claude / Canva / Exa / Tavily / Jina / Supabase / Hugging Face） | 🇸🇬 新加坡 |
 | 🍎 Apple、🪟 Microsoft、DeepSeek、Canva 可画（中国大陆） | DIRECT |
 | 🔎 Google、💻 GitHub、📱 社交媒体、▶️ YouTube、✈️ Telegram、🧩 自定义、🔞 NSFW | 🚀 默认代理 |
 | 🐟 漏网之鱼 | 🚀 默认代理；可切换 DIRECT / 👆 手动选择等 |
@@ -57,7 +57,7 @@ Claude / Anthropic 现包含 19 条专属分流规则（17 条 `DOMAIN-SUFFIX`�
 
 Canva 国际版及自有开发/应用/状态域名（`canva.com`、`canva.ai`、`canva.app`、`canva.dev`、`canva.me`、`canva.site`、`canva.link`、`canva.run`、`canva-apps.com`、`canva-hosted-embed.com`、`canvacode.com`、`canvastatus.com`）通过 `DOMAIN-SUFFIX` 指向“🤖 AI”，不引入 Cloudflare 等共享 CDN；Canva 可画中国大陆域名（`canva.cn`、`canva-apps.cn`、`canva-code.cn`、`my.canvasite.cn`）保持 `DIRECT` 直连。用户自行绑定到 Canva 的自定义域名不属于 Canva 自有后缀，无法仅按域名自动识别。
 
-Exa 与 Tavily 的网站、API、控制台、文档及 MCP 入口统一使用 `exa.ai`、`tavily.com` 两个自有后缀，并已从 `Custom.list` 移除后显式指向“🤖 AI”。Supabase 的 `supabase.com`、`supabase.co`、`supabase.in`，以及 Hugging Face 的 `huggingface.co`、`hf.co`、`hf.space`，也按当前个人偏好从 `Custom.list` 移入“🤖 AI”。规则不引入第三方共享域名，也不新增 Provider、MITM 或 DNS。
+Exa、Tavily 与 Jina 的网站、Reader、Search、Embedding / Reranker、API、控制台、文档及 MCP 入口统一使用 `exa.ai`、`tavily.com`、`jina.ai` 三个自有后缀，并已从 `Custom.list` 移除后显式指向“🤖 AI”。Supabase 的 `supabase.com`、`supabase.co`、`supabase.in`，以及 Hugging Face 的 `huggingface.co`、`hf.co`、`hf.space`，也按当前个人偏好从 `Custom.list` 移入“🤖 AI”。规则不引入第三方共享域名，也不新增 Provider、MITM 或 DNS。
 
 地区节点池：香港、台湾、新加坡、日本、美国。Shadowrocket 用 `policy-regex-filter` 按“地区 | 节点”筛选；所有业务组都可直接选择这五个地区及“👆 手动选择”，从而访问订阅中的其他地区。若某地区组为空，请手动选择节点并核对名称，客户端的空组呈现以设备行为为准。
 
@@ -76,7 +76,7 @@ IP-CIDR,::/0,🐟 漏网之鱼,no-resolve
 - [查看 Custom.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list)
 - [查看 Adult.list](https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list)
 
-`Custom.list` 收录个人显式自定义域名（知识资料、开发工具及其他）；Exa、Tavily、Supabase、Hugging Face 已提升为双端 AI 手工规则，不应重新加入该清单。`Adult.list` 为个人用途的成人网站显式分流清单（指向“🔞 NSFW”），仅代表个人使用偏好，不构成推荐或背书；仓库公开可读，如对外分享请自行评估可见性，且不得与 `Custom.list` 重复收录。
+`Custom.list` 收录个人显式自定义域名（知识资料、开发工具及其他）；Exa、Tavily、Jina、Supabase、Hugging Face 已提升为双端 AI 手工规则，不应重新加入该清单。`Adult.list` 为个人用途的成人网站显式分流清单（指向“🔞 NSFW”），仅代表个人使用偏好，不构成推荐或背书；仓库公开可读，如对外分享请自行评估可见性，且不得与 `Custom.list` 重复收录。
 
 ## Clash Verge Rev
 
@@ -115,7 +115,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | chat.com、sora.com、chatgpt.livekit.cloud、host.livekit.cloud、turn.livekit.cloud、grok.x.com | 🤖 AI |
 | claude.ai、claude.app、claude.site、claudepages.dev、api.anthropic.com、*.claudeusercontent.com | 🤖 AI |
 | canva.com、canva.ai、canva.app、canva.dev、*.canva.site | 🤖 AI |
-| exa.ai、api.exa.ai、tavily.com、api.tavily.com | 🤖 AI |
+| exa.ai、api.exa.ai、tavily.com、api.tavily.com、jina.ai、r.jina.ai | 🤖 AI |
 | supabase.com、supabase.co、supabase.in、huggingface.co、hf.co、hf.space | 🤖 AI |
 | wikipedia.org、greasyfork.org | 🧩 自定义 |
 | jable.tv、missav.ws、asmr.one | 🔞 NSFW |
@@ -126,7 +126,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 
 2026-10-06 已完成 Claude 网页 / 应用 / API / Artifacts 分流与当时的 YouTube 专项增强设备核验。**v2.7.24 已于 2026-11-08 在 Clash Verge Rev `v2.5.10`（内置 Mihomo `v1.19.33`）上按上述样本完成设备端回归，结果正常；`a6api.vip` / `a6api.com` 按预期进入“🤖 AI”。** 该次回归同时关闭了 v2.7.23 遗留的验证欠账。YouTube 上游脚本现已自动跟随 `master`，后续上游发生行为变化时再重新验证。
 
-### 待实机核验清单（v2.7.25–v2.7.38）
+### 待实机核验清单（v2.7.25–v2.7.39）
 
 以下改动均已通过静态规则、双端一致性与离线/Mihomo 回归，但**尚未完成设备端连接日志核验**，建议在下次更新配置后按表一次性完成双端回归：
 
@@ -136,7 +136,7 @@ Windows 覆盖安装前仍需先完全退出客户端。
 | v2.7.30–v2.7.31 / v2.7.33 | Gemini / Antigravity 专属入口与 `DOMAIN-WILDCARD,*-aiplatform.googleapis.com` 走 `🤖 AI` | Shadowrocket + Clash |
 | v2.7.32–v2.7.33 | Clash `apple.com` / `bilibili.com` 根域名命中（`+.` 语法）与 `GEOIP` 前零提前 DNS 解析 | Clash Verge Rev |
 | v2.7.35 | `Adult.list` 命中 `🔞 NSFW` 且与 `Custom.list` 互不干扰 | Shadowrocket + Clash |
-| v2.7.36–v2.7.38 | ChatGPT Voice LiveKit / TURN 与 UDP/3478 走 `🤖 AI`；Claude/Grok 扩展域名生效；移除 `cdn.auth0.com` 与 `jnn-pa` / `waa-pa` 后登录、YouTube 播放与 Gemini 连接正常 | Shadowrocket + Clash |
+| v2.7.36–v2.7.39 | ChatGPT Voice LiveKit / TURN 与 UDP/3478 走 `🤖 AI`；Claude/Grok 扩展域名与 `jina.ai` 生效；移除 `cdn.auth0.com` 与 `jnn-pa` / `waa-pa` 后登录、YouTube 播放与 Gemini 连接正常 | Shadowrocket + Clash |
 
 ## 维护
 
