@@ -25,9 +25,7 @@ async function freePort() {
 
 const root = path.resolve(__dirname, '..');
 const localListFiles = {
-  Custom: path.join(root, 'Custom.list'),
-  Adult: path.join(root, 'Adult.list'),
-  OpenAI_Voice: path.join(root, 'OpenAI_Voice.list')
+  Adult: path.join(root, 'Adult.list')
 };
 
 async function startTagSink(tag) {
@@ -180,7 +178,7 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
       { name: 'unmatched-test-node', type: 'ss', server: '127.0.0.1', port: 1, cipher: 'aes-128-gcm', password: 'test-only' }
     ] } } });
     // Keep every generated rule before GEOIP,CN and inject IP-CIDR into every Blackmatrix classical provider
-    // so any missing no-resolve on LAN/Apple/Microsoft/GitHub/Telegram/Twitter/Instagram/TikTok/YouTube/Google/Custom/Adult/OpenAI_Voice/China triggers DNS.
+    // so any missing no-resolve on LAN/Apple/Microsoft/GitHub/Telegram/Twitter/Instagram/TikTok/YouTube/Google/Adult/China triggers DNS.
     for (const [name, provider] of Object.entries(output['rule-providers'])) {
       output['rule-providers'][name] = {
         type: 'inline',
@@ -229,7 +227,7 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
     assert(queries === 0, 'LAN unexpectedly triggered DNS before domain routing (pre-GEOIP RULE-SET resolved DNS)');
     console.log('PASS: Mihomo rejects empty provider groups and pre-GEOIP rules perform no early DNS lookup');
 
-    // End-to-end offline routing verification with real local text rule files (Custom/Adult/OpenAI_Voice) and DOMAIN-WILDCARD rules.
+    // End-to-end offline routing verification with real local text rule file (Adult) and DOMAIN-WILDCARD rules.
     const sgSink = await startTagSink('SG'); sinks.push(sgSink.server);
     const hkSink = await startTagSink('HK'); sinks.push(hkSink.server);
     const twSink = await startTagSink('TW'); sinks.push(twSink.server);
@@ -294,9 +292,9 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
 
     // Pin distinct regions on non-AI groups so each policy decision produces a distinct tag.
     for (const [groupName, target] of [
+      ['💻 开发工具', '🏝️ 台湾'],
       ['🔎 Google', '🇯🇵 日本'],
       ['📱 社交媒体', '🇯🇵 日本'],
-      ['🧩 自定义', '🏝️ 台湾'],
       ['🔞 NSFW', '🇺🇸 美国']
     ]) {
       const response = await fetch(`http://127.0.0.1:${routeApiPort}/proxies/${encodeURIComponent(groupName)}`, {
@@ -307,8 +305,6 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
       assert(response.ok, `failed to switch Mihomo group ${groupName} -> ${target}: HTTP ${response.status}`);
     }
 
-    const voiceFirstIp = fs.readFileSync(localListFiles.OpenAI_Voice, 'utf8')
-      .split(/\r?\n/).find(line => line.startsWith('IP-CIDR,')).split(',')[1].split('/')[0];
     const routeCases = [
       ['http://us-central1-aiplatform.googleapis.com/', 'us-central1-aiplatform.googleapis.com', 'SG', 'Vertex AI DOMAIN-WILDCARD'],
       ['http://chatgpt-async-webps-prod-eastus.webpubsub.azure.com/', 'chatgpt-async-webps-prod-eastus.webpubsub.azure.com', 'SG', 'OpenAI WebPubSub DOMAIN-WILDCARD'],
@@ -316,9 +312,9 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
       ['http://x.com/', 'x.com', 'JP', 'Twitter x.com remains social media'],
       ['http://jnn-pa.googleapis.com/', 'jnn-pa.googleapis.com', 'JP', 'Shared Google BotGuard stays on Google'],
       ['http://waa-pa.clients6.google.com/', 'waa-pa.clients6.google.com', 'JP', 'Shared Google WAA stays on Google'],
-      [`http://${voiceFirstIp}/`, voiceFirstIp, 'SG', 'OpenAI_Voice.list host IP routes to AI'],
       ['http://r.jina.ai/', 'r.jina.ai', 'SG', 'Jina migrated AI search routes to AI'],
-      ['http://wikipedia.org/', 'wikipedia.org', 'TW', 'Custom.list routes to Custom'],
+      ['http://pypi.org/', 'pypi.org', 'TW', 'Dev tools rule routes to 开发工具'],
+      ['http://wikipedia.org/', 'wikipedia.org', 'TW', 'Migrated reference rule routes to 开发工具'],
       ['http://jable.tv/', 'jable.tv', 'US', 'Adult.list routes to NSFW'],
       [`http://canva.cn:${directSink.port}/`, `canva.cn:${directSink.port}`, 'DIRECT', 'Canva China routes DIRECT'],
       ['http://canva.com/', 'canva.com', 'SG', 'Canva international routes to AI'],
@@ -328,7 +324,7 @@ function sendProxyRequest(proxyPort, targetUrl, hostHeader) {
       const actualTag = await sendProxyRequest(routeProxyPort, url, host);
       assert(actualTag === expectedTag, `Mihomo routing mismatch for ${desc} (${host}): expected ${expectedTag}, got ${actualTag}`);
     }
-    console.log('PASS: Mihomo runtime matches DOMAIN-WILDCARD, AI, Google, Direct, Custom.list, Adult.list and OpenAI_Voice.list rules accurately');
+    console.log('PASS: Mihomo runtime matches DOMAIN-WILDCARD, AI, Google, Direct and Adult.list rules accurately');
   } catch (error) {
     console.error(logs);
     throw error;

@@ -3,7 +3,6 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const routing = fs.readFileSync(path.join(root, 'Shadowrocket_Routing.conf'), 'utf8');
-const customRulesText = fs.readFileSync(path.join(root, 'Custom.list'), 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 function section(text, name) {
@@ -36,16 +35,16 @@ for (const line of groupLines) {
   groups.set(name, parts.slice(1));
 }
 
-const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedGroups = ['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...groups.keys()]) === JSON.stringify(expectedGroups), 'proxy group display order changed unexpectedly');
 assert(!groups.has('🛑 广告拦截'), 'legacy Advertising group must be absent');
+assert(!groups.has('🧩 自定义'), 'removed Custom group must be absent');
 
-const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🧩 自定义':'🚀 默认代理','🔞 NSFW':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 GitHub':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
+const expectedDefaults = {'🚀 默认代理':'🇭🇰 香港','🔞 NSFW':'🚀 默认代理','🐟 漏网之鱼':'🚀 默认代理','🤖 AI':'🇸🇬 新加坡','🍎 Apple':'DIRECT','🔎 Google':'🚀 默认代理','💻 开发工具':'🚀 默认代理','🪟 Microsoft':'DIRECT','📱 社交媒体':'🚀 默认代理','▶️ YouTube':'🚀 默认代理','✈️ Telegram':'🚀 默认代理'};
 for (const [name, expected] of Object.entries(expectedDefaults)) assert(groups.get(name)[0] === expected, name + ' default changed: expected ' + expected);
 
-assert(JSON.stringify(groups.get('🧩 自定义').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']), 'custom group options changed unexpectedly');
 assert(JSON.stringify(groups.get('🔞 NSFW').filter(x => !x.includes('='))) === JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']), 'NSFW group options changed unexpectedly');
-const fullChoiceGroups = ['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
+const fullChoiceGroups = ['🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼'];
 for (const name of fullChoiceGroups) {
   for (const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']) {
     assert(groups.get(name).includes(choice), name + ' missing shared routing choice: ' + choice);
@@ -88,11 +87,10 @@ for (const rule of rules) {
   assert(builtins.has(policy) || groups.has(policy), 'rule references missing policy: ' + policy);
 }
 
-const customMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
-const voiceMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
 const adultMarker = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW';
-assert(rules.includes(customMarker), 'Custom.list routing rule missing');
 assert(rules.includes(adultMarker), 'Adult.list routing rule missing');
+assert(!routing.includes('/Custom.list'), 'removed Custom.list must be absent');
+assert(!routing.includes('/OpenAI_Voice.list'), 'removed OpenAI_Voice.list must be absent');
 assert(!routing.includes('/Global.list'), 'routing must not use old Global.list');
 assert(!groups.has('🌍 Global'), 'old Global policy group must not return');
 
@@ -107,40 +105,24 @@ const rulesOverlap = (a, b) => (
   (b.type === 'DOMAIN-SUFFIX' && a.domain.endsWith('.' + b.domain))
 );
 
-const customRules = activeLines(customRulesText);
-assert(customRules.length > 0, 'Custom.list must not be empty');
-assert(new Set(customRules).size === customRules.length, 'duplicate Custom.list entry detected');
-for (const rule of customRules) assert(strictListRulePattern.test(rule), 'unsupported Custom.list rule syntax: ' + rule);
-assert(!customRules.some(rule => /^DOMAIN-SUFFIX,npmjs\.(com|org)$/.test(rule)), 'npm must remain owned by GitHub rules');
-
 const adultRulesText = fs.readFileSync(path.join(root, 'Adult.list'), 'utf8');
 const adultRules = activeLines(adultRulesText);
 assert(adultRules.length > 0, 'Adult.list must not be empty');
 assert(new Set(adultRules).size === adultRules.length, 'duplicate Adult.list entry detected');
 for (const rule of adultRules) assert(strictListRulePattern.test(rule), 'unsupported Adult.list rule syntax: ' + rule);
 
-const parsedCustom = customRules.map(rule => parseDomainRule(rule, 'Custom.list'));
 const parsedAdult = adultRules.map(rule => parseDomainRule(rule, 'Adult.list'));
-for (const [label, list] of [['Custom.list', parsedCustom], ['Adult.list', parsedAdult]]) {
-  for (let i = 0; i < list.length; i++) {
-    for (let j = i + 1; j < list.length; j++) {
-      assert(!rulesOverlap(list[i], list[j]), `overlapping/redundant ${label} entries: ${list[i].raw} vs ${list[j].raw}`);
-    }
-  }
-}
-for (const customItem of parsedCustom) {
-  for (const adultItem of parsedAdult) {
-    assert(!rulesOverlap(customItem, adultItem), 'overlapping rule between Custom.list and Adult.list: ' + adultItem.raw);
+for (let i = 0; i < parsedAdult.length; i++) {
+  for (let j = i + 1; j < parsedAdult.length; j++) {
+    assert(!rulesOverlap(parsedAdult[i], parsedAdult[j]), `overlapping/redundant Adult.list entries: ${parsedAdult[i].raw} vs ${parsedAdult[j].raw}`);
   }
 }
 const mainDomainRules = rules
   .filter(rule => rule.startsWith('DOMAIN,') || rule.startsWith('DOMAIN-SUFFIX,'))
   .map(rule => parseDomainRule(rule, 'Shadowrocket_Routing.conf'));
-for (const [label, list] of [['Custom.list', parsedCustom], ['Adult.list', parsedAdult]]) {
-  for (const item of list) {
-    for (const mainItem of mainDomainRules) {
-      assert(!rulesOverlap(item, mainItem), `overlapping rule between ${label} and Shadowrocket_Routing.conf: ${item.raw} vs ${mainItem.raw}`);
-    }
+for (const item of parsedAdult) {
+  for (const mainItem of mainDomainRules) {
+    assert(!rulesOverlap(item, mainItem), `overlapping rule between Adult.list and Shadowrocket_Routing.conf: ${item.raw} vs ${mainItem.raw}`);
   }
 }
 
@@ -154,11 +136,14 @@ const requiredOrder = [
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
   'DOMAIN-SUFFIX,gemini.google,🤖 AI',
   'DOMAIN-SUFFIX,grok.com,🤖 AI',
-  voiceMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple_Domain.list,🍎 Apple',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Microsoft/Microsoft.list,🪟 Microsoft',
-  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GitHub/GitHub.list,💻 GitHub',
+  'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GitHub/GitHub.list,💻 开发工具',
+  'DOMAIN-SUFFIX,docker.io,💻 开发工具',
+  'DOMAIN-SUFFIX,pythonhosted.org,💻 开发工具',
+  'DOMAIN-SUFFIX,wikipedia.org,💻 开发工具',
+  'DOMAIN-SUFFIX,greasyfork.org,💻 开发工具',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Telegram/Telegram.list,✈️ Telegram',
   'DOMAIN-SUFFIX,bytedance.com,DIRECT',
   'DOMAIN-SUFFIX,bytedance.net,DIRECT',
@@ -167,7 +152,6 @@ const requiredOrder = [
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list,▶️ YouTube',
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list,🔎 Google',
-  customMarker,
   adultMarker,
   'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China.list,DIRECT',
   'DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list,DIRECT',
@@ -183,4 +167,4 @@ for (const marker of requiredOrder) {
 }
 
 assert(!routing.includes('🐟 FINAL'), 'obsolete FINAL policy group must be absent');
-console.log('PASS: Shadowrocket routing, no Advertising, Custom.list, and Adult.list checks');
+console.log('PASS: Shadowrocket routing, no Advertising, and Adult.list checks');

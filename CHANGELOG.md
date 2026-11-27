@@ -1,5 +1,12 @@
 # 变更记录
 
+## 2026-11-27
+
+- 内部版本升至 `v2.7.40`：
+  - 移除 OpenAI / ChatGPT Voice 专项分流：删除 `OpenAI_Voice.list`、`scripts/sync-openai-voice-rules.js` 与 `scripts/check-openai-voice-rules.js`，从 `rules/ai-rules.json` 及双端移除 `openai-voice` 分区（`chatgpt.livekit.cloud`、`host.livekit.cloud`、`turn.livekit.cloud`，当前剩余 8 个分区、166 条手工 AI 规则）与 `OpenAI_Voice` 规则集 / Provider。
+  - 拆分并移除 `Custom.list` 与“🧩 自定义”分组：将双端“💻 GitHub”更名为“💻 开发工具”（当前共 17 个策略组、Clash 端 14 个规则集），将原 `Custom.list` 中的全部 13 条域名（`docker.io`、`docker.com`、`dhi.io`、`stackoverflow.com`、`sstatic.net`、`gitlab.com`、`gitlab-static.net`、`pypi.org`、`pythonhosted.org`、`wikipedia.org`、`wikimedia.org`、`hero-sms.com`、`greasyfork.org`）内联并入双端“💻 开发工具”（紧随上游 `GitHub` 规则集之后）。
+  - 更新全套校验器、Mihomo 运行时测试、负例回归与外部依赖工作流（移除 OpenAI Voice 与 `Custom.list` 依赖，新增防静默回流断言及 `💻 开发工具` 一致性与端到端路由断言），并同步更新 `README.md` 与 `EXPERIENCE.md`。
+
 ## 2026-11-24
 
 - 内部版本升至 `v2.7.39`：

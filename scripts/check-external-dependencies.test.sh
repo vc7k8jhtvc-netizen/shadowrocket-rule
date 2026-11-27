@@ -5,19 +5,6 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 checker="$root/scripts/check-external-dependencies.sh"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
-voice_fixture="$tmpdir/voice.json"
-export VOICE_FIXTURE="$voice_fixture"
-node - "$root/OpenAI_Voice.list" "$voice_fixture" <<'NODE'
-const fs = require('fs');
-const lines = fs.readFileSync(process.argv[2], 'utf8').split(/\r?\n/);
-const creationTime = (lines.find(line => line.startsWith('# Creation-Time: ')) || '').slice('# Creation-Time: '.length);
-const prefixes = [];
-for (const line of lines) {
-  if (line.startsWith('IP-CIDR,')) prefixes.push({ ipv4Prefix: line.split(',')[1] });
-  else if (line.startsWith('IP-CIDR6,')) prefixes.push({ ipv6Prefix: line.split(',')[1] });
-}
-fs.writeFileSync(process.argv[3], JSON.stringify({ creationTime, prefixes }));
-NODE
 
 mkdir -p "$tmpdir/bin"
 cat > "$tmpdir/bin/curl" <<'EOF'
@@ -34,13 +21,6 @@ while (($#)); do
 done
 [[ -n "$out" && -n "$url" ]]
 case "$url" in
-  https://openai.com/chatgpt-voice.json)
-    if [[ "${MALFORM_VOICE:-}" == 1 ]]; then
-      printf '{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"0.0.0.0/0"}]}' > "$out"
-    else
-      cat "$VOICE_FIXTURE" > "$out"
-    fi
-    ;;
   *.js)
     printf '/* upstream fixture */\nconst ok = true;\n' > "$out"
     for _ in $(seq 1 64); do printf '/* padding */\n' >> "$out"; done
@@ -111,11 +91,6 @@ fi
 
 if MALFORM_DOMAIN_DOT=1 PATH="$tmpdir/bin:$PATH" bash "$checker" "$tmpdir/module.sgmodule" >/dev/null 2>&1; then
   echo 'FAIL: checker accepted leading-dot Clash domain provider entries' >&2
-  exit 1
-fi
-
-if MALFORM_VOICE=1 PATH="$tmpdir/bin:$PATH" bash "$checker" "$tmpdir/module.sgmodule" >/dev/null 2>&1; then
-  echo 'FAIL: checker accepted broad OpenAI voice prefix' >&2
   exit 1
 fi
 

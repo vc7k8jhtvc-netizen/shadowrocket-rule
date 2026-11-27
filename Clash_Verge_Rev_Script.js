@@ -1,13 +1,13 @@
 /**
  * Clash Verge Rev 订阅扩展脚本
- * 版本：v2.7.39
+ * 版本：v2.7.40
  * 与小火箭分流策略保持一致。
  * 继承订阅 DNS / hosts / 节点入口，重建代理组和正常分流。
  * 不加载通用 Advertising 广告黑名单；YouTube 增强为 Shadowrocket 专属模块。
  */
 
 function main(config) {
-  const scriptVersion = 'v2.7.39';
+  const scriptVersion = 'v2.7.40';
   const logPrefix = '[shadowrocket-rule]';
   const writeLog = (level, message) => {
     if (typeof console === 'undefined') return;
@@ -89,12 +89,11 @@ function main(config) {
     { name: '🤖 AI', type: 'select', proxies: ['🇸🇬 新加坡', '🇭🇰 香港', '🏝️ 台湾', '🇯🇵 日本', '🇺🇸 美国', '🚀 默认代理', '👆 手动选择'] },
     { name: '🍎 Apple', type: 'select', proxies: ['DIRECT', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🚀 默认代理', '👆 手动选择'] },
     { name: '🔎 Google', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
-    { name: '💻 GitHub', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
+    { name: '💻 开发工具', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '🪟 Microsoft', type: 'select', proxies: ['DIRECT', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '🚀 默认代理', '👆 手动选择'] },
     { name: '📱 社交媒体', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '▶️ YouTube', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '✈️ Telegram', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
-    { name: '🧩 自定义', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '🔞 NSFW', type: 'select', proxies: ['🚀 默认代理', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     { name: '🐟 漏网之鱼', type: 'select', proxies: ['🚀 默认代理', 'DIRECT', '🇭🇰 香港', '🏝️ 台湾', '🇸🇬 新加坡', '🇯🇵 日本', '🇺🇸 美国', '👆 手动选择'] },
     regionalGroup('🇭🇰 香港', regionPatterns.hk, regionMatches.hk),
@@ -134,20 +133,10 @@ function main(config) {
     TikTok: classicalProvider('TikTok'),
     YouTube: classicalProvider('YouTube'),
     Google: classicalProvider('Google'),
-    Custom: {
-      type: 'http', behavior: 'classical', format: 'text',
-      url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list',
-      path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理'
-    },
     Adult: {
       type: 'http', behavior: 'classical', format: 'text',
       url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list',
       path: './rule_providers/Adult.list', interval: 86400, proxy: '🚀 默认代理'
-    },
-    OpenAI_Voice: {
-      type: 'http', behavior: 'classical', format: 'text',
-      url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list',
-      path: './rule_providers/OpenAI_Voice.list', interval: 86400, proxy: '🚀 默认代理'
     },
     China: classicalProvider('China'),
     China_Domain: domainProvider('China')
@@ -417,11 +406,6 @@ function main(config) {
     'DOMAIN,production-openaicom-storage.azureedge.net,🤖 AI',
     'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI',
     // OpenAI 共享依赖（WorkOS、Intercom、Stripe、Cloudflare、Apple、Datadog）保持正常分流。
-    // OpenAI / ChatGPT Voice
-    // 高级语音使用 LiveKit 信令与 TURN；服务器 IP 由 OpenAI_Voice.list 从官方 chatgpt-voice.json 同步。
-    'DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI',
-    'DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI',
-    'DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI',
     // 个人 AI 中转
     'DOMAIN-SUFFIX,a6api.vip,🤖 AI',
     'DOMAIN-SUFFIX,a6api.com,🤖 AI',
@@ -576,11 +560,17 @@ function main(config) {
     'DOMAIN-SUFFIX,canvacode.com,🤖 AI',
     'DOMAIN-SUFFIX,canvastatus.com,🤖 AI',
     // <<< END AI RULES <<<
-    'RULE-SET,OpenAI_Voice,🤖 AI,no-resolve',
-    'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve','RULE-SET,GitHub,💻 GitHub,no-resolve','RULE-SET,Telegram,✈️ Telegram,no-resolve',
+    'RULE-SET,Apple,🍎 Apple,no-resolve','RULE-SET,Apple_Domain,🍎 Apple','RULE-SET,Microsoft,🪟 Microsoft,no-resolve',
+    'RULE-SET,GitHub,💻 开发工具,no-resolve',
+    'DOMAIN-SUFFIX,docker.io,💻 开发工具','DOMAIN-SUFFIX,docker.com,💻 开发工具','DOMAIN-SUFFIX,dhi.io,💻 开发工具',
+    'DOMAIN-SUFFIX,stackoverflow.com,💻 开发工具','DOMAIN-SUFFIX,sstatic.net,💻 开发工具',
+    'DOMAIN-SUFFIX,gitlab.com,💻 开发工具','DOMAIN-SUFFIX,gitlab-static.net,💻 开发工具',
+    'DOMAIN-SUFFIX,pypi.org,💻 开发工具','DOMAIN-SUFFIX,pythonhosted.org,💻 开发工具',
+    'DOMAIN-SUFFIX,wikipedia.org,💻 开发工具','DOMAIN-SUFFIX,wikimedia.org,💻 开发工具',
+    'DOMAIN-SUFFIX,hero-sms.com,💻 开发工具','DOMAIN-SUFFIX,greasyfork.org,💻 开发工具',
+    'RULE-SET,Telegram,✈️ Telegram,no-resolve',
     'DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT',
     'RULE-SET,Twitter,📱 社交媒体,no-resolve','RULE-SET,Instagram,📱 社交媒体,no-resolve','RULE-SET,TikTok,📱 社交媒体,no-resolve','RULE-SET,YouTube,▶️ YouTube,no-resolve','RULE-SET,Google,🔎 Google,no-resolve',
-    'RULE-SET,Custom,🧩 自定义,no-resolve',
     'RULE-SET,Adult,🔞 NSFW,no-resolve',
     'RULE-SET,China,DIRECT,no-resolve','RULE-SET,China_Domain,DIRECT','GEOIP,CN,DIRECT','MATCH,🐟 漏网之鱼'
   ];

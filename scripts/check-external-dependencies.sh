@@ -6,10 +6,8 @@ module="${1:-$root/YouTube.Enhance.Shadowrocket.sgmodule}"
 routing="$root/Shadowrocket_Routing.conf"
 clash_script="$root/Clash_Verge_Rev_Script.js"
 clash_checker="$root/scripts/check-clash-script.js"
-openai_voice_sync="$root/scripts/sync-openai-voice-rules.js"
-openai_voice_url="https://openai.com/chatgpt-voice.json"
 
-for file in "$module" "$routing" "$clash_script" "$clash_checker" "$openai_voice_sync" "$root/OpenAI_Voice.list"; do
+for file in "$module" "$routing" "$clash_script" "$clash_checker"; do
   if [[ ! -f "$file" ]]; then
     echo "FAIL: required file not found: $file" >&2
     exit 1
@@ -149,16 +147,4 @@ for spec in "${clash_specs[@]}"; do
   download "clash:$kind_suffix" "$url"
 done
 
-echo "Checking [openai:voice] $openai_voice_url"
-curl -fsSL --retry 3 --retry-all-errors --connect-timeout 10 --max-time 30 "$openai_voice_url" -o "$tmpdir/openai-voice.json"
-if (( $(wc -c < "$tmpdir/openai-voice.json" | tr -d ' ') < 16 )); then
-  echo "FAIL: OpenAI voice source is unexpectedly small" >&2
-  exit 1
-fi
-if grep -qiE '<!doctype html|<html|404: Not Found' "$tmpdir/openai-voice.json"; then
-  echo "FAIL: OpenAI voice source returned HTML/error content" >&2
-  exit 1
-fi
-node "$openai_voice_sync" --check --source "$tmpdir/openai-voice.json"
-
-echo "PASS: Maasea, Blackmatrix and OpenAI Voice live dependencies are reachable and structurally valid"
+echo "PASS: Maasea and Blackmatrix live dependencies are reachable and structurally valid"

@@ -66,7 +66,6 @@ function runSuite(eol) {
 
     let routing=read('Shadowrocket_Routing.conf');
     const aiRules=read('rules/ai-rules.json');
-    const custom=read('Custom.list');
     const adult=read('Adult.list');
     const readme=read('README.md');
     let changelog=read('CHANGELOG.md');
@@ -77,7 +76,6 @@ function runSuite(eol) {
     check('check-dual-client.js',[],0);
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],0);
     check('check-claude-routing.js',[],0);
-    check('check-openai-voice-rules.js',[],0);
     check('check-routing-hardening.js',[],0);
     check('check-youtube-module.js',[],0);
     check('check-version.js',[],0);
@@ -119,7 +117,7 @@ function runSuite(eol) {
       'Mihomo routing mismatch'
     ]) assert(runtimeChecker.includes(marker),`${label}: Mihomo runtime checker lost assertion: ${marker}`);
     const gate=read('scripts/check-config.sh');
-    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','node "$openai_voice_check"','bash "$external_test"'])
+    for(const marker of ['"$root"/scripts/*.js','node --check "$js_file"','[[ -f "$mihomo_check" ]]','node "$sync_ai_check" --check','bash "$external_test"'])
       assert(gate.includes(marker),`${label}: check-config.sh lost M4 guard: ${marker}`);
 
     // AI rules single-source-of-truth sync checks: drift, missing markers, invalid rules, conflicts, and write-mode recovery.
@@ -134,22 +132,12 @@ function runSuite(eol) {
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,a6api.com,🤖 AI"','"DOMAIN-SUFFIX,a6api.vip,DIRECT"'));
     check('sync-ai-rules.js',['--check'],1,'conflicting AI rule policies');
     write('rules/ai-rules.json',aiRules);
-    const voiceList=read('OpenAI_Voice.list');
-    const voiceFirst=voiceList.split('\n').find(line=>line.startsWith('IP-CIDR,'));
-    assert(voiceFirst,label+': OpenAI voice fixture has no IPv4 rule');
-    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,'IP-CIDR,0.0.0.0/0,no-resolve'));
-    check('check-openai-voice-rules.js',[],1,'host routes');
-    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,voiceFirst.replace('/32,','/032,')));
-    check('check-openai-voice-rules.js',[],1,'host routes');
-    write('OpenAI_Voice.list',mutate('OpenAI_Voice.list',voiceList,voiceFirst,voiceFirst.replace(',no-resolve','')));
-    check('check-openai-voice-rules.js',[],1,'unsupported OpenAI voice rule');
-    write('OpenAI_Voice.list',voiceList);
-    fs.writeFileSync(at('voice-bad.json'),'{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"0.0.0.0/0"}]}');
-    check('sync-openai-voice-rules.js',['--source',at('voice-bad.json')],1,'host routes');
-    fs.writeFileSync(at('voice-v6.json'),'{"creationTime":"fixture","prefixes":[{"ipv4Prefix":"102.37.57.54/32"},{"ipv6Prefix":"2001:db8::1/128"}]}');
-    check('sync-openai-voice-rules.js',['--source',at('voice-v6.json')],0);
-    check('check-openai-voice-rules.js',[],0);
-    write('OpenAI_Voice.list',voiceList);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# ===== 系统与开发 =====\n','RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI\n\n# ===== 系统与开发 =====\n'));
+    check('check-shadowrocket-routing.js',[],1,'removed OpenAI_Voice.list must be absent');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    China: classicalProvider('China'),","    OpenAI_Voice: { type: 'http', behavior: 'classical', format: 'text', url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list', path: './rule_providers/OpenAI_Voice.list', interval: 86400, proxy: '🚀 默认代理' },\n    China: classicalProvider('China'),"));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'removed OpenAI_Voice provider must be absent');
+    write('Clash_Verge_Rev_Script.js',clash);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,grok.me,🤖 AI\n',''));
     check('sync-ai-rules.js',['--check'],1,'Shadowrocket_Routing.conf');
@@ -179,9 +167,12 @@ function runSuite(eol) {
     check('check-youtube-module.js',[],1,'unexpected upstream script');
     write('YouTube.Enhance.Shadowrocket.sgmodule',youtubeModule);
 
-    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义\n',''));
-    check('check-shadowrocket-routing.js',[],1,'Custom.list routing rule missing');
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'# ===== NSFW =====\n','RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🚀 默认代理\n\n# ===== NSFW =====\n'));
+    check('check-shadowrocket-routing.js',[],1,'removed Custom.list must be absent');
     write('Shadowrocket_Routing.conf',routing);
+    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    Adult: {","    Custom: { type: 'http', behavior: 'classical', format: 'text', url: 'https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list', path: './rule_providers/Custom.list', interval: 86400, proxy: '🚀 默认代理' },\n    Adult: {"));
+    check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'removed Custom provider must be absent');
+    write('Clash_Verge_Rev_Script.js',clash);
 
     // Reintroduction of either Advertising source or the old group must fail.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'[Rule]\n','[Rule]\nRULE-SET,https://example.invalid/Advertising.list,DIRECT\n'));
@@ -250,18 +241,12 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'personal AI relay rule');
     write('Shadowrocket_Routing.conf',routing);
 
-    // Exa / Tavily / Jina are AI search/reader services; deleting the explicit rule or returning
-    // any of them to Custom.list must fail the hardening check.
+    // Exa / Tavily / Jina are AI search/reader services; deleting the explicit rule must fail hardening.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,exa.ai,🤖 AI\n',''));
     check('check-routing-hardening.js',[],1,'Exa/Tavily/Jina AI search rule');
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,jina.ai,🤖 AI\n',''));
     check('check-routing-hardening.js',[],1,'Exa/Tavily/Jina AI search rule');
     write('Shadowrocket_Routing.conf',routing);
-    write('Custom.list',mutate('Custom.list',custom,'# ===== 开发工具 =====\n','DOMAIN-SUFFIX,exa.ai\n\n# ===== 开发工具 =====\n'));
-    check('check-routing-hardening.js',[],1,'Exa/Tavily/Jina must not remain in Custom.list');
-    write('Custom.list',mutate('Custom.list',custom,'# ===== 开发工具 =====\n','DOMAIN-SUFFIX,jina.ai\n\n# ===== 开发工具 =====\n'));
-    check('check-routing-hardening.js',[],1,'Exa/Tavily/Jina must not remain in Custom.list');
-    write('Custom.list',custom);
 
     // Direct mutations of rules/ai-rules.json must still trip independent security/policy redlines.
     write('rules/ai-rules.json',mutate('rules/ai-rules.json',aiRules,'"DOMAIN-SUFFIX,grokipedia.com,🤖 AI"','"DOMAIN-SUFFIX,grokipedia.com,🤖 AI",\n        "DOMAIN-SUFFIX,featureassets.org,🤖 AI"'));
@@ -284,13 +269,10 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'Supabase/HuggingFace AI platform anchor missing');
     write('rules/ai-rules.json',aiRules);
 
-    // Supabase / Hugging Face are explicit AI choices and must also stay outside Custom.list.
+    // Supabase / Hugging Face are explicit AI choices and must remain locked.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,huggingface.co,🤖 AI\n',''));
     check('check-routing-hardening.js',[],1,'Supabase/HuggingFace AI platform rule');
     write('Shadowrocket_Routing.conf',routing);
-    write('Custom.list',mutate('Custom.list',custom,'# ===== 开发工具 =====\n','DOMAIN-SUFFIX,supabase.in\n\n# ===== 开发工具 =====\n'));
-    check('check-routing-hardening.js',[],1,'Supabase/HuggingFace must not remain in Custom.list');
-    write('Custom.list',custom);
 
     // Canva rules are a dedicated AI application group and must not disappear or drift.
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,canvastatus.com,🤖 AI\n',''));
@@ -300,24 +282,16 @@ function runSuite(eol) {
     check('check-routing-hardening.js',[],1,'Canva dedicated-domain rules');
     write('Clash_Verge_Rev_Script.js',clash);
 
-    write('Custom.list',custom+'DOMAIN-SUFFIX,wikipedia.org\n');
-    check('check-shadowrocket-routing.js',[],1,'duplicate Custom.list entry');
-    write('Custom.list',custom+'INVALID,example.com\n');
-    check('check-shadowrocket-routing.js',[],1,'unsupported Custom.list rule syntax');
-    write('Custom.list',custom+'DOMAIN-SUFFIX,https://example.com\n');
-    check('check-shadowrocket-routing.js',[],1,'unsupported Custom.list rule syntax');
-    write('Custom.list',custom+'DOMAIN-SUFFIX,openai.com\n');
-    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Shadowrocket_Routing.conf');
-    write('Custom.list',custom);
-
     write('Adult.list',adult+'DOMAIN-SUFFIX,jable.tv\n');
     check('check-shadowrocket-routing.js',[],1,'duplicate Adult.list entry');
     write('Adult.list',adult+'INVALID,example.com\n');
     check('check-shadowrocket-routing.js',[],1,'unsupported Adult.list rule syntax');
-    write('Adult.list',adult+'DOMAIN-SUFFIX,wikipedia.org\n');
-    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Adult.list');
-    write('Adult.list',adult+'DOMAIN,en.wikipedia.org\n');
-    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Custom.list and Adult.list');
+    write('Adult.list',adult+'DOMAIN-SUFFIX,https://example.com\n');
+    check('check-shadowrocket-routing.js',[],1,'unsupported Adult.list rule syntax');
+    write('Adult.list',adult+'DOMAIN,www.jable.tv\n');
+    check('check-shadowrocket-routing.js',[],1,'overlapping/redundant Adult.list entries');
+    write('Adult.list',adult+'DOMAIN-SUFFIX,openai.com\n');
+    check('check-shadowrocket-routing.js',[],1,'overlapping rule between Adult.list and Shadowrocket_Routing.conf');
     write('Adult.list',adult);
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW\n',''));
     check('check-shadowrocket-routing.js',[],1,'Adult.list routing rule missing');
@@ -362,9 +336,6 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'GEOIP,CN,DIRECT',","'GEOIP,CN,DIRECT,no-resolve',"));
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'Clash GEOIP rule must not use no-resolve');
     write('Clash_Verge_Rev_Script.js',clash);
-    write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"'RULE-SET,Custom,🧩 自定义,no-resolve',\n",''));
-    check('check-dual-client.js',[],1,'Clash Custom rule missing');
-    write('Clash_Verge_Rev_Script.js',clash);
     write('Clash_Verge_Rev_Script.js',mutate('Clash_Verge_Rev_Script.js',clash,"    China: classicalProvider('China'),","    Advertising: classicalProvider('Advertising'),\n    China: classicalProvider('China'),"));
     check('check-clash-script.js',[at('Clash_Verge_Rev_Script.js')],1,'legacy Advertising providers must be absent');
     write('Clash_Verge_Rev_Script.js',clash);
@@ -373,6 +344,10 @@ function runSuite(eol) {
     write('Clash_Verge_Rev_Script.js',clash);
 
     write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list,📱 社交媒体\n',''));
+    check('check-shadowrocket-routing.js',[],1,'missing required rule');
+    check('check-dual-client.js',[],1,'Shadowrocket non-AI rule sequence drift');
+    write('Shadowrocket_Routing.conf',routing);
+    write('Shadowrocket_Routing.conf',mutate('Shadowrocket_Routing.conf',routing,'DOMAIN-SUFFIX,docker.io,💻 开发工具\n',''));
     check('check-shadowrocket-routing.js',[],1,'missing required rule');
     check('check-dual-client.js',[],1,'Shadowrocket non-AI rule sequence drift');
     write('Shadowrocket_Routing.conf',routing);

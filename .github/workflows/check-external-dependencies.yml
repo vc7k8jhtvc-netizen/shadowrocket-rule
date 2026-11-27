@@ -7,9 +7,6 @@ on:
       - '.github/workflows/check-external-dependencies.yml'
       - 'scripts/check-external-dependencies.sh'
       - 'scripts/check-external-dependencies.test.sh'
-      - 'scripts/check-openai-voice-rules.js'
-      - 'scripts/sync-openai-voice-rules.js'
-      - 'OpenAI_Voice.list'
       - 'scripts/check-clash-script.js'
       - 'scripts/check-youtube-module.js'
       - 'Clash_Verge_Rev_Script.js'
@@ -21,9 +18,6 @@ on:
       - '.github/workflows/check-external-dependencies.yml'
       - 'scripts/check-external-dependencies.sh'
       - 'scripts/check-external-dependencies.test.sh'
-      - 'scripts/check-openai-voice-rules.js'
-      - 'scripts/sync-openai-voice-rules.js'
-      - 'OpenAI_Voice.list'
       - 'scripts/check-clash-script.js'
       - 'scripts/check-youtube-module.js'
       - 'Clash_Verge_Rev_Script.js'
@@ -67,5 +61,5 @@ jobs:
           node-version: '22'
       - name: Validate local YouTube module contract
         run: node scripts/check-youtube-module.js
-      - name: Smoke-test live Maasea, Blackmatrix and OpenAI Voice dependencies
+      - name: Smoke-test live Maasea and Blackmatrix dependencies
         run: bash scripts/check-external-dependencies.sh

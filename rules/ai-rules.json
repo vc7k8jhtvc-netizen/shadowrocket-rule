@@ -33,18 +33,6 @@
       ]
     },
     {
-      "id": "openai-voice",
-      "title": "OpenAI / ChatGPT Voice",
-      "headerComments": [
-        "高级语音使用 LiveKit 信令与 TURN；服务器 IP 由 OpenAI_Voice.list 从官方 chatgpt-voice.json 同步。"
-      ],
-      "rules": [
-        "DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI",
-        "DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI",
-        "DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI"
-      ]
-    },
-    {
       "id": "personal-relay",
       "title": "个人 AI 中转",
       "rules": [

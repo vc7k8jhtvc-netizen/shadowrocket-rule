@@ -32,22 +32,21 @@ const clash=context.main({proxies:[
 ]});
 const clashGroups=new Map(clash['proxy-groups'].map(g=>[g.name,g]));
 
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 assert(JSON.stringify([...shadowGroups.keys()])===JSON.stringify(expectedOrder),'Shadowrocket display order drift');
 assert(JSON.stringify([...clashGroups.keys()])===JSON.stringify(expectedOrder),'Clash display order drift');
 assert(!shadowGroups.has('🛑 广告拦截')&&!clashGroups.has('🛑 广告拦截'),'legacy Advertising group must be absent in both clients');
+assert(!shadowGroups.has('🧩 自定义')&&!clashGroups.has('🧩 自定义'),'removed Custom group must be absent in both clients');
 assert(!clash['rule-providers'].Advertising&&!clash['rule-providers'].Advertising_Domain,'Clash Advertising providers must be absent');
 
-const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
+const parityGroups=['🚀 默认代理','🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼'];
 for(const name of parityGroups){
   assert(shadowGroups.has(name),'Shadowrocket missing parity group: '+name);
   assert(clashGroups.has(name),'Clash missing parity group: '+name);
   assert(JSON.stringify(shadowGroups.get(name))===JSON.stringify(clashGroups.get(name).proxies||[]),'proxy group drift between clients: '+name);
 }
 
-assert(clash['rule-providers'].Custom,'Clash Custom rule-provider missing');
-assert(clash['rule-providers'].Custom.url.endsWith('/Custom.list'),'Clash Custom provider URL drift');
-assert(clash['rule-providers'].Custom.path==='./rule_providers/Custom.list','Clash Custom provider path drift');
+assert(!clash['rule-providers'].Custom,'removed Clash Custom rule-provider must be absent');
 assert(clash['rule-providers'].Adult,'Clash Adult rule-provider missing');
 assert(clash['rule-providers'].Adult.url.endsWith('/Adult.list'),'Clash Adult provider URL drift');
 assert(clash['rule-providers'].Adult.path==='./rule_providers/Adult.list','Clash Adult provider path drift');
@@ -81,33 +80,23 @@ const isAiRule = rule => rulePolicy(rule) === '🤖 AI';
 const shadowAi=shadowRules.filter(r=>r.startsWith('DOMAIN')&&isAiRule(r));
 const clashAi=clash.rules.filter(r=>r.startsWith('DOMAIN')&&isAiRule(r));
 assert(JSON.stringify(shadowAi)===JSON.stringify(clashAi),'AI manual rules drift between clients');
-const shadowVoice='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
-const clashVoice='RULE-SET,OpenAI_Voice,🤖 AI,no-resolve';
-assert(shadowRules.includes(shadowVoice),'Shadowrocket OpenAI voice rule missing');
-assert(clash.rules.includes(clashVoice),'Clash OpenAI voice rule missing');
-assert(shadowRules.indexOf(shadowVoice) < shadowRules.findIndex(r=>r.includes('/Apple/Apple.list')),'Shadowrocket OpenAI voice rule must precede Apple');
-const clashAppleIndex=clash.rules.findIndex(r=>r.startsWith('RULE-SET,Apple,'));
-assert(clashAppleIndex!==-1,'Clash Apple rule missing');
-assert(clash.rules.indexOf(clashVoice) < clashAppleIndex,'Clash OpenAI voice rule must precede Apple');
-assert(clash['rule-providers'].OpenAI_Voice,'Clash OpenAI voice rule-provider missing');
-assert(clash['rule-providers'].OpenAI_Voice.url.endsWith('/OpenAI_Voice.list'),'Clash OpenAI voice provider URL drift');
-assert(clash['rule-providers'].OpenAI_Voice.path==='./rule_providers/OpenAI_Voice.list','Clash OpenAI voice provider path drift');
-assert(clash['rule-providers'].OpenAI_Voice.behavior==='classical','Clash OpenAI voice provider behavior drift');
-assert(clash['rule-providers'].OpenAI_Voice.format==='text','Clash OpenAI voice provider format drift');
+assert(!shadowrocket.includes('/OpenAI_Voice.list'),'Shadowrocket removed OpenAI_Voice.list reference must be absent');
+assert(!clashSource.includes('/OpenAI_Voice.list'),'Clash removed OpenAI_Voice.list reference must be absent');
+assert(!clash['rule-providers'].OpenAI_Voice,'Clash removed OpenAI_Voice rule-provider must be absent');
+assert(!clash.rules.some(r=>r.startsWith('RULE-SET,OpenAI_Voice,')),'Clash removed OpenAI_Voice rule must be absent');
 
 for(const rule of ['DOMAIN-SUFFIX,deepseek.com,DIRECT','DOMAIN-SUFFIX,bytedance.com,DIRECT','DOMAIN-SUFFIX,bytedance.net,DIRECT']){
   assert(shadowRules.includes(rule),'Shadowrocket missing direct rule: '+rule);
   assert(clash.rules.includes(rule),'Clash missing direct rule: '+rule);
 }
 
-const shadowCustom='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Custom.list,🧩 自定义';
-const clashCustom='RULE-SET,Custom,🧩 自定义,no-resolve';
 const shadowAdult='RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/Adult.list,🔞 NSFW';
 const clashAdult='RULE-SET,Adult,🔞 NSFW,no-resolve';
-assert(shadowRules.includes(shadowCustom),'Shadowrocket Custom rule missing');
-assert(clash.rules.includes(clashCustom),'Clash Custom rule missing');
 assert(shadowRules.includes(shadowAdult),'Shadowrocket Adult rule missing');
 assert(clash.rules.includes(clashAdult),'Clash Adult rule missing');
+assert(!shadowrocket.includes('/Custom.list'),'Shadowrocket removed Custom.list reference must be absent');
+assert(!clashSource.includes('/Custom.list'),'Clash removed Custom.list reference must be absent');
+assert(!clash.rules.some(r=>r.startsWith('RULE-SET,Custom,')),'Clash removed Custom rule must be absent');
 assert(!shadowrocket.includes('/Global.list'),'Shadowrocket old Global.list reference must be absent');
 assert(!clashSource.includes('/Global.list'),'Clash old Global.list reference must be absent');
 
@@ -122,7 +111,20 @@ const expectedShadowNonAi=[
   `RULE-SET,${bmShadow}/Apple/Apple.list,🍎 Apple`,
   `DOMAIN-SET,${bmShadow}/Apple/Apple_Domain.list,🍎 Apple`,
   `RULE-SET,${bmShadow}/Microsoft/Microsoft.list,🪟 Microsoft`,
-  `RULE-SET,${bmShadow}/GitHub/GitHub.list,💻 GitHub`,
+  `RULE-SET,${bmShadow}/GitHub/GitHub.list,💻 开发工具`,
+  'DOMAIN-SUFFIX,docker.io,💻 开发工具',
+  'DOMAIN-SUFFIX,docker.com,💻 开发工具',
+  'DOMAIN-SUFFIX,dhi.io,💻 开发工具',
+  'DOMAIN-SUFFIX,stackoverflow.com,💻 开发工具',
+  'DOMAIN-SUFFIX,sstatic.net,💻 开发工具',
+  'DOMAIN-SUFFIX,gitlab.com,💻 开发工具',
+  'DOMAIN-SUFFIX,gitlab-static.net,💻 开发工具',
+  'DOMAIN-SUFFIX,pypi.org,💻 开发工具',
+  'DOMAIN-SUFFIX,pythonhosted.org,💻 开发工具',
+  'DOMAIN-SUFFIX,wikipedia.org,💻 开发工具',
+  'DOMAIN-SUFFIX,wikimedia.org,💻 开发工具',
+  'DOMAIN-SUFFIX,hero-sms.com,💻 开发工具',
+  'DOMAIN-SUFFIX,greasyfork.org,💻 开发工具',
   `RULE-SET,${bmShadow}/Telegram/Telegram.list,✈️ Telegram`,
   'DOMAIN-SUFFIX,bytedance.com,DIRECT',
   'DOMAIN-SUFFIX,bytedance.net,DIRECT',
@@ -131,7 +133,6 @@ const expectedShadowNonAi=[
   `RULE-SET,${bmShadow}/TikTok/TikTok.list,📱 社交媒体`,
   `RULE-SET,${bmShadow}/YouTube/YouTube.list,▶️ YouTube`,
   `RULE-SET,${bmShadow}/Google/Google.list,🔎 Google`,
-  shadowCustom,
   shadowAdult,
   `RULE-SET,${bmShadow}/China/China.list,DIRECT`,
   `DOMAIN-SET,${bmShadow}/China/China_Domain.list,DIRECT`,
@@ -150,7 +151,20 @@ const expectedClashNonAi=[
   'RULE-SET,Apple,🍎 Apple,no-resolve',
   'RULE-SET,Apple_Domain,🍎 Apple',
   'RULE-SET,Microsoft,🪟 Microsoft,no-resolve',
-  'RULE-SET,GitHub,💻 GitHub,no-resolve',
+  'RULE-SET,GitHub,💻 开发工具,no-resolve',
+  'DOMAIN-SUFFIX,docker.io,💻 开发工具',
+  'DOMAIN-SUFFIX,docker.com,💻 开发工具',
+  'DOMAIN-SUFFIX,dhi.io,💻 开发工具',
+  'DOMAIN-SUFFIX,stackoverflow.com,💻 开发工具',
+  'DOMAIN-SUFFIX,sstatic.net,💻 开发工具',
+  'DOMAIN-SUFFIX,gitlab.com,💻 开发工具',
+  'DOMAIN-SUFFIX,gitlab-static.net,💻 开发工具',
+  'DOMAIN-SUFFIX,pypi.org,💻 开发工具',
+  'DOMAIN-SUFFIX,pythonhosted.org,💻 开发工具',
+  'DOMAIN-SUFFIX,wikipedia.org,💻 开发工具',
+  'DOMAIN-SUFFIX,wikimedia.org,💻 开发工具',
+  'DOMAIN-SUFFIX,hero-sms.com,💻 开发工具',
+  'DOMAIN-SUFFIX,greasyfork.org,💻 开发工具',
   'RULE-SET,Telegram,✈️ Telegram,no-resolve',
   'DOMAIN-SUFFIX,bytedance.com,DIRECT',
   'DOMAIN-SUFFIX,bytedance.net,DIRECT',
@@ -159,7 +173,6 @@ const expectedClashNonAi=[
   'RULE-SET,TikTok,📱 社交媒体,no-resolve',
   'RULE-SET,YouTube,▶️ YouTube,no-resolve',
   'RULE-SET,Google,🔎 Google,no-resolve',
-  clashCustom,
   clashAdult,
   'RULE-SET,China,DIRECT,no-resolve',
   'RULE-SET,China_Domain,DIRECT',
@@ -170,4 +183,4 @@ const shadowNonAi=shadowRules.filter(r=>!isAiRule(r));
 const clashNonAi=clash.rules.filter(r=>!isAiRule(r));
 assert(JSON.stringify(shadowNonAi)===JSON.stringify(expectedShadowNonAi),'Shadowrocket non-AI rule sequence drift');
 assert(JSON.stringify(clashNonAi)===JSON.stringify(expectedClashNonAi),'Clash non-AI rule sequence drift');
-console.log('PASS: Shadowrocket and Clash Custom/parity checks (no Advertising)');
+console.log('PASS: Shadowrocket and Clash parity checks (no Advertising)');

@@ -8,7 +8,7 @@ vm.createContext(context);vm.runInContext(source,context,{filename:scriptPath});
 if(typeof context.main!=='function')throw new Error('main(config) is missing');
 const assert=(c,m)=>{if(!c)throw new Error(m);};
 const group=(config,name)=>config['proxy-groups'].find(item=>item.name===name);
-const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
+const expectedOrder=['🚀 默认代理','👆 手动选择','🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国'];
 
 const directInput={dns:{enable:false,marker:'subscription-dns'},hosts:{'subscription.example':'192.0.2.1'},ipv6:true,proxies:[
 {name:'Hong Kong | HK-01',type:'ss',server:'127.0.0.1',port:8388,cipher:'aes-128-gcm',password:'test-only'},
@@ -20,9 +20,10 @@ const direct=context.main(JSON.parse(JSON.stringify(directInput)));
 assert(JSON.stringify(direct['proxy-groups'].map(item=>item.name))===JSON.stringify(expectedOrder),'proxy group display order');
 assert(!group(direct,'🛑 广告拦截'),'legacy Advertising group must be absent');
 assert(group(direct,'🤖 AI').proxies[0]==='🇸🇬 新加坡','AI default');
-assert(JSON.stringify(group(direct,'🧩 自定义').proxies)===JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']),'Custom group options');
+assert(!group(direct,'🧩 自定义'),'removed Custom group must be absent');
+assert(!group(direct,'💻 GitHub'),'renamed GitHub group must be absent');
 assert(JSON.stringify(group(direct,'🔞 NSFW').proxies)===JSON.stringify(['🚀 默认代理','🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']),'NSFW group options');
-const fullChoiceGroups=['🤖 AI','🍎 Apple','🔎 Google','💻 GitHub','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🧩 自定义','🔞 NSFW','🐟 漏网之鱼'];
+const fullChoiceGroups=['🤖 AI','🍎 Apple','🔎 Google','💻 开发工具','🪟 Microsoft','📱 社交媒体','▶️ YouTube','✈️ Telegram','🔞 NSFW','🐟 漏网之鱼'];
 for(const name of fullChoiceGroups){
   for(const choice of ['🇭🇰 香港','🏝️ 台湾','🇸🇬 新加坡','🇯🇵 日本','🇺🇸 美国','👆 手动选择']){
     assert(group(direct,name).proxies.includes(choice),name+' missing shared routing choice: '+choice);
@@ -38,33 +39,24 @@ assert(!Object.prototype.hasOwnProperty.call(direct,'mode'),'must not force appl
 assert(direct.profile&&direct.profile['store-selected'],'must persist selection');
 assert(!direct['rule-providers'].Advertising&&!direct['rule-providers'].Advertising_Domain,'legacy Advertising providers must be absent');
 assert(!direct.rules.some(rule=>/Advertising|广告拦截/.test(rule)),'legacy Advertising rules must be absent');
-assert(direct['rule-providers'].Custom,'Custom provider missing');
-assert(direct['rule-providers'].Custom.behavior==='classical','Custom provider behavior');
-assert(direct['rule-providers'].Custom.format==='text','Custom provider format');
-assert(direct['rule-providers'].Custom.url.endsWith('/Custom.list'),'Custom provider source');
-assert(direct['rule-providers'].Custom.path==='./rule_providers/Custom.list','Custom provider path');
+assert(!('Custom' in direct['rule-providers']),'removed Custom provider must be absent');
 assert(direct['rule-providers'].Adult,'Adult provider missing');
 assert(direct['rule-providers'].Adult.behavior==='classical','Adult provider behavior');
 assert(direct['rule-providers'].Adult.format==='text','Adult provider format');
 assert(direct['rule-providers'].Adult.url.endsWith('/Adult.list'),'Adult provider source');
 assert(direct['rule-providers'].Adult.path==='./rule_providers/Adult.list','Adult provider path');
-assert(direct['rule-providers'].OpenAI_Voice,'OpenAI voice provider missing');
-assert(direct['rule-providers'].OpenAI_Voice.behavior==='classical','OpenAI voice provider behavior');
-assert(direct['rule-providers'].OpenAI_Voice.format==='text','OpenAI voice provider format');
-assert(direct['rule-providers'].OpenAI_Voice.url.endsWith('/OpenAI_Voice.list'),'OpenAI voice provider source');
-assert(direct['rule-providers'].OpenAI_Voice.path==='./rule_providers/OpenAI_Voice.list','OpenAI voice provider path');
+assert(!('OpenAI_Voice' in direct['rule-providers']),'removed OpenAI_Voice provider must be absent');
 assert(!('Global' in direct['rule-providers']),'old Global provider must be absent');
 assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Global,')),'old Global rule must be absent');
-assert(direct.rules.includes('RULE-SET,Custom,🧩 自定义,no-resolve'),'Custom routing rule missing');
+assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,Custom,')),'removed Custom rule must be absent');
 assert(direct.rules.includes('RULE-SET,Adult,🔞 NSFW,no-resolve'),'Adult routing rule missing');
-assert(direct.rules.includes('RULE-SET,OpenAI_Voice,🤖 AI,no-resolve'),'OpenAI voice routing rule missing');
+assert(!direct.rules.some(rule=>rule.startsWith('RULE-SET,OpenAI_Voice,')),'removed OpenAI_Voice rule must be absent');
 assert(direct.rules[direct.rules.length-1]==='MATCH,🐟 漏网之鱼','MATCH must route to fallback');
 
 const googleIndex=direct.rules.indexOf('RULE-SET,Google,🔎 Google,no-resolve');
-const customIndex=direct.rules.indexOf('RULE-SET,Custom,🧩 自定义,no-resolve');
 const adultIndex=direct.rules.indexOf('RULE-SET,Adult,🔞 NSFW,no-resolve');
 const chinaIndex=direct.rules.indexOf('RULE-SET,China,DIRECT,no-resolve');
-assert(googleIndex>0&&googleIndex<customIndex&&customIndex<adultIndex&&adultIndex<chinaIndex,'Google/Custom/Adult/China order');
+assert(googleIndex>0&&googleIndex<adultIndex&&adultIndex<chinaIndex,'Google/Adult/China order');
 
 assert(group(direct,'🇺🇸 美国').proxies.includes('United States | US-01'),'US node matching');
 assert(!group(direct,'👆 手动选择').proxies.includes('🇺🇸 US-EXTRA'),'all-node filter');
@@ -79,16 +71,14 @@ const classicalNoResolveRules=[
   'RULE-SET,Lan,DIRECT,no-resolve',
   'RULE-SET,Apple,🍎 Apple,no-resolve',
   'RULE-SET,Microsoft,🪟 Microsoft,no-resolve',
-  'RULE-SET,GitHub,💻 GitHub,no-resolve',
+  'RULE-SET,GitHub,💻 开发工具,no-resolve',
   'RULE-SET,Telegram,✈️ Telegram,no-resolve',
   'RULE-SET,Twitter,📱 社交媒体,no-resolve',
   'RULE-SET,Instagram,📱 社交媒体,no-resolve',
   'RULE-SET,TikTok,📱 社交媒体,no-resolve',
   'RULE-SET,YouTube,▶️ YouTube,no-resolve',
   'RULE-SET,Google,🔎 Google,no-resolve',
-  'RULE-SET,Custom,🧩 自定义,no-resolve',
   'RULE-SET,Adult,🔞 NSFW,no-resolve',
-  'RULE-SET,OpenAI_Voice,🤖 AI,no-resolve',
   'RULE-SET,China,DIRECT,no-resolve'
 ];
 for(const rule of classicalNoResolveRules){
@@ -108,9 +98,7 @@ for(const rule of direct.rules){
   const name=rule.split(',')[1];
   assert(ruleSetNames.has(name),`missing rule provider: ${name}`);
 }
-const voiceIndex=direct.rules.indexOf('RULE-SET,OpenAI_Voice,🤖 AI,no-resolve');
 const appleIndex=direct.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve');
-assert(voiceIndex!==-1&&voiceIndex<appleIndex,'OpenAI voice rule must precede Apple');
 const fallbackIndex=direct.rules.indexOf('MATCH,🐟 漏网之鱼');
 const chinaDomainIndex=direct.rules.indexOf('RULE-SET,China_Domain,DIRECT');
 assert(appleIndex>0&&appleIndex<googleIndex,'AI/Apple/Google order');
@@ -276,4 +264,4 @@ for(const invalid of [
   assert(JSON.stringify(input)===before,'dependency rejection must not partially mutate input');
 }
 if(process.env.MIHOMO_CONFIG_OUTPUT)fs.writeFileSync(process.env.MIHOMO_CONFIG_OUTPUT,JSON.stringify(direct,null,2));
-console.log('PASS: Clash Verge Rev Custom, Adult, OpenAI Voice and dependency checks (no Advertising)');
+console.log('PASS: Clash Verge Rev Adult and dependency checks (no Advertising)');

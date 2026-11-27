@@ -10,8 +10,6 @@ const routingPath = path.join(root, 'Shadowrocket_Routing.conf');
 const westdataCheck = path.join(root, 'scripts', 'check-westdata-local.js');
 const clashSource = fs.readFileSync(clashPath, 'utf8');
 const routing = fs.readFileSync(routingPath, 'utf8');
-const customListPath = path.join(root, 'Custom.list');
-const customList = fs.readFileSync(customListPath, 'utf8');
 const context = { console: { log() {}, warn() {}, error() {} } };
 vm.createContext(context);
 vm.runInContext(clashSource, context, { filename: clashPath });
@@ -23,7 +21,7 @@ assert(routingRuleSectionMatch, 'Shadowrocket [Rule] section missing');
 const routingRules = routingRuleSectionMatch[1].split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
 
 const aiSource = JSON.parse(fs.readFileSync(path.join(root, 'rules', 'ai-rules.json'), 'utf8'));
-const expectedSectionIds = ['openai', 'openai-voice', 'personal-relay', 'ai-search', 'ai-platforms', 'gemini', 'grok', 'claude', 'canva'];
+const expectedSectionIds = ['openai', 'personal-relay', 'ai-search', 'ai-platforms', 'gemini', 'grok', 'claude', 'canva'];
 assert(Array.isArray(aiSource.sections) && JSON.stringify(aiSource.sections.map(section => section.id)) === JSON.stringify(expectedSectionIds), 'rules/ai-rules.json section layout drift');
 const aiSections = new Map(aiSource.sections.map(section => [section.id, section.rules]));
 const sectionRules = id => {
@@ -65,8 +63,9 @@ const sharedAiHosts = [
   'rum.browser-intake-datadoghq.com',
   'setup.workos.com',
   'workos.imgix.net',
-  // Statsig's shared SDK/config CDN serves many non-AI apps.
-  'featureassets.org'
+  // Statsig's shared SDK/config CDN and Auth0 shared CDN serve many non-AI apps.
+  'featureassets.org',
+  'cdn.auth0.com'
 ];
 const valid = context.main({ proxies: [node('Hong Kong | HK-01')] });
 for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
@@ -75,7 +74,7 @@ for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', vali
   }
 }
 
-const openaiRules = [...sectionRules('openai'), ...sectionRules('openai-voice')];
+const openaiRules = sectionRules('openai');
 for (const rule of openaiRules) {
   assert(rule.endsWith(',🤖 AI'), 'OpenAI section rule must route to AI: ' + rule);
   assert(valid.rules.includes(rule), 'Clash missing scoped OpenAI rule: ' + rule);
@@ -84,10 +83,7 @@ for (const rule of openaiRules) {
 for (const anchor of [
   'DOMAIN-SUFFIX,openai.com,🤖 AI',
   'DOMAIN-SUFFIX,chatgpt.com,🤖 AI',
-  'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI',
-  'DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 AI',
-  'DOMAIN-SUFFIX,host.livekit.cloud,🤖 AI',
-  'DOMAIN-SUFFIX,turn.livekit.cloud,🤖 AI'
+  'DOMAIN-WILDCARD,chatgpt-async-webps-prod-*.webpubsub.azure.com,🤖 AI'
 ]) {
   assert(openaiRules.includes(anchor), 'OpenAI core anchor missing from ai-rules.json: ' + anchor);
 }
@@ -102,20 +98,12 @@ const grokRule = 'DOMAIN-SUFFIX,grok.x.com,🤖 AI';
 assert(grokRules.includes(grokRule), 'Grok core anchor missing from ai-rules.json: ' + grokRule);
 assert(valid.rules.indexOf(grokRule) < valid.rules.indexOf('RULE-SET,Twitter,📱 社交媒体,no-resolve'), 'Clash grok.x.com must precede Twitter');
 assert(routingRules.indexOf(grokRule) < routingRules.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Twitter/Twitter.list,📱 社交媒体'), 'Shadowrocket grok.x.com must precede Twitter');
-const shadowVoiceRule = 'RULE-SET,https://raw.githubusercontent.com/vc7k8jhtvc-netizen/shadowrocket-rule/main/OpenAI_Voice.list,🤖 AI';
-const clashVoiceRule = 'RULE-SET,OpenAI_Voice,🤖 AI,no-resolve';
-assert(valid.rules.includes(clashVoiceRule), 'Clash missing OpenAI voice rule');
-assert(routingRules.includes(shadowVoiceRule), 'Shadowrocket missing OpenAI voice rule');
-assert(valid['rule-providers'].OpenAI_Voice && valid['rule-providers'].OpenAI_Voice.format === 'text', 'Clash OpenAI voice provider missing');
-assert(valid.rules.indexOf(clashVoiceRule) < valid.rules.indexOf('RULE-SET,Apple,🍎 Apple,no-resolve'), 'Clash OpenAI voice rule order drift');
-assert(routingRules.indexOf(shadowVoiceRule) < routingRules.indexOf('RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Apple/Apple.list,🍎 Apple'), 'Shadowrocket OpenAI voice rule order drift');
-const voiceList = fs.readFileSync(path.join(root, 'OpenAI_Voice.list'), 'utf8');
-const voiceEntries = voiceList.split(/\r?\n/).filter(line => line.startsWith('IP-CIDR') || line.startsWith('IP-CIDR6'));
-assert(voiceEntries.length > 0, 'OpenAI voice list must contain host IP routes');
-for (const line of voiceEntries) {
-  const isV4 = line.startsWith('IP-CIDR,') && line.includes('/32,');
-  const isV6 = line.startsWith('IP-CIDR6,') && line.includes('/128,');
-  assert(line.endsWith(',no-resolve') && (isV4 || isV6), 'OpenAI voice list must contain only host routes with no-resolve: ' + line);
+assert(!valid['rule-providers'].OpenAI_Voice && !valid.rules.some(rule => rule.startsWith('RULE-SET,OpenAI_Voice,')), 'Clash removed OpenAI_Voice routing must stay absent');
+assert(!routingRules.some(rule => rule.includes('OpenAI_Voice.list')), 'Shadowrocket removed OpenAI_Voice routing must stay absent');
+for (const removedVoiceHost of ['chatgpt.livekit.cloud', 'host.livekit.cloud', 'turn.livekit.cloud']) {
+  for (const [name, rules] of [['ai-rules.json', allAiSourceRules], ['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
+    assert(routeManualRule(rules, removedVoiceHost) !== '🤖 AI', name + ' must not reintroduce removed OpenAI Voice host: ' + removedVoiceHost);
+  }
 }
 
 // Declared personal AI relay: an explicit policy cap outside vendor domains, locked exactly so it cannot expand silently.
@@ -130,7 +118,9 @@ for (const rule of personalRelayRules) {
 }
 
 // Exa, Tavily and Jina are AI search/reader services; Supabase and Hugging Face are explicit AI-group choices.
-// Their rules are sourced from rules/ai-rules.json and must stay out of Custom.list.
+// Their rules are sourced from rules/ai-rules.json; removed Custom.list / 🧩 自定义 must stay absent.
+assert(!valid['rule-providers'].Custom && !valid.rules.some(rule => rule.startsWith('RULE-SET,Custom,')), 'Clash removed Custom routing must stay absent');
+assert(!routingRules.some(rule => rule.includes('Custom.list')), 'Shadowrocket removed Custom routing must stay absent');
 const aiSearchRules = sectionRules('ai-search');
 for (const anchor of ['DOMAIN-SUFFIX,exa.ai,🤖 AI', 'DOMAIN-SUFFIX,tavily.com,🤖 AI', 'DOMAIN-SUFFIX,jina.ai,🤖 AI']) {
   assert(aiSearchRules.includes(anchor), 'Exa/Tavily/Jina AI search anchor missing: ' + anchor);
@@ -159,16 +149,6 @@ for (const rule of aiPlatformRules) {
 }
 
 const migratedAiRules = [...aiSearchRules, ...aiPlatformRules];
-const customEntries = customList.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
-for (const rule of aiSearchRules) {
-  const domain = rule.split(',')[1];
-  assert(!customEntries.includes('DOMAIN-SUFFIX,' + domain) && !customEntries.includes('DOMAIN,' + domain), 'Exa/Tavily/Jina must not remain in Custom.list: ' + domain);
-}
-for (const rule of aiPlatformRules) {
-  const domain = rule.split(',')[1];
-  assert(!customEntries.includes('DOMAIN-SUFFIX,' + domain) && !customEntries.includes('DOMAIN,' + domain), 'Supabase/HuggingFace must not remain in Custom.list: ' + domain);
-}
-assert(!customEntries.includes('DOMAIN,cdn.auth0.com') && !customEntries.includes('DOMAIN-SUFFIX,cdn.auth0.com'), 'shared Auth0 CDN must not be captured in Custom.list');
 
 // Gemini and Google AI dedicated endpoints are derived from rules/ai-rules.json;
 // security redlines (shared Google host exclusion, wildcard anchoring, representative match samples) stay independent.
@@ -264,11 +244,11 @@ for (const rule of expectedCanvaRules) {
 }
 const claudeRules = sectionRules('claude');
 for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRules]]) {
-  const customIndex = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /,🧩 自定义(?:,no-resolve)?$/.test(rule));
-  assert(customIndex !== -1, name + ' Custom routing rule missing');
+  const apple = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /(?:\/Apple\/Apple\.list|,Apple,🍎 Apple)/.test(rule));
+  assert(apple !== -1, name + ' Apple routing rule missing');
   for (const rule of migratedAiRules) {
     const index = rules.indexOf(rule);
-    assert(index !== -1 && index < customIndex, name + ' AI-migrated rule must precede Custom: ' + rule);
+    assert(index !== -1 && index < apple, name + ' AI-migrated rule must precede Apple: ' + rule);
   }
   const actual = rules.filter(rule => /^DOMAIN-SUFFIX,(?:canva|my\.canvasite\.)/i.test(rule));
   assert(JSON.stringify(actual) === JSON.stringify(expectedCanvaRules), name + ' Canva dedicated-domain rules must match exact DIRECT/AI list');
@@ -277,8 +257,7 @@ for (const [name, rules] of [['Clash', valid.rules], ['Shadowrocket', routingRul
   const claudeLast = rules.indexOf(claudeRules[claudeRules.length - 1]);
   assert(first !== -1 && last !== -1, name + ' Canva rules missing');
   assert(claudeLast !== -1 && first > claudeLast, name + ' Canva rules must follow Claude');
-  const apple = rules.findIndex(rule => rule.startsWith('RULE-SET,') && /(?:\/Apple\/Apple\.list|,Apple,🍎 Apple)/.test(rule));
-  assert(apple !== -1 && apple > last, name + ' Canva rules must precede Apple and China/fallback');
+  assert(apple > last, name + ' Canva rules must precede Apple and China/fallback');
   assert(JSON.stringify(rules.slice(first, last + 1)) === JSON.stringify(expectedCanvaRules), name + ' Canva rules must remain contiguous');
 }
 
@@ -349,4 +328,4 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('PASS: routing hardening rejects namespace/dependency drift, locks OpenAI voice, Gemini/Google AI, Canva, Grok and migrated AI routing, retains listener/tunnel/DNS RULES dependencies, and avoids shared-SaaS AI capture');
+console.log('PASS: routing hardening rejects namespace/dependency drift, locks Gemini/Google AI, Canva, Grok and migrated AI routing, retains listener/tunnel/DNS RULES dependencies, and avoids shared-SaaS AI capture');
